@@ -4084,7 +4084,7 @@ mod meeting_screen_tests {
     #[test]
     fn names_from_a_participant_list() {
         assert!(looks_like_name("Sarah Khan"));
-        assert!(looks_like_name("Dr. Danish Tamuly"));
+        assert!(looks_like_name("Dr. Amrita Baruah"));
         assert!(!looks_like_name("Mute Camera"));
         assert!(!looks_like_name("Meeting 2026-09-20"));
         assert!(!looks_like_name("sarah khan"));

@@ -307,7 +307,7 @@ mod tests {
 
     #[test]
     fn redacts_emails_and_phones_but_not_ordinary_numbers() {
-        assert_eq!(redact_contacts("mail parthajy@gmail.com or pb@lane.so now"), "mail [email] or [email] now");
+        assert_eq!(redact_contacts("mail someone@example.com or pb@lane.so now"), "mail [email] or [email] now");
         assert_eq!(redact_contacts("Phone 7002808244"), "Phone [phone]");
         assert_eq!(redact_contacts("call +91 70028 08244 or (415) 555-2671 today"), "call [phone] or [phone] today");
         // Years, amounts, IDs, CINs and short numbers stay.
