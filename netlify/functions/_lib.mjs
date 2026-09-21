@@ -1,6 +1,8 @@
 /** The bits every function needs: Supabase over plain fetch, and the admin gate. */
 
-const URL_BASE = () => (process.env.SUPABASE_URL || '').replace(/\/+$/, '')
+// The project URL is public: it ships in the page. Only the key is secret.
+const PROJECT = 'https://fuqrvmprgzqjmfqszxoe.supabase.co'
+const URL_BASE = () => (process.env.SUPABASE_URL || PROJECT).replace(/\/+$/, '')
 const SERVICE = () => process.env.SUPABASE_SERVICE_KEY || ''
 
 /** A call to PostgREST with the service key, which bypasses row level security. */

@@ -18,15 +18,19 @@ npx tauri signer sign --private-key-path "$HOME/.tauri/lane.key" -p "" "$OUT/Lan
 SIG=$(cat "$OUT/Lane.app.tar.gz.sig")
 NOTES="${NOTES:-Improvements and fixes.}"
 python3 - "$VERSION" "$ARCH" "$SIG" "$NOTES" "$OUT" <<'PY'
-import json, sys, datetime
+import json, os, sys, datetime
 version, arch, sig, notes, out = sys.argv[1:6]
 manifest = {
   "version": version,
   "notes": notes,
   "pub_date": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-  "platforms": {f"darwin-{arch}": {"signature": sig, "url": f"https://lane.so/updates/{version}/Lane.app.tar.gz"}},
+  # The artefact lives on the releases page; the manifest is served by the
+  # website, which is what the app polls.
+  "platforms": {f"darwin-{arch}": {"signature": sig, "url": f"https://github.com/parthajy/lane/releases/download/v{version}/Lane.app.tar.gz"}},
 }
 json.dump(manifest, open(f"{out}/darwin-{arch}.json", "w"), indent=2)
-print(f"manifest: {out}/darwin-{arch}.json")
+os.makedirs("site/updates", exist_ok=True)
+json.dump(manifest, open(f"site/updates/darwin-{arch}.json", "w"), indent=2)
+print(f"manifest: site/updates/darwin-{arch}.json (commit it; Netlify serves it)")
 PY
-echo "upload dist-updates/$VERSION/* to https://lane.so/updates/$VERSION/ and copy darwin-$ARCH.json to https://lane.so/updates/darwin-$ARCH.json"
+echo "next: scripts/release-github.sh, then commit site/updates/darwin-$ARCH.json"

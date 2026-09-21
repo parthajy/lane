@@ -28,23 +28,24 @@ You will need two things from Project settings → API:
 
 ## 2. Netlify
 
-Connect the GitHub repository `parthajy/lane`. The build settings come from
-`netlify.toml`, so there is nothing to type: the site is `site/` and the
-functions are `netlify/functions/`.
+Import the repository `parthajy/lane` and take the settings it offers, because
+`netlify.toml` already says the site is `site/`, the functions are
+`netlify/functions/`, and there is no build step.
 
-Set these environment variables in Site configuration → Environment variables:
+Everything public is in the code already: the Supabase project URL, the Dodo
+product ids, the download link. Only four variables need setting, in Site
+configuration → Environment variables, and three of them are secrets that must
+never be committed to this repository:
 
-| Name | Value |
+| Name | What it is |
 | --- | --- |
-| `SUPABASE_URL` | `https://fuqrvmprgzqjmfqszxoe.supabase.co` |
-| `SUPABASE_SERVICE_KEY` | the service role key, from Supabase |
-| `LANE_ADMIN_TOKEN` | a long random string you invent |
-| `LANE_DMG_URL` | where the dmg is served from |
+| `SUPABASE_SERVICE_KEY` | the project's secret key, which bypasses row level security |
 | `DODO_API_KEY` | the Dodo secret key |
-| `DODO_MODE` | `test` while you are testing, `live` when you are not |
-| `DODO_PRODUCT_LIFETIME` | `pdt_0No5eqhNCUK6AbLdVMdL3` |
-| `DODO_PRODUCT_MONTHLY` | `pdt_0No5etdA408odWxLdLHjI` |
-| `DODO_PRODUCT_YEARLY` | `pdt_0No5ethe62xSynYBoWPnO` |
+| `LANE_ADMIN_TOKEN` | a long random string you invent, the only thing guarding the dashboard |
+| `LANE_DMG_URL` | only if the build is not on the releases page |
+
+Two more are worth setting when you go live: `DODO_MODE=live`, and the three
+`DODO_PRODUCT_*` ids for the live products.
 
 Your dashboard is then `https://lane.so/admin?token=<your token>`: downloads by
 day, the waitlist, seats left, sales, keys still in the pool, and feedback.
@@ -71,10 +72,12 @@ app-specific password from appleid.apple.com, and the team ID 6AKUD88CVN.
 
 ```sh
 xcrun notarytool store-credentials lane
-npm run release        # builds, signs, notarises, staples, writes the update manifest
+npm run release              # build, sign, notarise, write the update manifest
+scripts/release-github.sh    # upload the dmg and the update artefact
+git add site/updates && git commit -m "Update manifest" && git push
 ```
 
-Then check Gatekeeper is happy before anyone else sees it:
+Check Gatekeeper is happy before anyone else sees it:
 
 ```sh
 spctl --assess --type open --context context:primary-signature -v \
@@ -85,8 +88,20 @@ xcrun stapler validate src-tauri/target/release/bundle/dmg/Lane-<version>.dmg
 Better still, copy the dmg to another Mac and open it there. A build that
 passes on the machine that made it can still fail on a stranger's.
 
-Upload the dmg wherever `LANE_DMG_URL` points, and always link people at
-`/download/mac` so the clicks are counted.
+### Where the dmg lives
+
+On the repository's releases page. It is free, it has no bandwidth limit for a
+public repository, and it is fast everywhere. `scripts/release-github.sh`
+uploads the build twice: once named for its version, and once as `Lane.dmg`, so
+this link is always the current build and never has to be edited:
+
+```
+https://github.com/parthajy/lane/releases/latest/download/Lane.dmg
+```
+
+Always send people to `/download/mac` rather than that link, so the clicks are
+counted. The updater reads `https://lane.so/updates/darwin-aarch64.json`, which
+Netlify serves from `site/updates/`, and which points back at the release.
 
 ## 5. Issuing a key by hand
 

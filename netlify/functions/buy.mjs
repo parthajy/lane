@@ -1,8 +1,15 @@
 /** Sends someone to the right Dodo checkout, and brings them back to /thanks. */
+// The test-mode products, which are public: they appear in every checkout
+// link. Set the variables in Netlify to point at the live ones.
+const TEST = {
+  monthly: 'pdt_0No5etdA408odWxLdLHjI',
+  yearly: 'pdt_0No5ethe62xSynYBoWPnO',
+  lifetime: 'pdt_0No5eqhNCUK6AbLdVMdL3',
+}
 const PRODUCTS = () => ({
-  monthly: process.env.DODO_PRODUCT_MONTHLY || '',
-  yearly: process.env.DODO_PRODUCT_YEARLY || '',
-  lifetime: process.env.DODO_PRODUCT_LIFETIME || '',
+  monthly: process.env.DODO_PRODUCT_MONTHLY || TEST.monthly,
+  yearly: process.env.DODO_PRODUCT_YEARLY || TEST.yearly,
+  lifetime: process.env.DODO_PRODUCT_LIFETIME || TEST.lifetime,
 })
 
 export default async (request) => {

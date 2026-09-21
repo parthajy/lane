@@ -29,11 +29,17 @@ function readPayment(p) {
   return { status, email, product, amount, currency }
 }
 
+const TEST = {
+  monthly: 'pdt_0No5etdA408odWxLdLHjI',
+  yearly: 'pdt_0No5ethe62xSynYBoWPnO',
+  lifetime: 'pdt_0No5eqhNCUK6AbLdVMdL3',
+}
+
 function planOf(productId) {
   const map = {
-    [process.env.DODO_PRODUCT_MONTHLY || 'x']: 'monthly',
-    [process.env.DODO_PRODUCT_YEARLY || 'y']: 'yearly',
-    [process.env.DODO_PRODUCT_LIFETIME || 'z']: 'lifetime',
+    [process.env.DODO_PRODUCT_MONTHLY || TEST.monthly]: 'monthly',
+    [process.env.DODO_PRODUCT_YEARLY || TEST.yearly]: 'yearly',
+    [process.env.DODO_PRODUCT_LIFETIME || TEST.lifetime]: 'lifetime',
   }
   return map[productId] || ''
 }
