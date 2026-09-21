@@ -6,16 +6,20 @@ and Dodo takes the money. The app itself talks to none of them.
 
 ## 1. Supabase (five minutes, do it first)
 
-Open the SQL editor for the project at
-`https://fuqrvmprgzqjmfqszxoe.supabase.co`, paste the whole of
-`supabase/schema.sql`, and run it. It makes the tables, locks them so the
-website can read nothing directly, and adds the three functions the site is
-allowed to call.
+One command does all of it, with a personal access token from
+https://supabase.com/dashboard/account/tokens:
 
-Then upload the licence keys. They were minted on this Mac and live in
-`~/.tauri/lane-keys/` as three CSV files, 250 keys each. In the table editor,
-open `licence_keys`, choose Import data from CSV, and load all three. Nothing
-else ever has to know the signing secret.
+```sh
+SUPABASE_ACCESS_TOKEN=sbp_… python3 scripts/setup-supabase.py
+```
+
+That makes the tables, locks them so the website can read nothing directly,
+adds the three functions the site is allowed to call, and loads the 750
+licence keys from `~/.tauri/lane-keys/`. Running it twice is safe. Add
+`--dry-run` to see what it would send without sending it.
+
+By hand instead: paste `supabase/schema.sql` into the SQL editor, then import
+the three CSVs into `licence_keys` from the table editor.
 
 You will need two things from Project settings → API:
 
