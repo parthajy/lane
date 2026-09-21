@@ -12,7 +12,8 @@
     "build:audio": "cd src-tauri/audio && swiftc -O -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper-info.plist -framework AVFoundation -framework CoreAudio -o lane-audio lane-audio.swift && swiftc -O -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper-info.plist -framework EventKit -o lane-calendar lane-calendar.swift && swiftc -O -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper-info.plist -framework Vision -framework AppKit -o lane-ocr lane-ocr.swift && swiftc -O -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper-info.plist -framework Contacts -o lane-contacts lane-contacts.swift && swiftc -O -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper-info.plist -framework AppKit -o lane-shot lane-shot.swift",
     "build:dmg": "npm run build:app && scripts/make-dmg.sh",
     "build:mcp": "cargo build --release --manifest-path src-tauri/lane-mcp/Cargo.toml --target-dir src-tauri/target && mkdir -p src-tauri/mcp && cp src-tauri/target/release/lane-mcp src-tauri/mcp/lane-mcp",
-    "release": "npm run build:dmg && scripts/notarize.sh && scripts/publish-update.sh"
+    "release": "npm run build:dmg && scripts/notarize.sh && scripts/publish-update.sh",
+    "ship": "scripts/ship.sh"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "1.1.11",
