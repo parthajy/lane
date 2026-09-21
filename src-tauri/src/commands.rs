@@ -1147,7 +1147,14 @@ pub fn circle(state: State<'_, Arc<AppState>>) -> Res<Circle> {
 /// The notch tab grows into a card and back; keep it centred either way.
 #[tauri::command]
 pub fn notch_resize(app: AppHandle, width: f64, height: f64) {
-    if app.get_webview_window("notch").is_some() {
+    // The notch webview asks for its size as soon as it mounts, and placing
+    // the window orders it on screen. With the notch switched off that put
+    // the tab straight back, whatever the setting said, so the size is only
+    // applied while the notch is meant to be there.
+    let wanted = app
+        .try_state::<Arc<AppState>>()
+        .map_or(true, |s| crate::lock(&s.settings).notch_enabled);
+    if wanted && app.get_webview_window("notch").is_some() {
         crate::place_notch_size(&app, Some((width, height)));
     }
 }

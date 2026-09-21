@@ -1,31 +1,76 @@
 # Launching Lane
 
-Everything here is done from this Mac. The order matters only where one step
-feeds the next; where it does not, do whichever is in front of you.
+Four places hold the launch: this Mac builds the app, GitHub holds the code,
+Supabase holds the database, Netlify serves the site and the few functions,
+and Dodo takes the money. The app itself talks to none of them.
 
-## 1. Notarise the build (do this first, it takes the longest)
+## 1. Supabase (five minutes, do it first)
 
-Apple needs credentials stored once, on this Mac. It asks for your Apple ID,
-an app-specific password from appleid.apple.com, and the team ID 6AKUD88CVN.
+Open the SQL editor for the project at
+`https://fuqrvmprgzqjmfqszxoe.supabase.co`, paste the whole of
+`supabase/schema.sql`, and run it. It makes the tables, locks them so the
+website can read nothing directly, and adds the three functions the site is
+allowed to call.
+
+Then upload the licence keys. They were minted on this Mac and live in
+`~/.tauri/lane-keys/` as three CSV files, 250 keys each. In the table editor,
+open `licence_keys`, choose Import data from CSV, and load all three. Nothing
+else ever has to know the signing secret.
+
+You will need two things from Project settings → API:
+
+- the **publishable key**, already in `site/index.html`, safe in public
+- the **service role key**, which is a secret and goes only into Netlify
+
+## 2. Netlify
+
+Connect the GitHub repository `parthajy/lane`. The build settings come from
+`netlify.toml`, so there is nothing to type: the site is `site/` and the
+functions are `netlify/functions/`.
+
+Set these environment variables in Site configuration → Environment variables:
+
+| Name | Value |
+| --- | --- |
+| `SUPABASE_URL` | `https://fuqrvmprgzqjmfqszxoe.supabase.co` |
+| `SUPABASE_SERVICE_KEY` | the service role key, from Supabase |
+| `LANE_ADMIN_TOKEN` | a long random string you invent |
+| `LANE_DMG_URL` | where the dmg is served from |
+| `DODO_API_KEY` | the Dodo secret key |
+| `DODO_MODE` | `test` while you are testing, `live` when you are not |
+| `DODO_PRODUCT_LIFETIME` | `pdt_0No5eqhNCUK6AbLdVMdL3` |
+| `DODO_PRODUCT_MONTHLY` | `pdt_0No5etdA408odWxLdLHjI` |
+| `DODO_PRODUCT_YEARLY` | `pdt_0No5ethe62xSynYBoWPnO` |
+
+Your dashboard is then `https://lane.so/admin?token=<your token>`: downloads by
+day, the waitlist, seats left, sales, keys still in the pool, and feedback.
+
+## 3. Dodo
+
+The three products already exist in test mode, with the ids above. When you are
+ready to take real money, make the same three in live mode, put the live ids and
+the live key into Netlify, and set `DODO_MODE=live`.
+
+The flow needs nothing else: `/buy/lifetime` sends the buyer to Dodo, Dodo sends
+them back to `/thanks/`, and that page asks Netlify for their key. The key is
+claimed from the pool once per payment, so a reloaded page shows the same key
+rather than burning another.
+
+**Test it before you announce anything.** Buy the lifetime plan in test mode with
+Dodo's test card, check the key appears on `/thanks/`, paste it into Lane under
+Settings → Your licence, and confirm the sale shows on `/admin`.
+
+## 4. Notarise and ship the app
+
+Apple needs credentials stored once, on this Mac. It asks for your Apple ID, an
+app-specific password from appleid.apple.com, and the team ID 6AKUD88CVN.
 
 ```sh
 xcrun notarytool store-credentials lane
-```
-
-Then the whole release runs in one command:
-
-```sh
 npm run release        # builds, signs, notarises, staples, writes the update manifest
 ```
 
-Notarisation takes a few minutes and Apple sometimes queues it for longer. If
-it fails, `xcrun notarytool log <submission-id> --keychain-profile lane` says
-why, and it is almost always an unsigned helper binary.
-
-When it finishes you have `src-tauri/target/release/bundle/dmg/Lane-<version>.dmg`,
-stapled, and `dist-updates/<version>/` for the updater.
-
-Check Gatekeeper is happy with it before anyone else sees it:
+Then check Gatekeeper is happy before anyone else sees it:
 
 ```sh
 spctl --assess --type open --context context:primary-signature -v \
@@ -36,62 +81,38 @@ xcrun stapler validate src-tauri/target/release/bundle/dmg/Lane-<version>.dmg
 Better still, copy the dmg to another Mac and open it there. A build that
 passes on the machine that made it can still fail on a stranger's.
 
-## 2. Put the server up
+Upload the dmg wherever `LANE_DMG_URL` points, and always link people at
+`/download/mac` so the clicks are counted.
 
-See `server/README.md`. Short version: copy `server/` to the box, make the
-venv, write `/opt/lane/lane.env` with a long `LANE_ADMIN_TOKEN`, enable the
-systemd unit, put Caddy in front of it for the certificate.
+## 5. Issuing a key by hand
 
-Then point the site at it: in `site/index.html`, `<meta name="lane-api">`
-should read `https://api.lane.so`.
-
-Your dashboard is `https://api.lane.so/admin?token=<your token>`. It shows
-downloads by day, the waitlist, seats left, feedback and sales.
-
-## 3. Put the site up
-
-`site/` is a folder of static files. Upload it. The only moving part is the
-waitlist form, which posts to the server above; if the server is down the page
-still reads correctly and the counter simply does not move.
-
-Upload the dmg too, and point `LANE_DMG_URL` at it. Link the download button
-at `https://api.lane.so/download/mac` rather than the file itself, so the
-clicks are counted.
-
-## 4. Selling
-
-There is no payment page yet, and nothing in Lane talks to a payment
-processor. For the first buyers, take the money however you like and issue the
-key by hand:
+For a refund, a replacement, or someone who paid you another way:
 
 ```sh
-scripts/issue-licence.sh buyer@example.com lifetime
+node scripts/licence.mjs sign someone@example.com lifetime
 ```
 
-That prints one line. Paste it into the receipt. The buyer opens Lane,
-Settings, Your licence, and pastes it in. Lane checks the signature on their
-own machine, so nothing is activated against a server and the app stays
-offline. Record the sale so the dashboard knows:
+That prints one line to paste into their receipt. To refill the pool:
 
 ```sh
-curl -X POST "https://api.lane.so/api/licences?token=<token>" \
-  -d "email=buyer@example.com&plan=lifetime&amount=500"
+node scripts/licence.mjs mint lifetime 250 > lifetime.csv   # then import to Supabase
 ```
 
-Plans are `monthly`, `yearly` and `lifetime`. A monthly key does not expire on
-its own yet, so issue those only when you are ready to track renewals by hand.
+## What is still open
 
-## 5. What is still open
-
-- **Screen Recording permission.** Lane cannot capture anything until macOS
-  grants it, and granting it needs your password, so it has to be you. System
-  Settings, Privacy & Security, Screen Recording, switch Lane on.
-- **The signing key.** `~/.tauri/lane.key` signs both updates and licences.
-  Lose it and you cannot ship an update to anyone who already installed Lane.
-  Copy it somewhere safe that is not this Mac, today.
+- **Screen Recording.** Lane captures nothing until macOS grants it, and that
+  needs your password, so it has to be you. System Settings → Privacy &
+  Security → Screen Recording → Lane.
+- **The signing keys.** `~/.tauri/lane.key` signs updates and
+  `~/.tauri/lane-licence.json` signs licences. Lose the first and you can never
+  update anyone; lose the second and you can never mint another key. Copy both
+  somewhere that is not this Mac, today.
+- **The Windows workflow** could not be pushed: the GitHub token this Mac holds
+  has no `workflow` scope. Run `gh auth refresh -s workflow`, then
+  `git add .github && git commit -m "CI" && git push`.
 - **Placeholders on the site.** `hello@lane.so` has to be a real mailbox, and
   the X and GitHub links in the footer still point nowhere.
-- **The footer pages.** About thirty links in the footer have no page behind
-  them yet. Either write them or cut them before launch.
-- **Monthly and yearly keys** need a renewal story. Lifetime is the only plan
-  that is honest with the current code.
+- **The footer pages.** About thirty links have no page behind them. Write them
+  or cut them before launch.
+- **Monthly and yearly keys never expire on their own.** Lifetime is the only
+  plan the current code tells the truth about, so sell that one first.

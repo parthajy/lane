@@ -30,15 +30,27 @@ Seven weeks free with everything on and no card, then $9 a month, $90 a year, or
 
 The trial is seven weeks (`licence::TRIAL_DAYS = 49`), started the first time Lane runs and kept in the Keychain under `so.lane.app.trial`, so deleting the app and its data does not hand out another seven weeks. A licence is a signed note, not an account: `lane1|<email>|<plan>|<issued ms>::<signature>`, verified offline in `licence.rs` against the public half of the updater key (`src/licence_pubkey.txt`). The signature travels as base64 of the whole minisign signature file, so a key is one pasteable line, and `PublicKey::from_base64` is what parses the key (`decode` takes bytes and silently fails).
 
-Issue one with `scripts/issue-licence.sh <email> <monthly|yearly|lifetime>`; it signs with `~/.tauri/lane.key`, whose password is empty. `cargo test --lib licence` checks that an issued key verifies and an edited one does not, and `-- --ignored` also runs the Keychain round trip.
+Issue one with `node scripts/licence.mjs sign <email> <monthly|yearly|lifetime>`, signed with `~/.tauri/lane-licence.json`. Node has Ed25519 and BLAKE2b built in, so the signer needs no dependencies. Two keys are trusted by the app: the licence key and the key that signs updates. Every minted key carries a random nonce, because a batch minted inside one millisecond would otherwise sign the same payload and hand several buyers the same key. `cargo test --lib licence` checks that an issued key verifies and an edited one does not, and `-- --ignored` also runs the Keychain round trip.
 
 When the trial runs out, `AppState.blocked` stands the capture and engine loops down, the notch says so, and `LicenceWall` covers the window. Nothing is deleted, and pasting a key brings everything back.
 
 Feedback (`components/feedback.tsx`, from Help & support) writes the note and hands it to the mail app or the clipboard. Lane itself sends nothing, which is why there is no in-app "submit".
 
-## The launch server (`server/`)
+## The launch stack
 
-One small FastAPI service, SQLite behind it, that the app never touches: the waitlist and its first-200 lifetime seats, feedback from the site, download counts, recorded sales, and an admin page at `/admin?token=…`. See `server/README.md` to put it on a box, and `LAUNCH.md` for the order of the whole release.
+Four things outside the Mac, none of which the app ever calls: **Supabase**
+holds the waitlist, feedback, download counts, sales and the pool of licence
+keys (`supabase/schema.sql`, locked by row level security so the site can only
+call three functions); **Netlify** serves `site/` and four small functions
+(`netlify/functions/`) for downloads, purchases, the key claim and the admin
+page; **Dodo** takes the payment; **GitHub** (`parthajy/lane`, private) holds
+the code.
+
+Keys are minted here and claimed there. `node scripts/licence.mjs mint
+lifetime 250` writes a CSV to import into Supabase, and the claim function
+hands one out per payment, so no signing secret is ever on a server. A payment
+is verified against Dodo from the function before any key is given. `LAUNCH.md`
+is the order of the whole release.
 
 ## Categories and the share card
 

@@ -822,7 +822,11 @@ pub fn run() {
             // A small tab below the notch; it grows into a card on hover. The
             // window is created visible, so switching the notch off has to be
             // applied here too, or it would come back on every launch.
-            notch_visible(app.handle(), lock(&state.settings).notch_enabled);
+            // `notch_on` was read above, into a variable on purpose: passing
+            // the lock guard straight into this call would hold the settings
+            // lock for the whole call, and notch_visible takes it again a few
+            // frames down. Same thread, same mutex, and Lane hangs on launch.
+            notch_visible(app.handle(), notch_on);
             watch_notch_mouse(app.handle().clone());
             if lock(&state.settings).mail_enabled {
                 engine::apply_mail_setting(&state);
