@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://lane.so/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://lane.so/features</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/features/ask</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/features/three-things</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/features/meetings</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/features/recall</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/features/dictation</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/features/notch</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/features/files</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/for/founders</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/for/consultants</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/for/researchers</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/for/engineers</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/for/sales</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/for/lawyers</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/for/students</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/compare</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/compare/rewind</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/compare/limitless</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/compare/granola</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/compare/otter</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/compare/notion</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/compare/obsidian</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/compare/apple-notes</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/rabbit</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://lane.so/features/commitments</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/pricing</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/privacy-explained</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/security</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/changelog</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/roadmap</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/blog</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/terms</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://lane.so/privacy</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+</urlset>

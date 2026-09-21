@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+html,body{margin:0;width:1200px;height:630px;background:#fff;overflow:hidden;font-family:Inter,sans-serif}
+canvas{position:absolute;inset:0}
+.scrim{position:absolute;inset:0;background:radial-gradient(46% 44% at 50% 46%,rgba(255,255,255,.95),rgba(255,255,255,.8) 46%,rgba(255,255,255,0) 78%),linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,0) 30%,rgba(255,255,255,0) 62%,#fff)}
+.in{position:absolute;inset:0;padding:70px;display:flex;flex-direction:column;justify-content:space-between}
+.top{display:flex;align-items:center;gap:12px;font:600 30px "Inter Tight";letter-spacing:-.03em;color:#101014}
+.top img{width:42px}
+h1{margin:0;font:500 70px/1.04 "Inter Tight",sans-serif;color:#101014;letter-spacing:-.037em;max-width:18ch}
+p{margin:16px 0 0;font:400 23px/1.45 Inter,sans-serif;color:#5b5b66;max-width:58ch}
+.tag{font:500 13px "JetBrains Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:#5a51e5;margin-bottom:18px}
+</style></head><body>
+<canvas id="field" width="1200" height="630"></canvas><div class="scrim"></div>
+<div class="in">
+  <div class="top"><img src="logo.png" alt=""> Lane</div>
+  <div>
+    <div class="tag">For Mac · runs on your machine</div>
+    <h1>Your AI second brain, on your Mac</h1>
+    <p>Remembers every page, call and promise from your day. Rabbit, our own model, runs it all on your machine.</p>
+  </div>
+</div>
+<script src="field.js"></script></body></html>

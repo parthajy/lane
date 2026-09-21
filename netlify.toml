@@ -1,0 +1,32 @@
+# lane.so — a folder of static files, plus four small functions.
+# The Mac app talks to none of this.
+
+[build]
+  publish = "site"
+  command = "echo 'the site is static'"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/download/mac"
+  to = "/.netlify/functions/download"
+  status = 200
+
+[[redirects]]
+  from = "/admin"
+  to = "/.netlify/functions/admin"
+  status = 200
+
+[[redirects]]
+  from = "/buy/:plan"
+  to = "/.netlify/functions/buy"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

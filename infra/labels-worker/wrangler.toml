@@ -1,0 +1,16 @@
+# Lane label intake: receives opted-in training labels from the app and
+# stores them as JSONL in R2. Deploy: `npx wrangler deploy` (needs a
+# Cloudflare account). Tester codes live in the TESTERS KV namespace
+# (key = code, value = tester name).
+name = "lane-labels"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+routes = [{ pattern = "labels.lane.so", custom_domain = true }]
+
+[[r2_buckets]]
+binding = "LABELS"
+bucket_name = "lane-labels"
+
+[[kv_namespaces]]
+binding = "TESTERS"
+id = "REPLACE_WITH_KV_ID"

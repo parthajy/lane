@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>so.lane.app.helper</string>
+    <key>CFBundleName</key>
+    <string>Lane</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Lane reads your upcoming events so it can prepare you for meetings from your own memories. Nothing is sent anywhere.</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Lane reads your upcoming events so it can prepare you for meetings from your own memories. Nothing is sent anywhere.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>Lane reads names and nicknames from your Contacts so it can recognise the people in your memories. Nothing is sent anywhere.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Lane records your side of a meeting only while you press Record. Audio stays on this Mac.</string>
+    <key>NSAudioCaptureUsageDescription</key>
+    <string>Lane records the other side of a call only while you press Record. Audio stays on this Mac.</string>
+</dict>
+</plist>

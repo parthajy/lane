@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Thank you · Lane</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .thanks { min-height: 100vh; display: grid; place-items: center; padding: 32px 20px; }
+  .thanks-card {
+    width: min(620px, 100%); background: var(--paper); border-radius: 24px;
+    padding: clamp(26px, 5vw, 44px); box-shadow: var(--sh-3);
+  }
+  .thanks h1 { font-size: clamp(26px, 4vw, 38px); letter-spacing: -.02em; margin: 14px 0 10px; }
+  .thanks p { color: var(--body); margin: 0 0 14px; }
+  .keybox {
+    margin: 18px 0 10px; padding: 14px 16px; border-radius: 14px;
+    background: var(--sink); box-shadow: inset 0 0 0 1px var(--line);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+    line-height: 1.5; word-break: break-all; max-height: 190px; overflow: auto;
+  }
+  .steps { margin: 18px 0 0; padding-left: 20px; color: var(--body); font-size: 14.5px; }
+  .steps li { margin-bottom: 6px; }
+  .muted { color: var(--faint); font-size: 13px; }
+  .bad { color: #b03f28; }
+</style>
+</head>
+<body>
+<main class="thanks">
+  <div class="thanks-card">
+    <a class="brand" href="/"><img src="/logo.png" alt="" width="26"> Lane</a>
+    <h1 id="head">One moment…</h1>
+    <p id="say">Looking up your payment.</p>
+    <div class="keybox" id="keybox" hidden></div>
+    <div class="actions" id="actions" hidden>
+      <button class="btn btn-primary" id="copy" type="button">Copy the key</button>
+      <a class="btn btn-ghost" href="/download/mac?source=thanks">Download Lane</a>
+    </div>
+    <ol class="steps" id="steps" hidden>
+      <li>Open Lane, then Settings, then Your licence.</li>
+      <li>Paste the key and press Unlock.</li>
+      <li>That is all. The key is checked on your Mac, so nothing is sent anywhere.</li>
+    </ol>
+    <p class="muted" id="foot">Keep this key. We can always send it again: write to hello@lane.so from the address you paid with.</p>
+  </div>
+</main>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var id = q.get('payment_id') || q.get('subscription_id') || q.get('paymentId') || '';
+  var sub = q.has('subscription_id');
+  var head = document.getElementById('head');
+  var say = document.getElementById('say');
+  var box = document.getElementById('keybox');
+  var actions = document.getElementById('actions');
+  var steps = document.getElementById('steps');
+
+  function fail(text) {
+    head.textContent = 'Thank you';
+    say.className = 'bad';
+    say.textContent = text;
+  }
+
+  if (!id) {
+    fail('We could not see which payment this was. Write to hello@lane.so and we will send your key by hand.');
+    return;
+  }
+
+  fetch('/.netlify/functions/claim?' + (sub ? 'subscription_id=' : 'payment_id=') + encodeURIComponent(id))
+    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+    .then(function (res) {
+      if (!res.ok || !res.d.ok) { fail(res.d.error || 'Something went wrong. Write to hello@lane.so and we will sort it out.'); return; }
+      head.textContent = 'Thank you. Here is your key.';
+      say.textContent = res.d.plan === 'lifetime'
+        ? 'Lane is yours for life, every update included.'
+        : 'Your licence is active.';
+      box.textContent = res.d.key;
+      box.hidden = false;
+      actions.hidden = false;
+      steps.hidden = false;
+      document.getElementById('copy').addEventListener('click', function () {
+        navigator.clipboard.writeText(res.d.key).then(function () {
+          document.getElementById('copy').textContent = 'Copied';
+        });
+      });
+    })
+    .catch(function () {
+      fail('We could not reach the licence desk. Write to hello@lane.so and we will send your key within the hour.');
+    });
+})();
+</script>
+</body>
+</html>

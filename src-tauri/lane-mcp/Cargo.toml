@@ -1,0 +1,10 @@
+[package]
+name = "lane-mcp"
+version = "0.1.0"
+edition = "2021"
+description = "Lane as an MCP server for other local AI tools (read-only)"
+
+[dependencies]
+rat_mac_lib = { path = "..", package = "rat-mac" }
+
+[workspace]

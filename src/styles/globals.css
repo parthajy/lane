@@ -1,0 +1,755 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Fonts. The custom properties below were never defined in the desktop
+     app, which made every font-family declaration invalid and left the
+     whole window in the browser's default serif. Body is the system sans,
+     headings the system serif, code the system mono. */
+  :root {
+    --font-inter: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+    --font-roboto-serif: "Iowan Old Style", "New York", "Apple Garamond", Georgia, serif;
+    --font-display: "Iowan Old Style", "New York", Georgia, serif;
+    --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
+  }
+  /* Reattend Enterprise design tokens.
+     Slate palette with a single indigo accent - MS Fluent / Notion / Linear
+     aesthetic. Higher density, flatter, crisper corners (4px). */
+  :root {
+    /* Surfaces. The app floats white panels on a soft, faintly lilac ground,
+       the way the references do: the window itself is never pure white. */
+    --app: 240 14% 96%;
+    --background: 0 0% 100%;
+    --foreground: 240 16% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 16% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 16% 9%;
+
+    /* One indigo accent, matching lane.so */
+    --primary: 244 74% 61%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Quiet, slightly warm greys */
+    --secondary: 240 16% 96%;
+    --secondary-foreground: 240 12% 24%;
+    --muted: 240 16% 96%;
+    --muted-foreground: 240 6% 48%;
+    --accent: 244 60% 96%;
+    --accent-foreground: 244 60% 34%;
+
+    --destructive: 2 74% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 12% 91%;
+    --input: 240 12% 91%;
+    --ring: 244 74% 61%;
+
+    /* Soft corners everywhere; panels go rounder still */
+    --radius: 0.75rem;
+
+    /* The sidebar is a floating panel, not a rail */
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 240 16% 9%;
+    --sidebar-border: 240 12% 91%;
+    --sidebar-accent: 240 16% 96%;
+    --sidebar-accent-foreground: 240 16% 9%;
+
+    /* Semantic dots used by status pills */
+    --ok: 152 58% 42%;
+    --warn: 34 92% 48%;
+  }
+
+  /* Dark mode - slate-950 base. This is the enterprise default. */
+  .dark {
+    --app: 240 14% 6%;
+    --background: 240 16% 8%;
+    --foreground: 240 12% 95%;
+    --card: 240 14% 10%;
+    --card-foreground: 240 12% 95%;
+    --popover: 240 14% 11%;
+    --popover-foreground: 240 12% 95%;
+
+    --primary: 246 84% 72%;
+    --primary-foreground: 240 30% 10%;
+
+    --secondary: 240 12% 15%;
+    --secondary-foreground: 240 12% 92%;
+    --muted: 240 12% 15%;
+    --muted-foreground: 240 8% 62%;
+    --accent: 245 40% 20%;
+    --accent-foreground: 246 84% 84%;
+
+    --destructive: 2 74% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 10% 20%;
+    --input: 240 10% 20%;
+    --ring: 246 84% 72%;
+
+    --sidebar: 240 14% 10%;
+    --sidebar-foreground: 240 12% 95%;
+    --sidebar-border: 240 10% 20%;
+    --sidebar-accent: 240 12% 16%;
+    --sidebar-accent-foreground: 240 12% 95%;
+
+    --ok: 152 50% 52%;
+    --warn: 34 90% 58%;
+  }
+
+
+  /* Team workspace theme - monochrome, professional, zero color */
+  .team-theme {
+    --primary: 0 0% 15%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 0 0% 95%;
+    --accent-foreground: 0 0% 15%;
+    --ring: 0 0% 15%;
+    --sidebar: 0 0% 97%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-accent: 0 0% 93%;
+    --sidebar-accent-foreground: 0 0% 15%;
+  }
+  .team-theme.dark, .dark .team-theme {
+    --primary: 0 0% 90%;
+    --primary-foreground: 0 0% 5%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 90%;
+    --ring: 0 0% 90%;
+    --sidebar: 0 0% 6%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 90%;
+  }
+}
+
+/* Team theme: desaturate decorative elements only.
+   Buttons, text, and interactive elements keep full contrast. */
+.team-theme .bg-gradient-to-br,
+.team-theme .bg-gradient-to-r,
+.team-theme [class*="from-violet"],
+.team-theme [class*="from-amber"],
+.team-theme [class*="from-emerald"],
+.team-theme [class*="from-indigo"],
+.team-theme [class*="bg-violet-"],
+.team-theme [class*="bg-purple-"],
+.team-theme [class*="bg-amber-"],
+.team-theme [class*="bg-emerald-"],
+.team-theme [class*="bg-blue-"],
+.team-theme [class*="bg-indigo-"],
+.team-theme [class*="text-violet-"],
+.team-theme [class*="text-purple-"],
+.team-theme [class*="text-amber-"],
+.team-theme [class*="text-emerald-"],
+.team-theme [class*="text-blue-"],
+.team-theme [class*="border-violet-"],
+.team-theme [class*="border-amber-"],
+.team-theme [class*="border-emerald-"] {
+  filter: saturate(0);
+}
+/* Keep buttons and interactive elements visible with strong contrast */
+.team-theme button,
+.team-theme a,
+.team-theme [role="button"] {
+  filter: none !important;
+}
+/* Team light mode: primary buttons are black */
+.team-theme .bg-primary {
+  background-color: hsl(0 0% 12%) !important;
+  color: white !important;
+}
+.team-theme .text-primary {
+  color: hsl(0 0% 12%) !important;
+}
+/* Team dark mode: primary buttons are white */
+.dark .team-theme .bg-primary,
+.team-theme.dark .bg-primary {
+  background-color: hsl(0 0% 92%) !important;
+  color: black !important;
+}
+.dark .team-theme .text-primary,
+.team-theme.dark .text-primary {
+  color: hsl(0 0% 92%) !important;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html.overlay, html.overlay body {
+    background: transparent !important;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* Enterprise density: 13.5px base, tighter leading */
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  /* Headings use the display serif inside admin/cockpit pages.
+     Scoped via .enterprise-shell wrapper so marketing pages keep their type.
+     Lock to weight 400 - Instrument Serif only ships a single weight, so
+     `font-bold` would synth-bold and look gummy. */
+  .enterprise-shell h1,
+  .enterprise-shell .font-display,
+  .enterprise-shell .serif {
+    font-family: var(--font-roboto-serif), 'Iowan Old Style', 'Apple Garamond', Georgia, serif;
+    letter-spacing: -0.015em;
+    font-weight: 400 !important;
+  }
+  /* Section headings (h2) inside the shell pick up the serif by default
+     too - Notion / Bloomberg / editorial vibe. Pages that want a sans
+     section title can opt out with class="font-sans". */
+  .enterprise-shell h2 {
+    font-family: var(--font-roboto-serif), 'Iowan Old Style', Georgia, serif;
+    letter-spacing: -0.01em;
+    font-weight: 400;
+  }
+  /* Restore standard sizes for input/button so forms don't shrink */
+  input, select, textarea, button {
+    font-size: inherit;
+  }
+  /* Mono - JetBrains Mono on every kbd / code / pre inside the shell. */
+  .enterprise-shell kbd,
+  .enterprise-shell code,
+  .enterprise-shell pre,
+  .enterprise-shell .mono {
+    font-family: var(--font-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────
+ * Enterprise palette - design system tokens in OKLCH-equivalent HSL.
+ *
+ * shadcn variables are HSL-component triplets consumed via
+ * `hsl(var(--background))`. We override them inside `.enterprise-shell`
+ * so every untouched page (admin, agents, integrations, settings, etc.)
+ * automatically picks up the warm-cream + indigo-violet palette without
+ * touching its JSX.
+ *
+ * Conversions are HSL approximations of:
+ *   --bg     oklch(0.985 0.005 85)  ≈ 48 25% 98%   warm cream canvas
+ *   --panel  oklch(1 0 0)           = 0 0% 100%    pure white card
+ *   --rail   oklch(0.97 0.005 85)   ≈ 48 20% 96%   subtler than bg
+ *   --line   oklch(0.92 0.005 270)  ≈ 258 8% 91%   default border
+ *   --ink    oklch(0.18 0.01 270)   ≈ 258 12% 13%  primary text
+ *   --ink-3  oklch(0.52 0.01 270)   ≈ 258 6% 50%   muted label
+ *   --accent oklch(0.52 0.18 275)   ≈ 258 52% 53%  indigo-violet
+ *   --green  oklch(0.62 0.13 155)   ≈ 155 45% 45%
+ *   --rose   oklch(0.62 0.16 25)    ≈ 15 65% 55%
+ * ──────────────────────────────────────────────────────────────────── */
+/* The shell no longer carries its own palette: the tokens on :root are the
+   single source of truth for both themes. */
+
+
+
+
+.enterprise-shell ::selection {
+  @apply bg-primary/25 text-foreground;
+}
+
+/* Kill the Personal-inherited gradient "hero" buttons. Enterprise uses flat. */
+.enterprise-shell [class*="bg-gradient-to-r"][class*="from-[#4F46E5]"],
+.enterprise-shell [class*="bg-gradient-to-r"][class*="from-indigo-"],
+.enterprise-shell [class*="bg-gradient-to-br"][class*="from-[#4F46E5]"] {
+  background: hsl(var(--primary)) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/30;
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Selection */
+::selection {
+  @apply bg-primary/20;
+}
+
+/* Focus ring */
+*:focus-visible {
+  @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+}
+
+/* Smooth transitions */
+.transition-theme {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Graph / Board styles */
+.react-flow__node {
+  cursor: grab;
+}
+.react-flow__node:active {
+  cursor: grabbing;
+}
+
+/* Toast animations */
+[data-sonner-toaster] {
+  font-family: inherit !important;
+}
+
+/* Landing page animations */
+@keyframes landing-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes landing-float-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+.landing-float { animation: landing-float 5s ease-in-out infinite; }
+.landing-float-delayed { animation: landing-float-delayed 4s ease-in-out infinite 1s; }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .landing-float,
+  .landing-float-delayed {
+    animation: none;
+  }
+}
+
+/* Integrations marquee */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee { animation: none; }
+}
+
+/* Reattend uses one visual voice across marketing and product. */
+html,
+body,
+body * {
+  font-family: var(--font-inter), Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body *,
+body *::before,
+body *::after {
+  font-style: normal !important;
+}
+
+
+/* ── Notch strip ────────────────────────────────────────────────────── */
+html.notch, html.notch body, html.notch #root { background: transparent !important; overflow: hidden; margin: 0; height: 100vh; width: 100vw; }
+.notch-root {
+  /* The window, which is already the card's size while the card unfurls.
+     Nothing is painted here: the surface inside does the drawing, so the
+     window stays invisible until there is something to see. */
+  position: relative;
+  width: 100vw; height: 100vh;
+  background: transparent;
+  overflow: hidden;
+}
+/* The surface: the tab when collapsed, the glass card when open. Rounded
+   corners on the collapsed tab would show the window's own backing on a
+   dark desktop, so it stays a plain rectangle. */
+.notch-surface {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 180px; height: 14px;
+  border-radius: 0;
+  background: #0b0b0d; color: #f2f4ff;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+/* Open, it is glass: a dark blue-violet wash, blurred desktop behind it, a
+   hairline of light along the top edge. */
+.notch-surface.is-open {
+  width: 100%; height: 100%;
+  border-radius: 0 0 26px 26px;
+  background:
+    radial-gradient(120% 90% at 12% -10%, rgba(120, 110, 255, .30), transparent 62%),
+    radial-gradient(90% 80% at 96% 8%, rgba(70, 190, 210, .20), transparent 60%),
+    radial-gradient(80% 90% at 70% 110%, rgba(190, 120, 255, .18), transparent 64%),
+    linear-gradient(160deg, rgba(24, 26, 60, .82), rgba(14, 16, 38, .88));
+  backdrop-filter: blur(34px) saturate(180%);
+  -webkit-backdrop-filter: blur(34px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .16),
+    inset 0 0 0 1px rgba(255, 255, 255, .07),
+    0 26px 70px rgba(0, 0, 0, .55);
+  animation: notch-unfurl .38s cubic-bezier(.22, 1, .3, 1) both;
+}
+
+/* It grows out of the tab rather than appearing: the card is clipped to the
+   tab's footprint for the first frame and opens from there. */
+@keyframes notch-unfurl {
+  from { clip-path: inset(0 43% 97% 43% round 0 0 7px 7px); }
+  to   { clip-path: inset(0 0 0 0 round 0 0 26px 26px); }
+}
+@keyframes notch-unfurl-up {
+  from { clip-path: inset(97% 43% 0 43% round 7px 7px 0 0); }
+  to   { clip-path: inset(0 0 0 0 round 22px 22px 0 0); }
+}
+@keyframes notch-unfurl-right {
+  from { clip-path: inset(43% 97% 43% 0 round 0 7px 7px 0); }
+  to   { clip-path: inset(0 0 0 0 round 0 22px 22px 0); }
+}
+@keyframes notch-unfurl-left {
+  from { clip-path: inset(43% 0 43% 97% round 7px 0 0 7px); }
+  to   { clip-path: inset(0 0 0 0 round 22px 0 0 22px); }
+}
+/* Everything on the card follows the edge in, a beat apart. */
+@keyframes notch-rise {
+  from { opacity: 0; transform: translateY(-9px); }
+  to   { opacity: 1; transform: none; }
+}
+.notch-surface.is-open .notch-body > * { animation: notch-rise .34s cubic-bezier(.22, 1, .3, 1) both; }
+.notch-surface.is-open .nc-head { animation-delay: .05s; }
+.notch-surface.is-open .nc-ask { animation-delay: .09s; }
+.notch-surface.is-open .nc-answer { animation-delay: .09s; }
+.notch-surface.is-open .nc-acts { animation-delay: .13s; }
+.notch-surface.is-open .nc-grid { animation-delay: .17s; }
+.notch-surface.is-open .nc-foot { animation-delay: .21s; }
+@media (prefers-reduced-motion: reduce) {
+  .notch-surface.is-open, .notch-surface.is-open .notch-body > * { animation: none; }
+}
+
+/* The tab: a 14pt sliver with one coloured dot. */
+.notch-tab { height: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; }
+.notch-surface.is-open .notch-tab { height: 22px; justify-content: flex-start; padding-left: 14px; padding-right: 10px; cursor: pointer; gap: 7px; }
+.notch-x { margin-left: auto; width: 18px; height: 18px; border-radius: 999px; color: rgba(255,255,255,.55); font-size: 14px; line-height: 18px; text-align: center; }
+.notch-x:hover { background: rgba(255,255,255,.15); color: #fff; }
+.notch-dot { width: 6px; height: 6px; border-radius: 999px; flex-shrink: 0; }
+.notch-surface.is-open .notch-tab .notch-dot { display: none; }
+.notch-body { padding: 2px 14px 12px; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+.notch-tile { border-radius: 12px; padding: 9px 10px; min-width: 0; overflow: hidden; background: rgba(255,255,255,.07); }
+.notch-tile.tint-green { background: rgba(126, 190, 150, .18); }
+.notch-tile.tint-violet { background: rgba(160, 150, 210, .18); }
+.notch-tile.tint-amber { background: rgba(214, 190, 120, .16); }
+.notch-btn.is-rec { background: #ef4444; color: #fff; }
+/* Positions: the rounded corners face away from the screen edge, and the
+   card unfurls from whichever edge the tab is pinned to. */
+.notch-root.pos-top-left .notch-surface { left: 0; transform: none; }
+.notch-root.pos-top-right .notch-surface { left: auto; right: 0; transform: none; }
+.notch-root.pos-top-left .notch-surface.is-open,
+.notch-root.pos-top-right .notch-surface.is-open { border-radius: 0 0 22px 22px; }
+.notch-root.pos-bottom-center .notch-surface { top: auto; bottom: 0; flex-direction: column-reverse; }
+.notch-root.pos-bottom-center .notch-surface.is-open { border-radius: 22px 22px 0 0; animation-name: notch-unfurl-up; }
+.notch-root.pos-left .notch-surface { top: 50%; left: 0; transform: translateY(-50%); width: 14px; height: 180px; }
+.notch-root.pos-left .notch-surface.is-open { border-radius: 0 22px 22px 0; animation-name: notch-unfurl-right; }
+.notch-root.pos-right .notch-surface { top: 50%; left: auto; right: 0; transform: translateY(-50%); width: 14px; height: 180px; }
+.notch-root.pos-right .notch-surface.is-open { border-radius: 22px 0 0 22px; animation-name: notch-unfurl-left; }
+.notch-root.pos-left .notch-surface.is-open, .notch-root.pos-right .notch-surface.is-open { top: 0; transform: none; }
+.notch-tab.is-vertical { height: 100%; width: 14px; flex-direction: column; }
+.notch-ask { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.08); border-radius: 999px; padding: 4px 6px 4px 10px; }
+.notch-ask input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: #fff; font-size: 12.5px; }
+.notch-ask input::placeholder { color: rgba(255,255,255,.4); }
+.notch-send { width: 22px; height: 22px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,.15); color: #fff; }
+.notch-send:disabled { opacity: .35; }
+.notch-h { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: rgba(255,255,255,.5); display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.notch-check { width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(255,255,255,.3); display: inline-flex; align-items: center; justify-content: center; color: transparent; flex-shrink: 0; margin-top: 1px; }
+.notch-check:hover { color: #fff; border-color: #fff; }
+.notch-check.is-on { color: #0b0b0d; background: #34d399; border-color: #34d399; }
+.notch-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; }
+.notch-btn:hover { background: rgba(255,255,255,.2); }
+.notch-btn:disabled { opacity: .4; }
+.notch-btn.is-live { background: #38bdf8; color: #0b0b0d; }
+
+
+/* ── Desktop polish ─────────────────────────────────────────────────── */
+.enterprise-shell { font-size: 14px; letter-spacing: -0.005em; }
+.enterprise-shell h1 { font-size: 1.5rem; }
+.enterprise-shell .select-text { -webkit-user-select: text; user-select: text; }
+.enterprise-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.enterprise-shell ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+.enterprise-shell ::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- the shell the app floats in ---------- */
+@layer components {
+  .app-ground { background: hsl(var(--app)); }
+  /* One panel treatment, used by the sidebar and the main surface. */
+  .panel {
+    background: hsl(var(--card));
+    border-radius: 18px;
+    box-shadow: 0 1px 2px hsl(240 20% 10% / .04), 0 0 0 1px hsl(240 20% 10% / .05);
+  }
+  .dark .panel { box-shadow: 0 1px 2px hsl(0 0% 0% / .3), 0 0 0 1px hsl(0 0% 100% / .06); }
+  /* Sidebar navigation: a quiet list, with the page you are on lifted onto
+     its own card the way the reference does it. */
+  .nav-item {
+    display: flex; align-items: center; gap: .7rem; width: 100%;
+    padding: .45rem .75rem; border-radius: 11px;
+    font-size: 14px; color: hsl(var(--muted-foreground));
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  .nav-item:hover { background: hsl(var(--secondary)); color: hsl(var(--foreground)); }
+  .nav-item-on, .nav-item-on:hover {
+    background: hsl(var(--accent) / .55);
+    position: relative;
+    color: hsl(var(--foreground)); font-weight: 500;
+    box-shadow: inset 3px 0 0 hsl(var(--primary));
+  }
+  .dark .nav-item-on, .dark .nav-item-on:hover {
+    background: hsl(var(--accent) / .5);
+    box-shadow: inset 3px 0 0 hsl(var(--primary));
+  }
+  /* Ask is the thing you came to do, so it is the one gradient in the rail. */
+  .nav-ask {
+    display: flex; align-items: center; gap: .7rem; width: 100%;
+    padding: .7rem .875rem; margin: .25rem 0; border-radius: 13px;
+    font-size: 14px; font-weight: 500; color: #fff;
+    background: linear-gradient(135deg, #6a7bff 0%, #5a51e5 55%, #7a4fe0 100%);
+    box-shadow: 0 6px 18px hsl(244 74% 55% / .32), inset 0 1px 0 hsl(0 0% 100% / .22);
+    transition: filter .15s ease, box-shadow .15s ease, transform .15s ease;
+  }
+  .nav-ask:hover { filter: brightness(1.06); box-shadow: 0 8px 22px hsl(244 74% 55% / .4), inset 0 1px 0 hsl(0 0% 100% / .28); }
+  .nav-ask.is-on { box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(244 74% 61% / .45), 0 8px 22px hsl(244 74% 55% / .4); }
+
+  .pill-dot { width: .4rem; height: .4rem; border-radius: 9999px; display: inline-block; }
+}
+
+/* Tinted stat cards, light and dark. */
+.tone-blue { background: #eef1ff; }
+.tone-violet { background: #f3effe; }
+.tone-amber { background: #fff6e8; }
+.dark .tone-blue { background: hsl(240 40% 16%); }
+.dark .tone-violet { background: hsl(258 38% 17%); }
+.dark .tone-amber { background: hsl(34 34% 15%); }
+
+
+/* ── The notch card, laid out like the panel it is ─────────────────── */
+.notch-body { padding: 10px 16px 12px; gap: 10px; }
+.nc-head { display: flex; align-items: center; gap: 10px; }
+.nc-mark {
+  width: 22px; height: 22px; border-radius: 8px; flex: none;
+  display: grid; place-items: center;
+  background: linear-gradient(140deg, #8ea2ff, #c39cff 55%, #6fe0e0);
+  box-shadow: 0 0 14px rgba(140, 160, 255, .45), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.nc-mark svg { width: 15px; height: 15px; fill: #14163a; }
+.nc-mark svg .eye { fill: rgba(255,255,255,.9); }
+.nc-mark.sm { width: 15px; height: 15px; border-radius: 6px; }
+.nc-mark.sm svg { width: 11px; height: 11px; }
+.nc-mark.tab { width: 15px; height: 15px; border-radius: 5px; }
+.nc-mark.tab svg { width: 10px; height: 10px; }
+.nc-name { font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+.nc-tag { font-size: 11.5px; color: rgba(235, 238, 255, .55); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nc-count { margin-left: auto; font-size: 11px; color: rgba(235, 238, 255, .45); font-variant-numeric: tabular-nums; }
+.nc-icon { width: 26px; height: 26px; border-radius: 999px; display: grid; place-items: center; color: rgba(235,238,255,.65); background: rgba(255,255,255,.08); }
+.nc-icon:hover { background: rgba(255,255,255,.16); color: #fff; }
+.nc-open {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 26px; padding: 0 11px; border-radius: 999px;
+  font-size: 12px; font-weight: 500; color: #fff;
+  background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
+}
+.nc-open:hover { background: rgba(255,255,255,.2); }
+
+.nc-ask {
+  display: flex; align-items: center; gap: 10px;
+  height: 46px; padding: 0 8px 0 14px; border-radius: 15px;
+  background: rgba(255,255,255,.10);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+}
+.nc-ask input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: #f2f4ff; font-size: 14px; }
+.nc-ask input::placeholder { color: rgba(235,238,255,.45); }
+.nc-spark { color: #b9c4ff; }
+.nc-kbd {
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 10.5px; letter-spacing: .06em; color: rgba(235,238,255,.6);
+  padding: 3px 7px; border-radius: 7px; background: rgba(255,255,255,.1);
+}
+.nc-mic {
+  width: 32px; height: 32px; border-radius: 999px; display: grid; place-items: center; flex: none;
+  color: #fff; background: linear-gradient(160deg, #7b8cff, #6f5bf0);
+  box-shadow: 0 6px 18px rgba(90, 80, 240, .5);
+}
+.nc-mic:disabled { opacity: .45; box-shadow: none; }
+
+.nc-answer {
+  flex: 1; min-height: 0; overflow-y: auto;
+  font-size: 13px; line-height: 1.55; color: #eef0ff;
+  padding: 12px 14px; border-radius: 15px;
+  background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+  white-space: pre-wrap;
+}
+
+.nc-acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.nc-act {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+  padding: 9px 11px; border-radius: 14px; text-align: left;
+  background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+}
+.nc-act:hover { background: rgba(255,255,255,.14); }
+.nc-act:disabled { opacity: .45; }
+.nc-act .ic { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; flex: none; background: rgba(255,255,255,.12); color: #e9ecff; }
+.nc-act span > b { display: block; font-size: 12.5px; font-weight: 600; }
+.nc-act span > i { display: block; font-style: normal; font-size: 10.5px; color: rgba(235,238,255,.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nc-act.is-rec .ic, .ic-rose { background: rgba(255, 105, 120, .22); color: #ffb4bd; }
+.ic-violet { background: rgba(150, 130, 255, .22); color: #cdc4ff; }
+.ic-blue { background: rgba(110, 170, 255, .22); color: #b8d6ff; }
+.ic-amber { background: rgba(255, 190, 90, .2); color: #ffd79b; }
+.ic-green { background: rgba(120, 230, 180, .2); color: #a9f0d0; }
+.nc-act.is-live .ic { background: rgba(150, 130, 255, .4); color: #fff; }
+
+.nc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex: 1; min-height: 0; }
+.nc-panel {
+  display: flex; flex-direction: column; gap: 5px; min-width: 0; min-height: 0;
+  padding: 10px; border-radius: 15px;
+  background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.09);
+  overflow: hidden;
+}
+.nc-panel header {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600; color: rgba(235,238,255,.9);
+  cursor: pointer; padding-bottom: 2px;
+}
+.nc-empty { font-size: 11.5px; color: rgba(235,238,255,.45); }
+.nc-row { display: flex; align-items: center; gap: 8px; padding: 6px 7px; border-radius: 11px; text-align: left; min-width: 0; }
+.nc-row:hover { background: rgba(255,255,255,.1); }
+.nc-row-ic { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; flex: none; background: rgba(255,255,255,.1); color: #d7ddff; }
+.nc-row-t { min-width: 0; flex: 1; }
+.nc-row-t b { display: block; font-size: 11.5px; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nc-row-t i { display: block; font-style: normal; font-size: 10px; color: rgba(235,238,255,.5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nc-row-w { font-size: 10px; color: rgba(235,238,255,.45); flex: none; font-variant-numeric: tabular-nums; }
+
+.nc-today { display: flex; align-items: center; gap: 10px; }
+.nc-ring {
+  position: relative; width: 74px; height: 74px; border-radius: 999px; flex: none;
+  display: grid; place-content: center; text-align: center;
+  background: conic-gradient(#8ea2ff var(--p, 0%), rgba(255,255,255,.12) 0);
+}
+.nc-ring::after { content: ''; position: absolute; inset: 9px; border-radius: 999px; background: rgba(18, 20, 44, .86); }
+.nc-ring b, .nc-ring i { position: relative; z-index: 1; }
+.nc-ring b { font-size: 13px; font-weight: 650; }
+.nc-ring i { display: block; font-style: normal; font-size: 9.5px; color: rgba(235,238,255,.55); }
+.nc-legend { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.nc-legend li { display: flex; align-items: center; gap: 6px; font-size: 10.5px; min-width: 0; }
+.nc-legend .d { width: 6px; height: 6px; border-radius: 999px; flex: none; background: #8ea2ff; }
+.nc-legend .d[data-i="1"] { background: #6fe0e0; }
+.nc-legend .d[data-i="2"] { background: #c39cff; }
+.nc-legend .d[data-i="3"] { background: rgba(235,238,255,.4); }
+.nc-legend .n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(235,238,255,.8); }
+.nc-legend .v { color: rgba(235,238,255,.5); font-variant-numeric: tabular-nums; }
+.nc-streak { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 7px 8px; border-radius: 12px; background: rgba(255,255,255,.07); text-align: left; }
+.nc-streak:hover { background: rgba(255,255,255,.13); }
+.nc-streak .ic { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; flex: none; background: rgba(120, 230, 180, .2); color: #a9f0d0; }
+.nc-streak b { display: block; font-size: 11.5px; font-weight: 600; }
+.nc-streak i { display: block; font-style: normal; font-size: 10px; color: rgba(235,238,255,.5); }
+
+.nc-quick { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 11px; font-size: 11.5px; text-align: left; }
+.nc-quick:hover { background: rgba(255,255,255,.1); }
+.nc-quick .ic { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+
+.nc-foot { display: flex; align-items: center; gap: 8px; font-size: 10.5px; color: rgba(235,238,255,.45); padding-top: 2px; }
+
+/* ── Recall overlay: glass ───────────────────────────────────────────
+   A pane of frosted glass over whatever is behind it — the desktop colour
+   comes through, a highlight runs along the top edge, and the light pools
+   faintly in two corners. Everything inside floats on it. */
+.sp-card {
+  position: relative;
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 90% at 8% -20%, hsl(250 90% 70% / .16), transparent 60%),
+    radial-gradient(90% 80% at 100% 0%, hsl(190 90% 60% / .12), transparent 62%),
+    linear-gradient(170deg, hsl(0 0% 100% / .62), hsl(0 0% 100% / .44));
+  backdrop-filter: blur(44px) saturate(200%);
+  -webkit-backdrop-filter: blur(44px) saturate(200%);
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / .75),
+    inset 0 0 0 1px hsl(0 0% 100% / .35),
+    0 0 0 1px hsl(240 20% 10% / .1),
+    0 36px 90px -24px hsl(240 40% 12% / .5);
+}
+/* A hairline of light along the very top, the way glass catches a highlight. */
+.sp-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 84px;
+  border-radius: 24px 24px 0 0;
+  background: linear-gradient(180deg, hsl(0 0% 100% / .5), transparent);
+  pointer-events: none;
+}
+.dark .sp-card {
+  background:
+    radial-gradient(120% 90% at 8% -20%, hsl(250 90% 62% / .22), transparent 60%),
+    radial-gradient(90% 80% at 100% 0%, hsl(190 80% 52% / .16), transparent 62%),
+    linear-gradient(170deg, hsl(240 24% 12% / .72), hsl(240 24% 8% / .6));
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / .14),
+    inset 0 0 0 1px hsl(0 0% 100% / .08),
+    0 0 0 1px hsl(0 0% 0% / .5),
+    0 36px 90px -24px hsl(0 0% 0% / .8);
+}
+.dark .sp-card::before { background: linear-gradient(180deg, hsl(0 0% 100% / .1), transparent); }
+
+.sp-search { position: relative; display: flex; align-items: center; gap: 14px; height: 62px; padding: 0 20px; }
+.sp-search input {
+  flex: 1; min-width: 0; background: transparent; border: 0; outline: none;
+  font-size: 21px; letter-spacing: -0.02em; color: hsl(var(--foreground));
+}
+.sp-search input::placeholder { color: hsl(var(--muted-foreground) / .75); }
+.sp-hint { display: flex; align-items: center; gap: 5px; font-size: 11px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+
+.sp-chips { display: flex; gap: 6px; padding: 0 14px 10px; overflow-x: auto; scrollbar-width: none; }
+.sp-chips::-webkit-scrollbar { display: none; }
+.sp-chip {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 4px 11px; border-radius: 999px; font-size: 12px;
+  color: hsl(var(--foreground) / .7);
+  background: hsl(0 0% 100% / .45);
+  box-shadow: inset 0 0 0 1px hsl(0 0% 100% / .5), 0 1px 2px hsl(240 20% 10% / .06);
+}
+.dark .sp-chip { background: hsl(0 0% 100% / .08); box-shadow: inset 0 0 0 1px hsl(0 0% 100% / .1); }
+.sp-chip .n { font-variant-numeric: tabular-nums; opacity: .7; }
+.sp-chip:hover { background: hsl(0 0% 100% / .7); color: hsl(var(--foreground)); }
+.dark .sp-chip:hover { background: hsl(0 0% 100% / .16); }
+.sp-chip.is-on, .dark .sp-chip.is-on { background: hsl(var(--primary) / .92); color: hsl(var(--primary-foreground)); box-shadow: inset 0 1px 0 hsl(0 0% 100% / .3), 0 4px 12px hsl(var(--primary) / .35); }
+.sp-chip.is-on .n { opacity: .85; }
+
+.sp-list { padding: 4px 8px; display: grid; gap: 1px; }
+.sp-row {
+  width: 100%; display: flex; align-items: center; gap: 12px; min-width: 0;
+  padding: 8px 12px; border-radius: 12px; text-align: left;
+}
+.sp-row:hover { background: hsl(0 0% 100% / .5); }
+.dark .sp-row:hover { background: hsl(0 0% 100% / .07); }
+.sp-row.is-sel {
+  background: hsl(0 0% 100% / .62);
+  box-shadow: inset 0 0 0 1px hsl(0 0% 100% / .6), 0 2px 10px hsl(240 20% 10% / .08);
+}
+.dark .sp-row.is-sel { background: hsl(0 0% 100% / .12); box-shadow: inset 0 0 0 1px hsl(0 0% 100% / .12); }
+.sp-ic {
+  width: 28px; height: 28px; border-radius: 8px; flex: none;
+  display: grid; place-items: center; font-size: 10px; font-weight: 600; text-transform: uppercase;
+  background: hsl(0 0% 100% / .55); color: hsl(var(--muted-foreground));
+  box-shadow: inset 0 0 0 1px hsl(0 0% 100% / .5);
+}
+.dark .sp-ic { background: hsl(0 0% 100% / .1); box-shadow: inset 0 0 0 1px hsl(0 0% 100% / .1); }
+.sp-ic-img { width: 28px; height: 28px; border-radius: 8px; }
+.sp-ic-person { border-radius: 999px; background: hsl(var(--primary) / .15); color: hsl(var(--primary)); font-size: 12px; }
+.sp-ic-task { background: hsl(34 90% 55% / .18); color: hsl(34 80% 40%); }
+.dark .sp-ic-task { color: hsl(34 90% 65%); }
+.sp-t { min-width: 0; flex: 1; }
+.sp-t b { display: block; font-size: 13.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-t i { display: block; font-style: normal; font-size: 11.5px; color: hsl(var(--muted-foreground)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-w { font-size: 11px; color: hsl(var(--muted-foreground)); flex: none; font-variant-numeric: tabular-nums; }

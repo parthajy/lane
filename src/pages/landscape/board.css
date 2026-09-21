@@ -1,0 +1,1185 @@
+/* Board - Miro-style memory canvas. Everything is scoped under .rb-root
+   (or .rb-rewind-shell) so none of it leaks into the rest of the app. */
+
+.rb-root {
+  --rb-accent: #4262ff;
+  --rb-accent-soft: #e8ecff;
+  --rb-canvas: #f6f6f3;
+  --rb-dot: #d3d3cc;
+  --rb-panel: #ffffff;
+  --rb-line: rgba(17, 20, 28, 0.08);
+  --rb-ink: #1c1f26;
+  --rb-ink-2: #4a4f5c;
+  --rb-ink-3: #80858f;
+  --rb-shadow: 0 1px 2px rgba(17, 20, 28, 0.06), 0 6px 20px -8px rgba(17, 20, 28, 0.18);
+  --rb-label-scale: 1;
+  --rb-dot-label-scale: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--rb-canvas);
+  color: var(--rb-ink);
+  font-family: inherit;
+  -webkit-font-smoothing: antialiased;
+}
+.dark .rb-root {
+  --rb-accent: #6b86ff;
+  --rb-accent-soft: rgba(107, 134, 255, 0.16);
+  --rb-canvas: #15171c;
+  --rb-dot: #2c2f37;
+  --rb-panel: #1f2229;
+  --rb-line: rgba(255, 255, 255, 0.08);
+  --rb-ink: #eceef2;
+  --rb-ink-2: #b9bdc7;
+  --rb-ink-3: #868b96;
+  --rb-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+}
+
+.rb-root .react-flow { background: transparent; }
+.rb-root .react-flow__background.rb-bg { background: var(--rb-canvas); }
+.rb-root .react-flow__background.rb-bg circle { fill: var(--rb-dot); }
+.rb-root.tool-memory .react-flow__pane { cursor: crosshair; }
+.rb-root.tool-connect .react-flow__pane,
+.rb-root.tool-connect .rb-dot { cursor: alias; }
+.rb-root .react-flow__pane.dragging { cursor: grabbing; }
+
+/* The app's older graph styles (globals.css, dashboard.css, dark-refresh.css)
+   paint every React Flow node, control and minimap. Undo them here. */
+.rb-root .react-flow__node { cursor: default; }
+.rb-root .react-flow__node-memory { cursor: pointer; }
+.rb-root .react-flow__node-memory.dragging { cursor: grabbing; }
+
+/* dark-refresh.css paints every node's first child; dots stay transparent. */
+.dark .rb-root .react-flow__node > .rb-dot { background: transparent; border-color: transparent; }
+
+.rb-panel {
+  background: var(--rb-panel);
+  border-radius: 12px;
+  box-shadow: var(--rb-shadow), 0 0 0 1px var(--rb-line);
+}
+
+/* ─── Memory dots (Obsidian-style) ─────────────────────────────────── */
+
+.rb-dot {
+  position: relative;
+  box-sizing: border-box;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: opacity 180ms ease;
+}
+.rb-dot-core {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--ink) 55%, white) 0%, var(--ink) 62%);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--ink) 16%, transparent),
+    0 3px 10px -3px color-mix(in srgb, var(--ink) 70%, transparent);
+  transition: transform 180ms cubic-bezier(.2, .9, .3, 1.3), box-shadow 180ms ease, outline-color 160ms ease;
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+}
+.dark .rb-dot-core {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--ink) 26%, transparent),
+    0 0 14px -2px color-mix(in srgb, var(--ink) 80%, transparent);
+}
+.rb-dot:hover .rb-dot-core,
+.rb-dot.is-lit .rb-dot-core {
+  transform: scale(1.28);
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--ink) 22%, transparent),
+    0 0 26px 2px color-mix(in srgb, var(--ink) 65%, transparent);
+}
+.rb-dot.is-faded { opacity: 0.14; }
+.rb-dot.is-selected .rb-dot-core { outline-color: var(--rb-accent); }
+.rb-dot.is-open .rb-dot-core { outline: 3px solid var(--rb-accent); outline-offset: 4px; }
+.rb-dot.is-match .rb-dot-core { outline: 2px solid #f59f00; outline-offset: 4px; }
+.rb-dot.is-source .rb-dot-core { outline: 2px dashed var(--rb-accent); outline-offset: 5px; animation: rb-pulse 1.2s ease-in-out infinite; }
+.rb-dot.is-fresh .rb-dot-core { animation: rb-pop 620ms cubic-bezier(.2, 1.5, .4, 1) both; }
+.rb-dot.is-fresh::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  animation: rb-ripple 1.6s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes rb-pop { from { transform: scale(0.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes rb-pulse { 50% { outline-offset: 8px; } }
+@keyframes rb-ripple { from { transform: scale(0.8); opacity: 0.8; } to { transform: scale(2.4); opacity: 0; } }
+
+.rb-dot-label {
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 7px);
+  left: 50%;
+  translate: -50% 0;
+  scale: var(--rb-dot-label-scale, 1);
+  transform-origin: top center;
+  width: max-content;
+  max-width: 140px;
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 1.25;
+  font-weight: 550;
+  color: var(--rb-ink-2);
+  pointer-events: none;
+  text-shadow: 0 0 3px var(--rb-canvas), 0 0 6px var(--rb-canvas), 0 0 10px var(--rb-canvas);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: opacity 180ms ease;
+}
+.rb-dot-label em { font-style: normal; color: var(--rb-accent); }
+.rb-dot.is-hub .rb-dot-label { font-weight: 650; color: var(--rb-ink); }
+.rb-dot.is-lit .rb-dot-label, .rb-dot:hover .rb-dot-label { color: var(--rb-ink); font-weight: 650; }
+.rb-root.labels-hubs .rb-dot:not(.is-hub):not(.is-lit):not(:hover):not(.is-open):not(.is-match):not(.is-fresh) .rb-dot-label,
+.rb-root.labels-none .rb-dot:not(.is-lit):not(:hover):not(.is-open):not(.is-match):not(.is-fresh) .rb-dot-label { opacity: 0; }
+.rb-dot.is-faded .rb-dot-label { opacity: 0; }
+
+/* Link handle: one dot on the rim, shown on hover. */
+.rb-root .rb-dot .rb-handle.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--rb-panel);
+  border: 2px solid var(--rb-accent);
+  opacity: 0;
+  transition: opacity 120ms ease, scale 120ms ease;
+  cursor: crosshair;
+  /* Above the dot (which grows on hover) and just outside its rim. */
+  z-index: 3;
+  right: -9px;
+}
+.rb-root .rb-dot:hover .rb-handle,
+.rb-root.is-connecting .rb-handle,
+.rb-root.tool-connect .rb-handle { opacity: 1; }
+.rb-root .rb-handle:hover { scale: 1.4; background: var(--rb-accent); }
+.rb-root.is-connecting .rb-dot:hover .rb-dot-core { outline: 2px solid var(--rb-accent); outline-offset: 5px; }
+
+/* ─── Blast ──────────────────────────────────────────────────────────── */
+
+/* While dots fly: titles hide, dots glow, connectors thin out. */
+.rb-root.is-flying .rb-dot-label { opacity: 0 !important; }
+.rb-root.is-flying .rb-dot-core { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 20%, transparent), 0 0 22px 3px color-mix(in srgb, var(--ink) 70%, transparent); }
+.rb-root.is-flying .react-flow__edge-path { stroke-opacity: 0.35; }
+/* Big flights move dots outside React, so connectors would lag: fade them
+   out for the flight and back in when the dots land. */
+.rb-root .react-flow__edges, .rb-root .react-flow__edgelabel-renderer { transition: opacity 320ms ease; }
+.rb-root.is-direct .react-flow__edges, .rb-root.is-direct .react-flow__edgelabel-renderer { opacity: 0; transition-duration: 120ms; }
+.rb-root.is-direct .react-flow__node { will-change: transform; }
+.rb-root.is-flying .rb-edge-anchor { opacity: 0; }
+.rb-root.is-shaking .react-flow { animation: rb-shake 480ms cubic-bezier(.36, .07, .19, .97) both; }
+@keyframes rb-shake {
+  10%, 90% { transform: translate(-1px, 1px); }
+  20%, 80% { transform: translate(3px, -2px); }
+  30%, 50%, 70% { transform: translate(-6px, 3px); }
+  40%, 60% { transform: translate(6px, -3px); }
+}
+.rb-boom { position: absolute; z-index: 9; width: 0; height: 0; pointer-events: none; }
+.rb-boom > span { position: absolute; left: 0; top: 0; border-radius: 50%; }
+.rb-boom .flash {
+  width: 520px; height: 520px; margin: -260px 0 0 -260px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, color-mix(in srgb, var(--rb-accent) 45%, transparent) 30%, transparent 68%);
+  animation: rb-flash 520ms ease-out both;
+}
+.rb-boom .ring {
+  width: 1100px; height: 1100px; margin: -550px 0 0 -550px;
+  border: 3px solid color-mix(in srgb, var(--rb-accent) 80%, transparent);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--rb-accent) 40%, transparent), inset 0 0 40px color-mix(in srgb, var(--rb-accent) 25%, transparent);
+  animation: rb-ring 1100ms cubic-bezier(.1, .7, .3, 1) both;
+}
+.rb-boom .ring.r2 { border-color: color-mix(in srgb, #f59f00 70%, transparent); animation-delay: 110ms; animation-duration: 1300ms; }
+.rb-boom .spark {
+  margin: -3px 0 0 -3px;
+  box-shadow: 0 0 10px currentColor;
+  animation: rb-spark 950ms cubic-bezier(.15, .8, .3, 1) both;
+}
+@keyframes rb-flash { from { transform: scale(0.1); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+@keyframes rb-ring { from { transform: scale(0.02); opacity: 1; } 70% { opacity: 0.5; } to { transform: scale(1); opacity: 0; } }
+@keyframes rb-spark {
+  from { transform: translate(0, 0) scale(1); opacity: 1; }
+  to { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+}
+.rb-blast-btn:not(:disabled):hover svg { animation: rb-wiggle 420ms ease-in-out; }
+.rb-blast-btn.is-active svg { animation: rb-spin 6s linear infinite; }
+@keyframes rb-wiggle { 25% { rotate: -14deg; } 75% { rotate: 14deg; } }
+@keyframes rb-spin { to { rotate: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .rb-root.is-shaking .react-flow, .rb-boom, .rb-blast-btn svg, .rb-dot.is-fresh::after { animation: none !important; }
+  .rb-boom { display: none; }
+}
+
+/* ─── Connectors ────────────────────────────────────────────────────── */
+
+.rb-edge-anchor { position: absolute; pointer-events: all; z-index: 5; }
+.rb-edge-label {
+  display: inline-block;
+  scale: var(--rb-label-scale);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--c);
+  background: var(--rb-panel);
+  border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  box-shadow: 0 1px 3px rgba(17, 20, 28, 0.12);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms ease, color 120ms ease, transform 120ms ease;
+}
+.rb-edge-label:hover { transform: scale(1.06); }
+.rb-edge-label.is-active { background: var(--c); color: #fff; border-color: var(--c); }
+.rb-edge-label.is-pending {
+  --c: var(--rb-accent);
+  border-style: dashed;
+  animation: rb-breathe 1.4s ease-in-out infinite;
+}
+@keyframes rb-breathe { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--rb-accent) 20%, transparent); } }
+
+/* ─── Chrome ────────────────────────────────────────────────────────── */
+
+.rb-brand {
+  position: absolute;
+  z-index: 10;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px 7px 7px;
+  max-width: calc(100vw - 28px);
+}
+.rb-back {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--rb-ink-2);
+  flex: none;
+}
+.rb-back:hover { background: var(--rb-accent-soft); color: var(--rb-accent); }
+.rb-brand .logo, .rb-rewind-top .logo { width: 24px; height: 25px; object-fit: contain; flex: none; }
+.rb-brand .names { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.rb-brand .app { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+.rb-brand .board { font-size: 11.5px; color: var(--rb-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+
+.rb-rail {
+  position: absolute;
+  z-index: 10;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+}
+.rb-rail .sep { height: 1px; background: var(--rb-line); margin: 5px 4px; }
+.rb-tool {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--rb-ink-2);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.rb-tool:hover:not(:disabled) { background: color-mix(in srgb, var(--rb-ink) 6%, transparent); color: var(--rb-ink); }
+.rb-tool.is-active { background: var(--rb-accent-soft); color: var(--rb-accent); }
+.rb-tool:disabled { opacity: 0.35; cursor: default; }
+.rb-tool .tip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  background: #1c1f26;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 9px;
+  border-radius: 7px;
+  transition: opacity 120ms ease, transform 120ms ease;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.rb-tool .tip em { font-style: normal; font-weight: 500; color: #a9aebb; }
+.rb-tool:hover .tip { opacity: 1; transform: translateY(-50%) translateX(0); }
+
+.rb-top-right {
+  position: absolute;
+  z-index: 10;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.rb-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 8px 0 12px;
+  width: 280px;
+}
+.rb-search .ic { color: var(--rb-ink-3); flex: none; }
+.rb-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--rb-ink);
+  font-size: 13px;
+}
+.rb-search input::placeholder { color: var(--rb-ink-3); }
+.rb-search .count { font-size: 11.5px; color: var(--rb-ink-3); font-variant-numeric: tabular-nums; }
+.rb-search button {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--rb-ink-2);
+  cursor: pointer;
+}
+.rb-search button:hover:not(:disabled) { background: color-mix(in srgb, var(--rb-ink) 7%, transparent); }
+.rb-search button:disabled { opacity: 0.35; }
+.rb-stats { height: 40px; display: flex; align-items: center; padding: 0 14px; font-size: 12.5px; color: var(--rb-ink-3); white-space: nowrap; }
+.rb-stats b { color: var(--rb-ink); font-weight: 700; margin-right: 3px; }
+.rb-trunc {
+  margin-left: 8px; padding: 2px 7px; border-radius: 999px;
+  background: color-mix(in srgb, var(--rb-ink) 8%, transparent); color: var(--rb-ink-2); font-size: 11px; font-weight: 600;
+}
+.rb-rewind {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rb-ink);
+  text-decoration: none;
+}
+.rb-rewind:hover { color: var(--rb-accent); }
+
+.rb-legend {
+  position: absolute;
+  z-index: 10;
+  left: 14px;
+  bottom: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 5px;
+  max-width: calc(100vw - 330px);
+}
+.rb-legend .lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--rb-ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rb-legend .lg:hover { background: color-mix(in srgb, var(--rb-ink) 6%, transparent); }
+.rb-legend .lg .sw { width: 10px; height: 10px; border-radius: 3px; background: var(--ink); }
+.rb-legend .lg .n { color: var(--rb-ink-3); font-weight: 500; }
+.rb-legend .lg.is-off { color: var(--rb-ink-3); text-decoration: line-through; }
+.rb-legend .lg.is-off .sw { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.rb-legend .lg.all { color: var(--rb-accent); }
+
+.rb-zoom {
+  position: absolute;
+  z-index: 10;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+}
+.rb-zoom button {
+  height: 30px;
+  min-width: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--rb-ink-2);
+  cursor: pointer;
+}
+.rb-zoom button:hover { background: color-mix(in srgb, var(--rb-ink) 7%, transparent); color: var(--rb-ink); }
+.rb-zoom button.is-on { color: var(--rb-accent); }
+.rb-zoom .pct { font-size: 12px; font-weight: 600; min-width: 48px; font-variant-numeric: tabular-nums; }
+.rb-zoom .sep { width: 1px; height: 18px; background: var(--rb-line); margin: 0 3px; }
+
+.enterprise-shell .rb-root .react-flow__minimap.rb-minimap {
+  right: 14px;
+  bottom: 56px;
+  margin: 0;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: var(--rb-panel) !important;
+  box-shadow: var(--rb-shadow), 0 0 0 1px var(--rb-line);
+}
+.rb-root .react-flow__minimap.rb-minimap svg { display: block; }
+
+.rb-hint {
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  bottom: 70px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: min(calc(100vw - 40px), 820px);
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #1c1f26;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  animation: rb-rise 220ms ease both;
+}
+.rb-hint.is-tip { background: var(--rb-panel); color: var(--rb-ink-2); box-shadow: var(--rb-shadow), 0 0 0 1px var(--rb-line); }
+.rb-hint button {
+  flex: none;
+  border: 0;
+  border-radius: 999px;
+  background: var(--rb-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  cursor: pointer;
+}
+@keyframes rb-rise { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+.rb-center {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.rb-center > * { pointer-events: auto; }
+.rb-state { display: flex; align-items: center; gap: 10px; padding: 14px 18px; font-size: 13.5px; color: var(--rb-ink-2); }
+.rb-state.is-error { color: #c92a2a; }
+.rb-state button, .rb-empty button {
+  border: 0;
+  border-radius: 8px;
+  background: var(--rb-accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.rb-empty {
+  max-width: 360px;
+  padding: 28px 28px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--rb-ink-2);
+}
+.rb-empty svg { color: var(--rb-accent); }
+.rb-empty h2 { font-size: 18px; font-weight: 700; color: var(--rb-ink); margin: 0; }
+.rb-empty p { font-size: 13.5px; line-height: 1.5; margin: 0 0 6px; }
+.rb-empty kbd, .rb-picker kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  border: 1px solid var(--rb-line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 4px;
+  color: var(--rb-ink-3);
+  background: var(--rb-panel);
+}
+
+/* ─── Relation picker ───────────────────────────────────────────────── */
+
+.rb-picker {
+  position: fixed;
+  z-index: 60;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--rb-panel, #fff);
+  color: var(--rb-ink, #1c1f26);
+  box-shadow: 0 24px 60px -18px rgba(17, 20, 28, 0.45), 0 0 0 1px var(--rb-line, rgba(0, 0, 0, 0.08));
+  animation: rb-pick 160ms cubic-bezier(.2, .9, .3, 1.2) both;
+}
+@keyframes rb-pick { from { opacity: 0; transform: scale(0.94) translateY(4px); } to { opacity: 1; transform: none; } }
+.rb-picker-pair {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rb-ink-2);
+  padding: 2px 2px 8px;
+}
+.rb-picker-pair .t {
+  min-width: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: color-mix(in srgb, var(--rb-ink) 5%, transparent);
+  border-radius: 6px;
+  padding: 4px 7px;
+}
+.rb-picker-q { font-size: 14px; font-weight: 700; padding: 2px 2px 10px; }
+.rb-picker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.rb-rel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--rb-ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.rb-rel:hover { background: color-mix(in srgb, var(--c) 12%, transparent); }
+.rb-rel.is-current { border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, transparent); }
+.rb-rel .sw { width: 18px; height: 3px; border-radius: 2px; background: var(--c); flex: none; }
+.rb-rel .l { flex: 1; }
+.rb-picker-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rb-line);
+}
+.rb-picker-foot button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--rb-ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.rb-picker-foot button:hover { background: color-mix(in srgb, var(--rb-ink) 6%, transparent); }
+.rb-picker-foot button.danger { color: #e03131; }
+.rb-picker-foot button.danger:hover { background: rgba(224, 49, 49, 0.1); }
+
+/* ─── Memory drawer ─────────────────────────────────────────────────── */
+
+.rb-drawer {
+  position: absolute;
+  z-index: 30;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 100vw;
+  display: flex;
+  flex-direction: column;
+  background: var(--rb-panel);
+  box-shadow: -24px 0 60px -30px rgba(17, 20, 28, 0.45), -1px 0 0 var(--rb-line);
+  transform: translateX(104%);
+  transition: transform 280ms cubic-bezier(.2, .8, .2, 1);
+  visibility: hidden;
+}
+.rb-drawer.is-open { transform: translateX(0); visibility: visible; }
+.rb-drawer:not(.is-open) { transition: transform 240ms ease, visibility 0s linear 240ms; }
+
+.rb-drawer-head {
+  padding: 16px 20px 18px;
+  background: linear-gradient(135deg, #3450e8 0%, #4a6bff 60%, #6d8bff 100%);
+  color: #fff;
+}
+.rb-drawer-head .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.rb-drawer-head .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85; }
+.rb-drawer-head .x {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  cursor: pointer;
+}
+.rb-drawer-head .x:hover { background: rgba(255, 255, 255, 0.26); }
+.rb-drawer-head .type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--ink);
+}
+.rb-drawer-head .type-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
+.rb-drawer-head h2 { margin: 10px 0 6px; font-size: 20px; line-height: 1.28; font-weight: 700; letter-spacing: -0.01em; color: #fff; word-break: break-word; }
+.rb-drawer-head .meta { font-size: 12.5px; opacity: 0.85; }
+
+.rb-drawer-body { flex: 1; overflow-y: auto; padding: 6px 20px 20px; overscroll-behavior: contain; }
+.rb-drawer-body section { padding: 14px 0 4px; }
+.rb-drawer-body section + section { border-top: 1px solid var(--rb-line); }
+.rb-drawer-body h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rb-ink-3);
+}
+.rb-drawer-body .summary { margin: 0; font-size: 14px; line-height: 1.55; color: var(--rb-ink); }
+.rb-drawer-body .content { font-size: 14px; line-height: 1.6; color: var(--rb-ink-2); word-break: break-word; }
+.rb-drawer-body .content.md > :first-child { margin-top: 0; }
+.rb-drawer-body .content.md p { margin: 0 0 10px; }
+.rb-drawer-body .content.md :is(h1, h2, h3, h4) { font-size: 14.5px; font-weight: 700; color: var(--rb-ink); margin: 16px 0 6px; letter-spacing: 0; text-transform: none; }
+.rb-drawer-body .content.md :is(ul, ol) { margin: 0 0 10px; padding-left: 18px; }
+.rb-drawer-body .content.md ul { list-style: disc; }
+.rb-drawer-body .content.md ol { list-style: decimal; }
+.rb-drawer-body .content.md li { margin: 3px 0; }
+.rb-drawer-body .content.md strong { color: var(--rb-ink); font-weight: 650; }
+.rb-drawer-body .content.md a { color: var(--rb-accent); text-decoration: underline; text-underline-offset: 2px; }
+.rb-drawer-body .content.md code { font-size: 12.5px; background: color-mix(in srgb, var(--rb-ink) 7%, transparent); border-radius: 4px; padding: 1px 4px; }
+.rb-drawer-body .content.md pre { white-space: pre-wrap; background: color-mix(in srgb, var(--rb-ink) 5%, transparent); border-radius: 8px; padding: 10px; font-size: 12.5px; }
+.rb-drawer-body .content.md blockquote { margin: 0 0 10px; padding-left: 10px; border-left: 3px solid var(--rb-line); }
+.rb-drawer-body .inline-row { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--rb-ink-2); }
+.rb-drawer-body .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rb-drawer-body .chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--rb-accent-soft);
+  color: var(--rb-accent);
+}
+.rb-drawer-body .chip.soft { background: color-mix(in srgb, var(--rb-ink) 6%, transparent); color: var(--rb-ink-2); }
+.rb-drawer-body .empty { margin: 0; font-size: 13px; line-height: 1.5; color: var(--rb-ink-3); }
+.rb-drawer-loading, .rb-drawer-note { display: flex; align-items: center; gap: 8px; padding: 16px 0 4px; font-size: 13px; color: var(--rb-ink-3); }
+.rb-drawer-body .links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.rb-drawer-body .links li { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rb-drawer-body .links .rel {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--c) 40%, transparent);
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) 8%, transparent);
+  cursor: pointer;
+}
+.rb-drawer-body .links .rel:hover { background: var(--c); color: #fff; }
+.rb-drawer-body .links .other {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 6px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rb-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.rb-drawer-body .links .other:hover { color: var(--rb-accent); }
+.rb-drawer-body .links .auto { flex: none; font-size: 10.5px; color: var(--rb-ink-3); border: 1px dashed var(--rb-line); border-radius: 4px; padding: 1px 5px; }
+
+.rb-drawer-foot {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--rb-line);
+  background: var(--rb-panel);
+}
+.rb-drawer-foot > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+}
+.rb-drawer-foot .ghost { background: color-mix(in srgb, var(--rb-ink) 6%, transparent); color: var(--rb-ink); }
+.rb-drawer-foot .ghost:hover { background: color-mix(in srgb, var(--rb-ink) 10%, transparent); }
+.rb-drawer-foot .primary { margin-left: auto; background: var(--rb-accent); color: #fff; }
+.rb-drawer-foot .primary:hover { filter: brightness(1.08); }
+
+/* ─── Composer ──────────────────────────────────────────────────────── */
+
+.rb-composer {
+  position: absolute;
+  width: 280px;
+  padding: 12px 12px 10px;
+  border-radius: 6px;
+  background: #fff1b8;
+  color: #1c1f26;
+  box-shadow: 0 2px 4px rgba(17, 20, 28, 0.08), 0 22px 44px -16px rgba(17, 20, 28, 0.4), 0 0 0 2px var(--rb-accent);
+  pointer-events: all;
+  user-select: text;
+  -webkit-user-select: text;
+  animation: rb-pop 300ms cubic-bezier(.2, 1.4, .4, 1) both;
+  z-index: 20;
+}
+.dark .rb-composer { background: #3a3521; color: #f3efe0; }
+.rb-composer-type {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9a6a00;
+}
+.dark .rb-composer-type { color: #e3b341; }
+.rb-composer-type .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.rb-composer textarea {
+  display: block;
+  width: 100%;
+  height: 120px;
+  margin: 8px 0 6px;
+  resize: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.rb-composer textarea::placeholder { color: rgba(28, 31, 38, 0.45); }
+.dark .rb-composer textarea::placeholder { color: rgba(243, 239, 224, 0.45); }
+.rb-composer-foot { display: flex; align-items: center; gap: 6px; }
+.rb-composer-foot .hint { flex: 1; font-size: 11px; opacity: 0.6; }
+.rb-composer-foot button {
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 7px;
+  border: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.rb-composer-foot .cancel { background: transparent; color: inherit; opacity: 0.7; }
+.rb-composer-foot .save { background: var(--rb-accent); color: #fff; }
+.rb-composer-foot .save:disabled { opacity: 0.45; cursor: default; }
+
+/* ─── Rewind shell (same route, no app chrome) ──────────────────────── */
+
+.rb-rewind-shell { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.rb-rewind-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line, rgba(0, 0, 0, 0.08));
+  flex: none;
+}
+.rb-rewind-top .app { font-weight: 700; font-size: 14px; margin-right: 8px; }
+.rb-rewind-top .rb-back { color: inherit; }
+.rb-rewind-top .lsc-modes { margin: 0; }
+.rb-rewind-shell .lsc-page-wrap { flex: 1; min-height: 0; overflow-y: auto; }
+
+/* ─── Small screens ─────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .rb-stats { display: none; }
+  .rb-search { width: 200px; }
+  .rb-legend { max-width: calc(100vw - 28px); bottom: 62px; }
+}
+@media (max-width: 640px) {
+  .rb-brand { padding-right: 10px; }
+  .rb-brand .board { max-width: 130px; }
+  .rb-top-right { top: 70px; left: 14px; right: 14px; }
+  .rb-search { flex: 1; width: auto; }
+  .rb-rewind span { display: none; }
+  .rb-rail { top: auto; bottom: 14px; transform: none; flex-direction: row; }
+  .rb-rail .sep { width: 1px; height: auto; margin: 4px 3px; }
+  .rb-tool { width: 38px; height: 38px; }
+  .rb-tool .tip { display: none; }
+  .rb-legend { display: none; }
+  .rb-zoom { bottom: 72px; }
+  .rb-zoom .sep, .rb-zoom button[aria-label='Toggle mini map'] { display: none; }
+  .rb-hint { bottom: 126px; font-size: 12px; border-radius: 12px; }
+  .rb-drawer { width: 100vw; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Constellation skin. The board is the one dark room in a light app: a
+   deep field with the memories as glowing bodies. Written last so it wins
+   over the light palette above, in both themes.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.rb-root, .dark .rb-root {
+  --rb-canvas: #04050c;
+  --rb-dot: rgba(150, 170, 255, 0.10);
+  --rb-panel: rgba(10, 12, 24, 0.72);
+  --rb-line: rgba(180, 200, 255, 0.12);
+  --rb-ink: #e8ebf7;
+  --rb-ink-2: #aeb6d4;
+  --rb-ink-3: #7b83a3;
+  --rb-accent: #8aa0ff;
+  --rb-accent-soft: rgba(138, 160, 255, 0.18);
+  --rb-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.8);
+  color-scheme: dark;
+}
+
+/* The field itself: three layers of stars, drifting almost imperceptibly. */
+.rb-root::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1.4px 1.4px at 20% 30%, rgba(255,255,255,.55), transparent 60%),
+    radial-gradient(1.1px 1.1px at 70% 18%, rgba(255,255,255,.4), transparent 60%),
+    radial-gradient(1.6px 1.6px at 44% 72%, rgba(255,255,255,.5), transparent 60%),
+    radial-gradient(1px 1px at 82% 58%, rgba(198,214,255,.45), transparent 60%),
+    radial-gradient(1.2px 1.2px at 12% 84%, rgba(255,214,214,.35), transparent 60%),
+    radial-gradient(1px 1px at 60% 90%, rgba(255,255,255,.35), transparent 60%);
+  background-size: 260px 260px, 340px 340px, 420px 420px, 300px 300px, 520px 520px, 380px 380px;
+  opacity: .85;
+  animation: rb-drift 240s linear infinite;
+}
+@keyframes rb-drift { to { transform: translate3d(-260px, -180px, 0); } }
+@media (prefers-reduced-motion: reduce) { .rb-root::before { animation: none; } }
+
+/* A vignette, so the edges fall away and the centre reads first. */
+.rb-root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 50% 45%, transparent 38%, rgba(2, 3, 9, 0.55) 100%);
+}
+
+.rb-root .react-flow__background.rb-bg { background: transparent; }
+.rb-root .react-flow__background.rb-bg circle { fill: rgba(150, 170, 255, 0.07); }
+
+/* ── Bodies ─────────────────────────────────────────────────────────── */
+.rb-root .rb-dot-core,
+.dark .rb-root .rb-dot-core {
+  background:
+    radial-gradient(circle at 50% 50%,
+      #ffffff 0%,
+      color-mix(in srgb, var(--ink) 35%, #ffffff) 26%,
+      var(--ink) 58%,
+      color-mix(in srgb, var(--ink) 60%, transparent) 78%,
+      transparent 100%);
+  box-shadow:
+    0 0 10px 1px color-mix(in srgb, var(--ink) 60%, transparent),
+    0 0 30px 6px color-mix(in srgb, var(--ink) 28%, transparent);
+  outline-color: transparent;
+}
+.rb-root .rb-dot:hover .rb-dot-core,
+.rb-root .rb-dot.is-lit .rb-dot-core {
+  transform: scale(1.3);
+  box-shadow:
+    0 0 16px 3px color-mix(in srgb, var(--ink) 75%, transparent),
+    0 0 52px 14px color-mix(in srgb, var(--ink) 38%, transparent);
+}
+.rb-root .rb-dot.is-faded { opacity: 0.16; }
+.rb-root .rb-dot.is-hub .rb-dot-core {
+  box-shadow:
+    0 0 20px 4px color-mix(in srgb, var(--ink) 70%, transparent),
+    0 0 60px 18px color-mix(in srgb, var(--ink) 34%, transparent);
+}
+
+/* ── Labels: a readout chip on a hairline, as in a star census ─────── */
+.rb-root .rb-dot-label {
+  top: calc(100% + 12px);
+  max-width: 190px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(4, 6, 14, 0.82);
+  border: 1px solid rgba(180, 200, 255, 0.16);
+  backdrop-filter: blur(3px);
+  font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #d7ddf2;
+  text-shadow: none;
+  -webkit-line-clamp: 1;
+}
+.rb-root .rb-dot-label::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 1px;
+  height: 9px;
+  background: linear-gradient(180deg, rgba(180, 200, 255, 0), rgba(180, 200, 255, 0.5));
+}
+.rb-root .rb-dot.is-lit .rb-dot-label,
+.rb-root .rb-dot:hover .rb-dot-label { color: #fff; border-color: rgba(180, 200, 255, 0.4); }
+
+/* ── Threads between bodies ─────────────────────────────────────────── */
+.rb-root .react-flow__edge-path { stroke: rgba(170, 190, 255, 0.22); }
+.rb-root .react-flow__edge.selected .react-flow__edge-path,
+.rb-root .react-flow__edge:hover .react-flow__edge-path { stroke: rgba(200, 215, 255, 0.75); filter: drop-shadow(0 0 6px rgba(140, 170, 255, 0.55)); }
+
+/* ── Chrome: dark glass over the field ──────────────────────────────── */
+.rb-root .rb-panel {
+  background: var(--rb-panel);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: var(--rb-shadow), 0 0 0 1px rgba(180, 200, 255, 0.12);
+  color: var(--rb-ink);
+}
+.rb-root .rb-brand .board { color: var(--rb-ink-3); }
+.rb-root .rb-back {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 2px;
+  border-radius: 8px;
+  color: var(--rb-ink-2);
+  background: rgba(255, 255, 255, 0.06);
+}
+.rb-root .rb-back:hover { color: #fff; background: rgba(255, 255, 255, 0.14); }
+.rb-root input, .rb-root textarea { color: var(--rb-ink); }
+.rb-root .react-flow__minimap { background: rgba(6, 8, 18, 0.8); }
+.rb-root .react-flow__minimap-mask { fill: rgba(4, 6, 14, 0.6); }
+
+/* A census reads as stars first, names second: only hubs carry a label at
+   rest, everything else names itself when you touch it or search for it. */
+.rb-root .rb-dot-label { opacity: 0; }
+.rb-root .rb-dot.is-hub .rb-dot-label,
+.rb-root .rb-dot:hover .rb-dot-label,
+.rb-root .rb-dot.is-lit .rb-dot-label,
+.rb-root .rb-dot.is-open .rb-dot-label,
+.rb-root .rb-dot.is-selected .rb-dot-label,
+.rb-root .rb-dot.is-match .rb-dot-label,
+.rb-root .rb-dot.is-fresh .rb-dot-label { opacity: 1; }
+
+/* The relation picker renders above the field in a portal, so it carries its
+   own colours rather than the board's translucent panel: over a star field a
+   see-through popover is unreadable. */
+.rb-picker {
+  background: rgba(9, 11, 22, 0.97);
+  backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: 0 30px 80px -18px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(180, 200, 255, 0.2);
+  color: #e9ecf8;
+}
+.rb-picker .rb-picker-q { color: #fff; }
+.rb-picker .rb-picker-pair { color: #aeb6d4; }
+.rb-picker .rb-picker-pair .t { background: rgba(255, 255, 255, 0.07); color: #d8ddf0; }
+.rb-picker .rb-rel { color: #e9ecf8; }
+.rb-picker .rb-rel:hover { background: rgba(255, 255, 255, 0.09); }
+.rb-picker .rb-rel kbd, .rb-picker kbd {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #aeb6d4;
+}
+.rb-picker .rb-picker-foot { border-top-color: rgba(180, 200, 255, 0.16); }
+.rb-picker .rb-picker-foot button { color: #c9d0e8; }
+.rb-picker .rb-picker-foot button:hover { background: rgba(255, 255, 255, 0.1); }
+
+/* Same for anything else that floats over the field. */
+.rb-root .rb-drawer, .rb-root .rb-composer { background: rgba(9, 11, 22, 0.96); backdrop-filter: blur(20px); }
+
+/* ── Depth: two soft clouds behind the field, so it is space and not a
+      black rectangle. Very low contrast, and they never move. ────────── */
+.rb-root .react-flow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(52% 44% at 24% 30%, rgba(96, 86, 220, 0.16), transparent 70%),
+    radial-gradient(44% 40% at 78% 66%, rgba(34, 150, 160, 0.12), transparent 72%),
+    radial-gradient(60% 50% at 62% 12%, rgba(120, 70, 190, 0.10), transparent 74%);
+  filter: blur(6px);
+}
+
+/* ── HUD: mono, quiet, and out of the way of the field ──────────────── */
+.rb-root .rb-brand .app { letter-spacing: -0.01em; }
+.rb-root .rb-brand .board {
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.rb-root .rb-legend, .rb-root .rb-zoom, .rb-root .rb-counts {
+  font-variant-numeric: tabular-nums;
+}
+.rb-root .rb-legend button { transition: opacity .15s ease, background .15s ease; }
+.rb-root .rb-legend button:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* The minimap reads as a chart of the same sky. */
+.rb-root .react-flow__minimap {
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px rgba(180, 200, 255, 0.14), 0 20px 50px -20px rgba(0, 0, 0, 0.9);
+}
+
+/* ── A walk down memory lane ─────────────────────────────────────────
+   While it plays the board keeps only the field and the caption: the
+   rail, the search, the counts, the legend and the map step out. */
+.rb-root.is-tour .rb-rail,
+.rb-root.is-tour .rb-top-right,
+.rb-root.is-tour .rb-legend,
+.rb-root.is-tour .rb-hint,
+.rb-root.is-tour .rb-brand,
+.rb-root.is-tour .rb-zoom,
+.rb-root.is-tour .react-flow__minimap { opacity: 0; pointer-events: none; transition: opacity .4s ease; }
+.rb-root.is-tour .react-flow__pane { cursor: default; }
+
+.rb-tour { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
+.rb-tour::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(2,3,9,.72) 0%, rgba(2,3,9,0) 22%, rgba(2,3,9,0) 52%, rgba(2,3,9,.86) 100%);
+}
+.rb-tour-top {
+  position: absolute;
+  z-index: 2;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 8px 14px;
+  border-radius: 999px;
+  background: rgba(9, 11, 22, 0.82);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 0 0 1px rgba(180, 200, 255, 0.16);
+  pointer-events: auto;
+}
+.rb-tour-count {
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: .1em;
+  color: #aeb6d4;
+  font-variant-numeric: tabular-nums;
+}
+.rb-tour-bar { width: 180px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.14); overflow: hidden; }
+.rb-tour-bar span { display: block; height: 100%; border-radius: 2px; background: #8aa0ff; transition: width .6s ease; }
+.rb-tour-top button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: #d7ddf2;
+  background: rgba(255,255,255,.08);
+}
+.rb-tour-top button:hover { background: rgba(255,255,255,.18); color: #fff; }
+
+.rb-tour-card {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  width: min(620px, calc(100vw - 80px));
+  text-align: center;
+  color: #eef1fb;
+  animation: rb-tour-in 700ms cubic-bezier(.2,.9,.3,1) both;
+}
+@keyframes rb-tour-in { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.rb-tour-card .k {
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.rb-tour-card h2 {
+  margin: 10px 0 8px;
+  font-size: 26px;
+  line-height: 1.22;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  text-shadow: 0 2px 24px rgba(0,0,0,.6);
+}
+.rb-tour-card p { margin: 0; font-size: 13px; color: #aeb6d4; }
+@media (prefers-reduced-motion: reduce) { .rb-tour-card { animation: none; } }
+
+/* Relation labels belong to the night too. */
+.rb-root .rb-edge-label, .rb-root .react-flow__edge-textbg + .react-flow__edge-text { fill: #d7ddf2; }
+.rb-root .rb-edge-label {
+  background: rgba(9, 11, 22, 0.9);
+  border: 1px solid rgba(180, 200, 255, 0.18);
+  color: #d7ddf2;
+  backdrop-filter: blur(4px);
+}
+.rb-root.is-tour .rb-edge-label { opacity: .5; }

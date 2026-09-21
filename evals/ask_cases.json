@@ -1,0 +1,158 @@
+[
+  {
+    "q": "How much did I spend today?",
+    "must_not_lead_with": [
+      "2525",
+      "$2,525",
+      "annual"
+    ],
+    "note": "an annual total seen today is not today's spend"
+  },
+  {
+    "q": "What did I spend on domains this year?",
+    "must_contain_any": [
+      "2,525",
+      "2,611",
+      "2525",
+      "2611"
+    ],
+    "note": "the annual total is the right answer here (the account page states a higher year-to-date total since 20 Sep; either stated total is right)"
+  },
+  {
+    "q": "Who did I meet yesterday?",
+    "must_not_contain": [
+      "today at"
+    ],
+    "note": "only yesterday counts"
+  },
+  {
+    "q": "What did Sarah say about the deadline?",
+    "must_contain_any": [
+      "14 October",
+      "October 14",
+      "14th of October"
+    ],
+    "note": "from the recorded test meeting"
+  },
+  {
+    "q": "What do I owe Sarah?",
+    "must_contain_any": [
+      "compliance certificate",
+      "vendor list"
+    ],
+    "note": "commitments to a named person"
+  },
+  {
+    "q": "When is the site visit?",
+    "must_contain_any": [
+      "22"
+    ],
+    "note": "a date from the meeting"
+  },
+  {
+    "q": "How many followers do I have on X?",
+    "must_contain_any": [
+      "2,500",
+      "2500"
+    ],
+    "note": "a count from a memory"
+  },
+  {
+    "q": "Which domains are expiring this month?",
+    "must_contain_any": [
+      "intelligentdemo",
+      "intelligencelab",
+      "2026/09"
+    ],
+    "note": "list with a window"
+  },
+  {
+    "q": "What happened with the Vatsalya proposal?",
+    "must_contain_any": [
+      "Vatsalya"
+    ],
+    "note": "timeline"
+  },
+  {
+    "q": "Did I pay anything to Dynadot today?",
+    "must_not_lead_with": [
+      "2525",
+      "$2,525"
+    ],
+    "note": "yes/no with a window; an annual total is not a payment today"
+  },
+  {
+    "q": "What is the Dynadot annual spending?",
+    "must_contain_any": [
+      "2,525",
+      "2,611",
+      "2525",
+      "2611"
+    ],
+    "note": "direct fact lookup (the account page states a higher year-to-date total since 20 Sep; either stated total is right)"
+  },
+  {
+    "q": "What did I do this morning?",
+    "must_not_contain": [
+      "yesterday at"
+    ],
+    "note": "window: this morning"
+  },
+  {
+    "q": "Who is Sarah?",
+    "must_contain_any": [
+      "procurement",
+      "Sarah"
+    ],
+    "note": "person profile"
+  },
+  {
+    "q": "What is the revised submission deadline?",
+    "must_contain_any": [
+      "14 October",
+      "October 14",
+      "14th"
+    ],
+    "note": "fact from meeting notes"
+  },
+  {
+    "q": "How much did I spend today?",
+    "must_not_lead_with": [
+      "you spent $12.29",
+      "you spent 12.29"
+    ],
+    "must_contain_any": [
+      "did not spend",
+      "no payment",
+      "no spending",
+      "no transaction",
+      "not yet",
+      "nothing",
+      "nothing was spent",
+      "pending",
+      "unpaid",
+      "waiting"
+    ],
+    "note": "an order waiting for payment is not spending; saying nothing was spent is also right"
+  },
+  {
+    "q": "When was the tender review meeting?",
+    "must_not_contain": [
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "saturday"
+    ],
+    "must_contain_any": [
+      "09:38",
+      "18 july",
+      "20 sep",
+      "9:38",
+      "july 18",
+      "september 20",
+      "sunday",
+      "today"
+    ],
+    "note": "the synthetic transcript itself names 18 July, so answering with that date is faithful; what must never happen is an invented weekday"
+  }
+]
