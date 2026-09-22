@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { api, type Licence } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
-const BUY = 'https://lane.so/#access'
+const BUY = 'https://lane.so/buy'
 
 export function useLicence() {
   const [lic, setLic] = useState<Licence | null>(null)
@@ -77,38 +77,98 @@ export function LicenceWall({ lic, onApplied }: { lic: Licence; onApplied: (l: L
   )
 }
 
+/** What each plan is called, and what it costs. */
+const PLANS = [
+  { id: 'lifetime', name: 'Lifetime', price: '$499', per: 'once', note: 'Only 200 spots' },
+  { id: 'yearly', name: 'Yearly', price: '$89', per: 'a year', note: 'Two months off' },
+  { id: 'monthly', name: 'Monthly', price: '$9', per: 'a month', note: '' },
+] as const
+
 /** The card in Settings. */
 export function LicenceCard({ lic, onChanged }: { lic: Licence; onChanged: (l: Licence) => void }) {
+  const licensed = lic.state === 'licensed'
+  const plan = PLANS.find((p) => p.id === lic.plan)
+
+  if (licensed) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 p-4 flex items-center gap-3.5 flex-wrap">
+          <span className="h-11 w-11 shrink-0 rounded-xl bg-background grid place-items-center text-emerald-600 dark:text-emerald-400">
+            <ShieldCheck className="h-[22px] w-[22px]" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[15.5px] font-semibold">{plan?.name ?? 'Licensed'}</span>
+              {plan && (
+                <span className="rounded-full bg-emerald-600/10 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 text-[11px] font-medium">
+                  {plan.id === 'lifetime' ? 'Yours for good' : `Renews ${plan.per}`}
+                </span>
+              )}
+            </div>
+            <div className="text-[12.5px] text-muted-foreground mt-0.5 truncate">
+              {lic.email.includes('@') ? lic.email : 'Thank you. Lane is yours.'}
+            </div>
+          </div>
+          <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => api.clearLicence().then(onChanged)}>
+            Remove from this Mac
+          </Button>
+        </div>
+        <p className="text-[12.5px] text-muted-foreground">
+          Checked on this Mac. No account, and nothing about your licence is ever sent anywhere.
+        </p>
+      </div>
+    )
+  }
+
+  const ended = lic.state === 'expired'
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className={cn('h-10 w-10 rounded-xl grid place-items-center', lic.state === 'licensed' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400' : 'tone-violet text-primary')}>
-          <ShieldCheck className="h-5 w-5" />
+    <div className="space-y-5">
+      <div className={cn('rounded-2xl p-4 flex items-center gap-3.5', ended ? 'bg-rose-50 dark:bg-rose-500/10' : 'tone-violet')}>
+        <span className={cn('h-11 w-11 shrink-0 rounded-xl bg-background grid place-items-center', ended ? 'text-rose-600 dark:text-rose-400' : 'text-primary')}>
+          <ShieldCheck className="h-[22px] w-[22px]" />
         </span>
         <div className="min-w-0">
-          <div className="text-[15px] font-medium">
-            {lic.state === 'licensed' ? `Licensed · ${lic.plan}` : lic.state === 'trial' ? `Trial · ${lic.daysLeft} ${lic.daysLeft === 1 ? 'day' : 'days'} left` : 'Trial ended'}
+          <div className="text-[15.5px] font-semibold">
+            {ended ? 'Your two months are up' : `${lic.daysLeft} ${lic.daysLeft === 1 ? 'day' : 'days'} left of your trial`}
           </div>
-          <div className="text-[12.5px] text-muted-foreground">
-            {lic.state === 'licensed'
-              ? (lic.email.includes('@') ? lic.email : 'Thank you. Lane is yours.')
+          <div className="text-[12.5px] text-muted-foreground mt-0.5">
+            {ended
+              ? 'Nothing has been deleted. Everything comes back the moment you unlock it.'
               : 'Two months, everything switched on, no card to start.'}
           </div>
         </div>
-        {lic.state === 'licensed' && (
-          <Button size="sm" variant="ghost" className="ml-auto text-muted-foreground" onClick={() => api.clearLicence().then(onChanged)}>
-            Remove from this Mac
-          </Button>
-        )}
       </div>
-      {lic.state !== 'licensed' && (
-        <>
-          <a href={BUY} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center rounded-xl bg-primary px-4 text-[13.5px] font-medium text-primary-foreground hover:brightness-110">
-            $9 a month · $89 a year · $499 once
+
+      <div className="grid gap-2 sm:grid-cols-3">
+        {PLANS.map((p) => (
+          <a
+            key={p.id}
+            href={`${BUY}/${p.id}`}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(
+              'rounded-xl border p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm',
+              p.id === 'lifetime' ? 'border-primary/35 bg-accent/40' : 'hover:bg-secondary',
+            )}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[13px] font-medium">{p.name}</span>
+              {p.note && <span className="rounded-full bg-primary/10 text-primary px-1.5 py-0.5 text-[10px] font-medium">{p.note}</span>}
+            </div>
+            <div className="mt-1.5 text-[22px] font-semibold tracking-tight leading-none">
+              {p.price}
+              <span className="text-[12px] font-normal text-muted-foreground ml-1.5">{p.per}</span>
+            </div>
           </a>
-          <LicenceKey onApplied={onChanged} />
-        </>
-      )}
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-[12.5px] text-muted-foreground">
+          Bought already? Paste the key from your receipt, or press Open in Lane on the page you were sent to.
+        </p>
+        <LicenceKey onApplied={onChanged} />
+      </div>
     </div>
   )
 }

@@ -548,6 +548,58 @@ pub fn capture_now_from(app: &AppHandle) {
     });
 }
 
+/// `lane://licence/<key>` from a receipt: apply it, then show the licence
+/// so the person can see it worked. Anything else in the scheme is ignored.
+pub fn take_deep_link(app: &AppHandle, url: &str) {
+    let Some(rest) = url.strip_prefix("lane://") else { return };
+    let rest = rest.trim_start_matches('/');
+    let Some(key) = rest.strip_prefix("licence/").or_else(|| rest.strip_prefix("license/")) else {
+        log::info!("deep link ignored: {url}");
+        return;
+    };
+    let key = percent_decode(key);
+    match licence::apply(key.trim()) {
+        Ok(lic) => {
+            log::info!("deep link: licensed ({})", lic.plan);
+            let _ = app.emit("licence", &lic);
+            if let Some(s) = app.try_state::<Arc<AppState>>() {
+                s.blocked.store(lic.blocked, Ordering::Relaxed);
+            }
+            open_settings(app);
+        }
+        Err(e) => {
+            log::warn!("deep link licence refused: {e}");
+            open_settings(app);
+        }
+    }
+}
+
+/// Bring the window up on the licence, which is what the person came for.
+fn open_settings(app: &AppHandle) {
+    toggle_overlay(app, Some(false));
+    show_main(app);
+    let _ = app.emit("navigate", serde_json::json!({"page": "settings", "activity": null}));
+}
+
+/// Just enough of one: a licence key carries `|`, `:` and base64 only.
+fn percent_decode(s: &str) -> String {
+    let b = s.as_bytes();
+    let mut out = String::with_capacity(s.len());
+    let mut i = 0;
+    while i < b.len() {
+        if b[i] == b'%' && i + 2 < b.len() {
+            if let Ok(v) = u8::from_str_radix(&s[i + 1..i + 3], 16) {
+                out.push(v as char);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(b[i] as char);
+        i += 1;
+    }
+    out
+}
+
 pub fn show_main(app: &AppHandle) {
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.show();
@@ -619,6 +671,7 @@ pub fn run() {
                 }
             }
         }))
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
@@ -816,6 +869,26 @@ pub fn run() {
                     _ => {}
                 })
                 .build(app)?;
+
+            // A receipt can unlock the app in one click: lane://licence/<key>
+            // applies the key and opens Settings on it. Nothing else is
+            // accepted from the scheme, so a malicious link can do nothing
+            // but offer a licence key that has to verify anyway.
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let handle = app.handle().clone();
+                app.deep_link().on_open_url(move |event| {
+                    for url in event.urls() {
+                        take_deep_link(&handle, url.as_str());
+                    }
+                });
+                // A link that launched the app arrives before the listener.
+                if let Ok(Some(urls)) = app.deep_link().get_current() {
+                    for url in urls {
+                        take_deep_link(app.handle(), url.as_str());
+                    }
+                }
+            }
 
             capture::spawn(app.handle().clone(), state.clone());
             clipboard::spawn(state.clone());

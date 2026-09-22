@@ -44,13 +44,14 @@
     <p id="say">Looking up your payment.</p>
     <div class="keybox" id="keybox" hidden></div>
     <div class="actions" id="actions" hidden>
-      <button class="btn btn-primary" id="copy" type="button">Copy the key</button>
+      <a class="btn btn-primary" id="open" href="#">Open in Lane</a>
+      <button class="btn btn-ghost" id="copy" type="button">Copy the key</button>
       <a class="btn btn-ghost" href="/download/mac?source=thanks">Download Lane</a>
     </div>
     <ol class="steps" id="steps" hidden>
-      <li>Open Lane, then Settings, then Your licence.</li>
-      <li>Paste the key and press Unlock.</li>
-      <li>That is all. The key is checked on your Mac, so nothing is sent anywhere.</li>
+      <li><b>Press Open in Lane.</b> It hands the key straight to the app and unlocks it.</li>
+      <li>If nothing happens, Lane is not installed yet. Download it, then come back to this page.</li>
+      <li>You can always paste the key by hand: Lane, then Settings, then Your licence.</li>
     </ol>
     <p class="muted" id="foot">Keep this key. We can always send it again: write to pb@lane.so from the address you paid with.</p>
   </div>
@@ -89,6 +90,7 @@
       box.hidden = false;
       actions.hidden = false;
       steps.hidden = false;
+      document.getElementById('open').href = 'lane://licence/' + encodeURIComponent(res.d.key);
       document.getElementById('copy').addEventListener('click', function () {
         navigator.clipboard.writeText(res.d.key).then(function () {
           document.getElementById('copy').textContent = 'Copied';
