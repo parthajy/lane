@@ -25,6 +25,7 @@
 // layout, saved per browser and scope. Everything here can be undone.
 
 import './board.css'
+import galaxy from '@/assets/galaxy.jpg'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow, ReactFlowProvider, Background, BackgroundVariant, MiniMap, useReactFlow, useNodesState,
@@ -1114,15 +1115,10 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
           if ((e.target as HTMLElement).closest('.react-flow__pane')) placeComposer(e.clientX, e.clientY)
         }}
       >
-        {/* Deep space, behind everything: a galaxy, two nebulae and the band
-          of the milky way. Drawn rather than photographed, so it costs
-          nothing to ship and scales to any window. */}
-      <div className="rb-sky" aria-hidden="true">
-        <i className="rb-galaxy" />
-        <i className="rb-neb rb-neb-a" />
-        <i className="rb-neb rb-neb-b" />
-        <i className="rb-milky" />
-      </div>
+        {/* Deep space, behind everything. A picture, because no amount of CSS
+          draws a convincing galaxy; it ships inside the app, so the board
+          still works with the network off. */}
+      <div className="rb-sky" aria-hidden="true" style={{ backgroundImage: `url(${galaxy})` }} />
 
       <ReactFlow
           nodes={nodes}

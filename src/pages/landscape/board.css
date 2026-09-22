@@ -918,11 +918,7 @@
 
 /* A vignette, so the edges fall away and the centre reads first. */
 .rb-root::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+  content: none;
   /* Three depths of star, each tiling at its own size, so the field reads
      as distance rather than as a repeated pattern. */
   background-image:
@@ -1028,56 +1024,24 @@
 @media (max-width: 1100px) { .rb-root .rb-sky-note { display: none; } }
 
 /* ── the sky itself ──────────────────────────────────────────────────── */
-.rb-sky { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-.rb-sky i { position: absolute; display: block; }
-
-/* A spiral: a bright core, two arms swept by a conic gradient, squashed
-   and tilted so it sits at an angle to the viewer. */
-.rb-galaxy {
-  left: 3%; top: 4%;
-  width: clamp(240px, 26vw, 420px); aspect-ratio: 1; border-radius: 50%;
+/* One picture, covering the board, sitting under everything the canvas
+   draws. The starfield and nebulae in the stylesheet could not compete
+   with a real photograph of deep space, so they are gone. */
+.rb-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+/* A touch of shade at the edges, so the panels have something to sit on. */
+.rb-sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
   background:
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,1) 0%, rgba(255,240,212,.7) 4%, rgba(214,206,255,.3) 11%, transparent 24%),
-    conic-gradient(from 20deg at 50% 50%,
-      rgba(198,212,255,.5) 0deg, rgba(198,212,255,.06) 40deg, transparent 84deg,
-      rgba(176,196,255,.44) 142deg, rgba(176,196,255,.05) 184deg, transparent 236deg,
-      rgba(210,220,255,.4) 286deg, rgba(210,220,255,.05) 330deg, transparent 360deg);
-  /* Without a fading rim the conic gradient reads as a solid grey disc. */
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 12%, rgba(0,0,0,.65) 40%, transparent 70%);
-  mask-image: radial-gradient(circle at 50% 50%, #000 12%, rgba(0,0,0,.65) 40%, transparent 70%);
-  transform: rotate(-24deg) scaleY(.44);
-  filter: blur(1.6px);
-  opacity: .55;
-}
-.rb-galaxy::after {
-  content: ""; position: absolute; inset: 30%;
-  border-radius: 50%;
-  background: conic-gradient(from 110deg at 50% 50%, rgba(255,255,255,.34), transparent 66deg, rgba(255,255,255,.26) 186deg, transparent 252deg);
-  filter: blur(3px);
-}
-
-/* Two clouds of gas, well out of the way of the memories. */
-.rb-neb { border-radius: 50%; filter: blur(46px); }
-.rb-neb-a {
-  left: -6%; bottom: -10%;
-  width: clamp(300px, 30vw, 560px); aspect-ratio: 1.2;
-  background: radial-gradient(circle at 50% 50%, rgba(178, 96, 235, .3), rgba(120, 70, 200, .12) 52%, transparent 72%);
-}
-.rb-neb-b {
-  right: -8%; top: 8%;
-  width: clamp(320px, 34vw, 620px); aspect-ratio: 1.1;
-  background: radial-gradient(circle at 50% 50%, rgba(70, 130, 240, .26), rgba(60, 90, 210, .1) 54%, transparent 74%);
-}
-
-/* The band of the milky way, running across the corner. */
-.rb-milky {
-  inset: -25%;
-  background:
-    linear-gradient(72deg,
-      transparent 34%,
-      rgba(150, 170, 250, .07) 43%,
-      rgba(225, 232, 255, .13) 50%,
-      rgba(150, 170, 250, .06) 57%,
-      transparent 66%);
-  filter: blur(18px);
+    radial-gradient(120% 90% at 50% 50%, transparent 40%, rgba(3, 4, 10, .55) 100%),
+    linear-gradient(180deg, rgba(3, 4, 10, .35), transparent 22%, transparent 74%, rgba(3, 4, 10, .5));
 }
