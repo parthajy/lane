@@ -1,8 +1,56 @@
-import { adminOk, count, db, escape, html } from './_lib.mjs'
+import { adminOk, count, db, escape, html, tokenFrom, tokenIsGood } from './_lib.mjs'
+
+/** Sign in once. The token is kept in a cookie the browser will not hand to
+    any script, so the dashboard can be a bookmark rather than a secret URL. */
+const SIGNIN = (bad) => `<!doctype html><meta charset=utf-8><title>Lane · admin</title>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content=noindex>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f4f7;color:#101014;
+     font:15px/1.5 -apple-system,Inter,system-ui,sans-serif;padding:24px}
+form{background:#fff;padding:30px;border-radius:18px;box-shadow:0 1px 2px rgba(16,16,26,.06),0 20px 50px -30px rgba(16,16,26,.4);width:min(360px,100%);display:grid;gap:12px}
+h1{font-size:19px;margin:0;letter-spacing:-.02em}
+p{margin:0;color:#6b6b7a;font-size:13.5px}
+input{font:inherit;padding:11px 13px;border-radius:10px;border:1px solid rgba(16,16,26,.16);width:100%}
+input:focus{outline:0;border-color:#5a51e5;box-shadow:0 0 0 4px rgba(90,81,229,.14)}
+button{font:inherit;font-weight:500;padding:11px;border:0;border-radius:10px;background:#101014;color:#fff;cursor:pointer}
+.bad{color:#b03f28}
+</style>
+<form method="post" action="/admin">
+  <h1>Lane</h1>
+  <p>${bad ? '<span class="bad">That is not the token.</span>' : 'Paste the admin token once. This browser will remember it.'}</p>
+  <input name="token" type="password" autocomplete="current-password" placeholder="Admin token" autofocus required>
+  <button type="submit">Open the dashboard</button>
+</form>`
 
 /** Everything the outside world tells us. The app itself reports nothing. */
 export default async (request) => {
-  if (!adminOk(request)) return html('<h1>no</h1>', 401)
+  // Signing in: keep the token in a cookie for ninety days.
+  if (request.method === 'POST') {
+    const form = await request.formData()
+    const given = String(form.get('token') || '')
+    if (!tokenIsGood(given)) return html(SIGNIN(true), 401)
+    return new Response(null, {
+      status: 303,
+      headers: {
+        location: '/admin',
+        'set-cookie': `lane_admin=${encodeURIComponent(given)}; Path=/; Max-Age=7776000; HttpOnly; Secure; SameSite=Lax`,
+      },
+    })
+  }
+
+  if (!adminOk(request)) {
+    // A token that is present but wrong should say so; a missing one just asks.
+    return html(SIGNIN(Boolean(tokenFrom(request))), 401)
+  }
+
+  // Signing out: drop the cookie and ask again.
+  if (new URL(request.url).searchParams.get('out')) {
+    return new Response(SIGNIN(false), {
+      status: 401,
+      headers: { 'content-type': 'text/html; charset=utf-8', 'set-cookie': 'lane_admin=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax' },
+    })
+  }
 
   const since = new Date(Date.now() - 21 * 86400_000).toISOString()
   const [downloads, waitTotal, lifetimeTaken, keysLeft, sales, recentWait, recentFeedback, recentDownloads] =
@@ -78,7 +126,7 @@ td:last-child{width:104px;white-space:nowrap;text-align:right}
 td:first-child{width:34%}
 section.fb td:first-child{width:74px;color:var(--muted)}
 </style>
-<h1>Lane</h1><p class="sub">Everything the outside world tells us. The app itself reports nothing.</p>
+<h1>Lane</h1><p class="sub">Everything the outside world tells us. The app itself reports nothing. <a href="/admin?out=1" style="color:var(--muted)">Sign out</a></p>
 <div class="cards">
   <div class="card"><b>${downloads}</b><span>downloads</span></div>
   <div class="card"><b>${waitTotal}</b><span>on the waitlist</span></div>

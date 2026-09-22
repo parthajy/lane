@@ -43,13 +43,13 @@ holds the waitlist, feedback, download counts, sales and the pool of licence
 keys (`supabase/schema.sql`, locked by row level security so the site can only
 call three functions); **Netlify** serves `site/` and four small functions
 (`netlify/functions/`) for downloads, purchases, the key claim and the admin
-page; **Dodo** takes the payment; **GitHub** (`parthajy/lane`, private) holds
+page; **Polar** takes the payment; **GitHub** (`parthajy/lane`, private) holds
 the code.
 
 Keys are minted here and claimed there. `node scripts/licence.mjs mint
 lifetime 250` writes a CSV to import into Supabase, and the claim function
 hands one out per payment, so no signing secret is ever on a server. A payment
-is verified against Dodo from the function before any key is given. `LAUNCH.md`
+is verified against Polar from the function before any key is given. `LAUNCH.md`
 is the order of the whole release.
 
 ## Categories and the share card

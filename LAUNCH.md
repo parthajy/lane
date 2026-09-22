@@ -2,7 +2,7 @@
 
 Four places hold the launch: this Mac builds the app, GitHub holds the code,
 Supabase holds the database, Netlify serves the site and the few functions,
-and Dodo takes the money. The app itself talks to none of them.
+and Polar takes the money. The app itself talks to none of them.
 
 ## 1. Supabase (five minutes, do it first)
 
@@ -32,7 +32,7 @@ Import the repository `parthajy/lane` and take the settings it offers, because
 `netlify.toml` already says the site is `site/`, the functions are
 `netlify/functions/`, and there is no build step.
 
-Everything public is in the code already: the Supabase project URL, the Dodo
+Everything public is in the code already: the Supabase project URL, the Polar
 product ids, the download link. Only four variables need setting, in Site
 configuration → Environment variables, and three of them are secrets that must
 never be committed to this repository:
@@ -40,7 +40,7 @@ never be committed to this repository:
 | Name | What it is |
 | --- | --- |
 | `SUPABASE_SERVICE_KEY` | the project's secret key, which bypasses row level security |
-| `DODO_API_KEY` | the Dodo secret key |
+| `POLAR_ACCESS_TOKEN` | the Polar organization access token |
 | `LANE_ADMIN_TOKEN` | a long random string you invent, the only thing guarding the dashboard |
 | `LANE_DMG_URL` | only if the build is not on the releases page |
 
@@ -50,19 +50,18 @@ Two more are worth setting when you go live: `DODO_MODE=live`, and the three
 Your dashboard is then `https://lane.so/admin?token=<your token>`: downloads by
 day, the waitlist, seats left, sales, keys still in the pool, and feedback.
 
-## 3. Dodo
+## 3. Polar
 
-The three products already exist in test mode, with the ids above. When you are
-ready to take real money, make the same three in live mode, put the live ids and
-the live key into Netlify, and set `DODO_MODE=live`.
+The three products exist in Polar: monthly, yearly and lifetime. Their ids are
+in `netlify/functions/buy.mjs`, which is fine in the open; the token that
+creates a checkout is the secret, and it lives only in Netlify.
 
-The flow needs nothing else: `/buy/lifetime` sends the buyer to Dodo, Dodo sends
+The flow needs nothing else: `/buy/lifetime` creates a Polar checkout and sends the buyer to it, Polar sends
 them back to `/thanks/`, and that page asks Netlify for their key. The key is
 claimed from the pool once per payment, so a reloaded page shows the same key
 rather than burning another.
 
-**Test it before you announce anything.** Buy the lifetime plan in test mode with
-Dodo's test card, check the key appears on `/thanks/`, paste it into Lane under
+**Test it before you announce anything.** Buy the lifetime plan with a test card, check the key appears on `/thanks/`, paste it into Lane under
 Settings → Your licence, and confirm the sale shows on `/admin`.
 
 ## 4. Notarise and ship the app

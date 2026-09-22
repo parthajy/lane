@@ -32,17 +32,31 @@ export async function count(table, query = '') {
   return Number(range.split('/')[1] || 0)
 }
 
-export function adminOk(request) {
-  const token = process.env.LANE_ADMIN_TOKEN || ''
-  if (!token) return false
+/** The credential can arrive three ways: a cookie set once, a header for
+    scripts, or the query string for a one-off. */
+export function tokenFrom(request) {
   const url = new URL(request.url)
-  const given = url.searchParams.get('token') || request.headers.get('x-admin-token') || ''
-  // Constant time enough for a token this long, and the comparison never
-  // short-circuits on length alone.
+  const cookie = (request.headers.get('cookie') || '')
+    .split(';').map((c) => c.trim()).find((c) => c.startsWith('lane_admin='))
+  return url.searchParams.get('token')
+    || request.headers.get('x-admin-token')
+    || (cookie ? decodeURIComponent(cookie.slice('lane_admin='.length)) : '')
+}
+
+export function tokenIsGood(given) {
+  const token = process.env.LANE_ADMIN_TOKEN || ''
+  if (!token || !given) return false
   if (given.length !== token.length) return false
   let diff = 0
   for (let i = 0; i < token.length; i++) diff |= token.charCodeAt(i) ^ given.charCodeAt(i)
   return diff === 0
+}
+
+export function adminOk(request) {
+  const token = process.env.LANE_ADMIN_TOKEN || ''
+  if (!token) return false
+  const given = tokenFrom(request)
+  return tokenIsGood(given)
 }
 
 export const json = (body, status = 200) =>
