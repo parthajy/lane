@@ -35,6 +35,17 @@ def absolutise(s: str) -> str:
 HEADER = absolutise(block("header", "nav"))
 FOOTER = absolutise(block("footer", "foot"))
 
+# Google Analytics. The privacy policy and the security page both describe
+# this, because claiming "no analytics" while running some would be a lie.
+GA = """<script async src="https://www.googletagmanager.com/gtag/js?id=G-GLEMYFELND"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-GLEMYFELND');
+</script>"""
+
+
 ICON = {
     "eye": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>',
     "ask": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8.5 8.5 0 0 1-12.3 7.6L3.5 21l1.4-5.2A8.5 8.5 0 1 1 21 12z"/></svg>',
@@ -138,14 +149,19 @@ def page(slug: str, title: str, desc: str, kicker: str, h1: str, lede: str, body
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
-<link rel="canonical" href="https://lane.so/{slug}">
+<link rel="canonical" href="https://lane.so/{slug}/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Lane">
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(desc)}">
-<meta property="og:url" content="https://lane.so/{slug}">
+<meta property="og:url" content="https://lane.so/{slug}/">
 <meta property="og:image" content="https://lane.so/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Lane, your AI second brain, on your Mac">
+<meta property="og:locale" content="en_GB">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lane.so/og.png">
 <meta name="twitter:title" content="{html.escape(title)}">
 <meta name="twitter:description" content="{html.escape(desc)}">
 <meta name="theme-color" content="#ffffff">
@@ -154,6 +170,8 @@ def page(slug: str, title: str, desc: str, kicker: str, h1: str, lede: str, body
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
+<script type="application/ld+json">{{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{{"@type":"ListItem","position":1,"name":"Lane","item":"https://lane.so/"}},{{"@type":"ListItem","position":2,"name":"{html.escape(kicker) or html.escape(title.split(chr(183))[0].strip())}","item":"https://lane.so/{slug}/"}}]}}</script>
+{GA}
 {head}
 </head>
 <body class="{body_class}">
@@ -194,7 +212,7 @@ AUDIENCES = [
         slug="for/founders",
         kicker="For founders",
         title="Lane for founders · Your AI second brain, on your Mac",
-        desc="You are the memory of the company. Lane remembers the investor calls, the hiring threads, the pricing decision and the promise you made on Slack, and answers from your own Mac.",
+        desc="You are the memory of the company. Lane remembers the calls, the threads and the promises, and answers from your own Mac.",
         h1="You are the memory of&nbsp;the&nbsp;company",
         lede="Six contexts before lunch: the investor, the candidate, the customer who is about to churn, the pricing argument, the contract, the bug. Nobody is taking notes for you, and the cost lands two weeks later when someone asks what you decided.",
         problem=("The tax you already pay",
@@ -603,7 +621,7 @@ COMPARISONS = [
     dict(
         slug="compare/rewind", nav="vs Rewind", other="Rewind",
         title="Lane vs Rewind · A memory that reads instead of records",
-        desc="Rewind records your screen so you can play it back. Lane reads what was on it, writes memories, and answers questions about your day with a model that runs on your Mac.",
+        desc="Rewind records your screen so you can play it back. Lane reads what was on it, writes memories, and answers with a model on your own Mac.",
         h1="Lane vs&nbsp;Rewind",
         lede="Rewind made the case that your Mac should remember your day, and it was right. The difference is what gets kept, and where the thinking happens.",
         what="Rewind is a Mac app that records your screen and your calls and makes that recording searchable, so you can scrub back to the moment something happened. Its AI features send context to a hosted model.",
@@ -618,7 +636,7 @@ COMPARISONS = [
     dict(
         slug="compare/limitless", nav="vs Limitless", other="Limitless",
         title="Lane vs Limitless · On your Mac, or in their cloud",
-        desc="Limitless captures conversations, including away from your desk, and thinks about them in the cloud. Lane captures the working day on your Mac and thinks about it there.",
+        desc="Limitless captures conversations in the cloud, with a wearable. Lane captures the working day on your Mac and does the thinking there too.",
         h1="Lane vs&nbsp;Limitless",
         lede="Both want to give you a memory. They disagree about where it should live, and that disagreement decides almost everything else.",
         what="Limitless is a cloud product for capturing and recalling conversations, with a wearable for catching the ones that happen away from a computer. Your recordings and the work of understanding them happen on their servers.",
@@ -662,7 +680,7 @@ COMPARISONS = [
     ),
     dict(
         slug="compare/notion", nav="vs Notion", other="Notion",
-        title="Lane vs Notion · A place to file, or a memory that fills itself",
+        title="Lane vs Notion · Filing, or a memory that fills itself",
         desc="Notion is where you put things. Lane is what remembers them without being told. They solve different halves of the same problem.",
         h1="Lane vs&nbsp;Notion",
         lede="Notion answers questions about what you wrote down. Lane answers questions about what you did. Most of what you need later was never written down at all.",
@@ -843,7 +861,7 @@ def build_company() -> list[str]:
             "Updates are signed with a key we hold offline. The app checks the signature before installing anything, so an update that did not come from us is refused.",
             "Licence keys are signed the same way and checked on your machine, which is why unlocking Lane needs no server.")),
         ("Our website", p(
-            "lane.so is a static site. It sets no cookies and runs no analytics. If you join the waitlist, your email address is stored so we can write to you. If you buy, our payment processor handles the card and we never see it.",
+            "lane.so is a static site. It runs Google Analytics, which sets cookies and counts visits, and nothing else. If you join the waitlist, your email address is stored so we can write to you. If you buy, our payment processor handles the card and we never see it.",
             'The full detail is in the <a href="/privacy">privacy policy</a>.')),
         ("Reporting something", p(
             "If you find a security problem, please tell us before you tell anyone else, and give us a reasonable chance to fix it. " + CONTACT,
@@ -867,7 +885,7 @@ def build_company() -> list[str]:
             "Lane reads the text your apps publish for accessibility: the page you are reading, the document you are writing, the title of the window. It never reads keystrokes and it never stores what you type into a password field.",
             "You can pause it from the menu bar at any moment, and exclude any app or any website permanently. Anything you exclude is never read, not read and discarded.")),
         ("What we can see", p(
-            "Almost nothing. We know how many people downloaded the app, because the download link counts clicks. We know who joined the waitlist, because they told us their email address. We know who bought a licence, because they paid us.",
+            "Almost nothing about you, and nothing at all about your use of the app. The website runs Google Analytics, so we know how many people visited and which pages they read. We know how many people downloaded the app, because the download link counts clicks. We know who joined the waitlist, because they told us their email address. We know who bought a licence, because they paid us.",
             "We do not know how you use Lane, what is in your memories, what you ask it, or whether you have opened it since installing. There is no telemetry.")),
         ("Things you can choose to send", p(
             "Feedback, which opens your mail app with the note you wrote and nothing attached. Labels for improving Rabbit, which are off unless you turn them on and which you can review before they go.",
@@ -901,11 +919,12 @@ def build_legal() -> list[str]:
             "<b>Downloads.</b> When the download link is used we record that a download happened, and the source parameter in the link. No IP address and no identifier is stored with it.",
             "<b>Feedback.</b> If you send feedback through the website we store what you wrote and, if you give one, your email address.",
             "<b>Purchases.</b> If you buy a licence we store your email address, the plan and the amount, so that we can support the purchase and meet our tax obligations."),
-         p("The website sets no cookies and runs no analytics or advertising scripts. Your browser stores one flag locally to remember that you have already joined the waitlist; it never leaves your browser.")),
-        ("Who else is involved", p("We use two processors, and no others:"),
+         p("<b>Analytics.</b> The website uses Google Analytics to count visits and see which pages people read. It sets cookies in your browser and sends Google your IP address, which Google uses to approximate your location and then discards. We use it to understand which pages are worth writing, nothing more. We run no advertising scripts and we do not use analytics to build a profile of you. Lawful basis: our legitimate interest in knowing whether the site works. Any blocker, or the Google Analytics opt-out add-on, stops it, and the site works exactly the same." + "<p>Your browser also stores one flag locally to remember that you have already joined the waitlist; that flag never leaves your browser.</p>")),
+        ("Who else is involved", p("We use these processors, and no others:"),
          ul("<b>Supabase</b> hosts the database holding the waitlist, feedback and purchase records.",
             "<b>Dodo Payments</b> processes payments and acts as merchant of record. They handle your card details; we never receive them.",
-            "<b>Netlify</b> serves the website and, like any web server, processes requests in order to answer them."),
+            "<b>Netlify</b> serves the website and, like any web server, processes requests in order to answer them.",
+            "<b>Google Analytics</b> counts visits to the website. It sees nothing that happens inside the application."),
          p("We do not sell your data, share it for advertising, or use it to train any model.")),
         ("How long we keep it", p(
             "Waitlist entries are kept until you ask us to remove them, or until the waitlist is closed and everyone on it has been contacted. Purchase records are kept for as long as tax law requires us to keep them. Feedback is kept until it has been acted on.")),
@@ -981,7 +1000,7 @@ def build_updates() -> list[str]:
     </ol>'''
     body = sec("", "", entries + '<p class="aside rv">Lane updates itself, and every update is signed. <a class="tlink" href="/security">How that works</a></p>')
     made.append(str(page("changelog", "Changelog · Lane for Mac",
-                         "What changed in each version of Lane, newest first.",
+                         "What changed in each version of Lane for Mac, newest first: the notch tab, meetings, the encrypted vault, and the model that runs on your own machine.",
                          "Changelog", "What changed, and&nbsp;when",
                          "Newest first. Versions before 1.0 were tested on our own machines and with a small number of people.",
                          body)))
@@ -1184,6 +1203,33 @@ def build_rabbit() -> list[str]:
                      "Rabbit", "", "", body, body_class="dark-page", head=head, hero=hero))]
 
 
+def build_404() -> list[str]:
+    """Netlify serves /404.html for anything it cannot match."""
+    links = cards([("ask", "Everything Lane does", "The features, one page each.", "/features"),
+                   ("people", "Who it is for", "Founders, consultants, researchers, engineers, sales teams, lawyers and students.", "/for/founders"),
+                   ("bar", "How it compares", "Next to Rewind, Granola, Notion, Obsidian and the rest.", "/compare")])
+    body = sec("Try these", "Where you were probably going", links, "sec mist")
+    hero = """  <section class="subhero">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Lane</a><span>/</span><span>Not found</span></nav>
+      <h1 class="display">That page is not here</h1>
+      <p class="lede">Which is ironic, for a memory app. The link may be old, or we may have moved something without leaving a forwarding address.</p>
+      <div class="actions">
+        <a class="btn btn-primary btn-lg" href="/">Back to the start</a>
+        <a class="btn btn-ghost btn-lg" href="/features">See every feature</a>
+      </div>
+    </div>
+  </section>"""
+    page("404", "Not found · Lane", "That page does not exist. Here are the features, the use cases and the comparisons, which is probably where you were going.",
+         "Not found", "", "", body, hero=hero)
+    import shutil
+    made = (ROOT / "404" / "index.html").read_text()
+    made = made.replace('<link rel="canonical" href="https://lane.so/404/">', '<meta name="robots" content="noindex">')
+    (ROOT / "404.html").write_text(made)
+    shutil.rmtree(ROOT / "404")
+    return [str(ROOT / "404.html")]
+
+
 if __name__ == "__main__":
-    for f in build() + build_rest() + build_company() + build_legal() + build_updates() + build_rabbit():
+    for f in build() + build_rest() + build_company() + build_legal() + build_updates() + build_rabbit() + build_404():
         print("wrote", f.replace(str(ROOT) + "/", ""))

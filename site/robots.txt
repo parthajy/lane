@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
 
+# The receipt page is per-purchase and has nothing to index.
+Disallow: /thanks/
+
 Sitemap: https://lane.so/sitemap.xml
