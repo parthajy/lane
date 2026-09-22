@@ -129,7 +129,7 @@ node scripts/licence.mjs mint lifetime 250 > lifetime.csv   # then import to Sup
 - **The Windows workflow** could not be pushed: the GitHub token this Mac holds
   has no `workflow` scope. Run `gh auth refresh -s workflow`, then
   `git add .github && git commit -m "CI" && git push`.
-- **Placeholders on the site.** `hello@lane.so` has to be a real mailbox, and
+- **Placeholders on the site.** `pb@lane.so` has to be a real mailbox, and
   the X and GitHub links in the footer still point nowhere.
 - **The footer pages.** About thirty links have no page behind them. Write them
   or cut them before launch.

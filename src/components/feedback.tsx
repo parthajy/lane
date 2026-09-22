@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { api } from '@/lib/api'
 
-const TO = 'hello@lane.so'
+const TO = 'pb@lane.so'
 
 /**
  * Feedback without a server: Lane cannot reach the network, so it writes the

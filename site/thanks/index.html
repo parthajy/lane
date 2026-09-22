@@ -44,7 +44,7 @@
       <li>Paste the key and press Unlock.</li>
       <li>That is all. The key is checked on your Mac, so nothing is sent anywhere.</li>
     </ol>
-    <p class="muted" id="foot">Keep this key. We can always send it again: write to hello@lane.so from the address you paid with.</p>
+    <p class="muted" id="foot">Keep this key. We can always send it again: write to pb@lane.so from the address you paid with.</p>
   </div>
 </main>
 <script>
@@ -66,14 +66,14 @@
   }
 
   if (!id) {
-    fail('We could not see which payment this was. Write to hello@lane.so and we will send your key by hand.');
+    fail('We could not see which payment this was. Write to pb@lane.so and we will send your key by hand.');
     return;
   }
 
   fetch('/.netlify/functions/claim?' + (sub ? 'subscription_id=' : 'payment_id=') + encodeURIComponent(id))
     .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
     .then(function (res) {
-      if (!res.ok || !res.d.ok) { fail(res.d.error || 'Something went wrong. Write to hello@lane.so and we will sort it out.'); return; }
+      if (!res.ok || !res.d.ok) { fail(res.d.error || 'Something went wrong. Write to pb@lane.so and we will sort it out.'); return; }
       head.textContent = 'Thank you. Here is your key.';
       say.textContent = res.d.plan === 'lifetime'
         ? 'Lane is yours for life, every update included.'
@@ -89,7 +89,7 @@
       });
     })
     .catch(function () {
-      fail('We could not reach the licence desk. Write to hello@lane.so and we will send your key within the hour.');
+      fail('We could not reach the licence desk. Write to pb@lane.so and we will send your key within the hour.');
     });
 })();
 </script>

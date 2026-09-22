@@ -92,7 +92,7 @@ export default async (request) => {
   })
   if (!claim?.ok) {
     console.error('claim failed', claim)
-    return json({ ok: false, error: 'We are out of keys for that plan. Write to hello@lane.so and we will send one within the hour.' }, 409)
+    return json({ ok: false, error: 'We are out of keys for that plan. Write to pb@lane.so and we will send one within the hour.' }, 409)
   }
   return json({ ok: true, key: claim.key, plan, email: p.email })
 }

@@ -255,7 +255,7 @@
       return;
     }
     email.removeAttribute('aria-invalid');
-    if (!db || !key) { say('The list is not open yet. Write to hello@lane.so and we will add you.', 'bad'); return; }
+    if (!db || !key) { say('The list is not open yet. Write to pb@lane.so and we will add you.', 'bad'); return; }
 
     button.disabled = true;
     say('One moment…');
@@ -276,7 +276,7 @@
         button.disabled = false;
         say(String(err.message || err).indexOf('email address') >= 0
           ? 'That does not look like an email address.'
-          : 'We could not reach the list. Write to hello@lane.so and we will add you by hand.', 'bad');
+          : 'We could not reach the list. Write to pb@lane.so and we will add you by hand.', 'bad');
       });
   });
 })();

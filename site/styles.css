@@ -431,6 +431,66 @@ section[id], [id="access"] { scroll-margin-top: 78px; }
 .tile.t-sky { background: linear-gradient(180deg, #ebf4fe, #fbfdff); border-color: rgba(43,156,243,.18); }
 
 /* ---------- the closing colour block ---------- */
+/* ---------- the use-case and feature pages ---------- */
+.subhero {
+  position: relative; padding-block: clamp(72px, 10vh, 120px) clamp(44px, 6vw, 72px);
+  background:
+    radial-gradient(48% 60% at 16% 0%, rgba(122,106,255,.15), rgba(122,106,255,0) 68%),
+    radial-gradient(40% 50% at 86% 10%, rgba(139,125,255,.12), rgba(139,125,255,0) 66%),
+    linear-gradient(180deg, #fbfaff 0%, #ffffff 74%);
+  border-bottom: 1px solid var(--line);
+}
+.subhero .wrap { display: grid; gap: 20px; justify-items: start; }
+.subhero h1 { font-size: clamp(34px, 4.6vw, 62px); letter-spacing: -.045em; font-weight: 700; line-height: 1.04; max-width: 17ch; color: #171727; }
+.subhero .lede { font-size: clamp(16.5px, 1.5vw, 19.5px); color: #4a4a5d; max-width: 58ch; line-height: 1.55; }
+.subhero .actions { justify-content: flex-start; gap: 12px; margin-top: 6px; }
+.crumbs {
+  display: flex; align-items: center; gap: 8px;
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--faint);
+}
+.crumbs a { color: var(--accent); }
+.crumbs span:last-child { color: var(--body); }
+
+/* the example questions */
+/* On a wide screen a full-width row of small text is hard to read. */
+.sec .facts { max-width: 980px; }
+
+.asklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-width: 760px; }
+.asklist li {
+  display: grid; grid-template-columns: 18px 1fr; gap: 14px; align-items: start;
+  padding: 15px 18px; border-radius: 13px; background: var(--paper);
+  border: 1px solid var(--line); font-size: 16px; color: #23233a;
+}
+.asklist li svg { margin-top: 3px; color: var(--accent); }
+.aside { margin-top: 20px; font-size: 14.5px; color: var(--body); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* the numbered steps */
+.steplist { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; counter-reset: s; }
+@media (min-width: 860px) { .steplist { grid-template-columns: repeat(3, 1fr); gap: 18px; } }
+.steplist li { display: grid; gap: 12px; align-content: start; padding: 22px; border-radius: 16px; background: var(--paper); border: 1px solid var(--line); }
+.steplist .n {
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px;
+  background: var(--accent-soft); color: var(--accent-ink);
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 13px; font-weight: 500;
+}
+.steplist b { display: block; font-size: 16px; font-weight: 600; color: #171727; margin-bottom: 5px; }
+.steplist p { font-size: 14.5px; color: var(--body); line-height: 1.5; }
+
+/* the link cards */
+.pcards { display: grid; gap: 14px; }
+@media (min-width: 720px) { .pcards { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1040px) { .pcards { grid-template-columns: repeat(3, 1fr); } }
+.pcard {
+  display: grid; gap: 9px; align-content: start; padding: 22px; border-radius: 16px;
+  background: var(--paper); border: 1px solid var(--line); text-decoration: none;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.pcard:hover { transform: translateY(-2px); border-color: rgba(90,81,229,.28); box-shadow: 0 16px 34px -20px rgba(60,40,140,.4); }
+.pcard-ic { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-ink); }
+.pcard b { font-size: 16.5px; font-weight: 600; color: #171727; letter-spacing: -.01em; }
+.pcard p { font-size: 14.5px; color: var(--body); line-height: 1.5; }
+.pcard .tlink { margin-top: 2px; }
+
 /* ---------- early access, full width ---------- */
 .access {
   padding-block: clamp(64px, 8vw, 104px);
