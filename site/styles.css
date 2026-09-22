@@ -108,6 +108,13 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; text-wrap: balance; }
     radial-gradient(70% 46% at 50% 104%, rgba(255,231,214,.85), rgba(255,231,214,0) 72%),
     linear-gradient(180deg, #eceaff 0%, #f4effc 30%, #fdf1e9 64%, #fffcfa 88%, #fff 100%);
 }
+/* The dot field across the whole width of the hero. It is drawn below the
+   grain and below the white fade at the bottom, so it never fights the copy. */
+.hero-dots {
+  position: absolute; inset: 0; z-index: -1;
+  width: 100%; height: 100%; display: block; pointer-events: none;
+}
+
 .hero::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .5;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
@@ -122,6 +129,9 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; text-wrap: balance; }
 .pill b { color: var(--ink); font-weight: 500; }
 .pill .tag { background: var(--accent-soft); color: var(--accent-ink); border-radius: 999px; padding: 2px 8px; font-size: 11.5px; font-weight: 500; }
 .hero h1 { font-size: clamp(40px, 6.8vw, 82px); max-width: 15ch; letter-spacing: -0.042em; font-weight: 600; color: #171727; }
+/* On a narrow phone the longest line, "brain, on your Mac", is wider than
+   the screen at the clamp's floor, so it steps down once more. */
+@media (max-width: 430px) { .hero h1 { font-size: 34px; } }
 .hero .lede { font-size: clamp(16.5px, 2vw, 19.5px); max-width: min(58ch, 100%); color: #4a4a5d; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .note { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 14px; color: var(--faint); font-size: 13px; }

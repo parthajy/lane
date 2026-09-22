@@ -280,3 +280,180 @@
       });
   });
 })();
+
+/* ================= the dot field behind the hero =================
+   A field of dots across the full width, with a sphere of dots drifting
+   through it: where the sphere passes, the field gathers onto its surface
+   and brightens, then lets go again. Quiet in the middle, so the headline
+   is never fighting it. Nothing here loads, and it stops when out of view. */
+(function () {
+  var canvas = document.querySelector('.hero-dots')
+  if (!canvas || !canvas.getContext) return
+
+  var hero = canvas.parentElement
+  var ctx = canvas.getContext('2d', { alpha: true })
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  var dots = []
+  var w = 0
+  var h = 0
+  var dpr = 1
+  var SPACING = 27          // one dot roughly every 27 css pixels
+  var MAX_DOTS = 2200       // and never more than this many
+  var BUCKETS = 7           // alphas are rounded into this many, to batch the drawing
+
+  function build() {
+    var rect = hero.getBoundingClientRect()
+    w = Math.max(1, Math.round(rect.width))
+    h = Math.max(1, Math.round(rect.height))
+    dpr = Math.min(2, window.devicePixelRatio || 1)
+    canvas.width = Math.round(w * dpr)
+    canvas.height = Math.round(h * dpr)
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+    var step = SPACING
+    while ((w / step) * (h / step) > MAX_DOTS) step += 2
+
+    dots = []
+    for (var y = step * 0.5; y < h; y += step) {
+      for (var x = step * 0.5; x < w; x += step) {
+        // A little jitter, so it reads as a field and not as graph paper.
+        var jx = x + (Math.random() - 0.5) * step * 0.7
+        var jy = y + (Math.random() - 0.5) * step * 0.7
+        dots.push({
+          x: jx,
+          y: jy,
+          phase: Math.random() * Math.PI * 2,
+          size: 0.9 + Math.random() * 0.9,
+        })
+      }
+    }
+  }
+
+  /* The sphere: where it is, and how big, at a given moment. It crosses the
+     full width, so the animation belongs to the whole band rather than the
+     middle of it. */
+  function sphereAt(t) {
+    var span = w + 760
+    var travel = (t / 34) % 1                       // one crossing every 34 seconds
+    return {
+      x: -380 + travel * span,
+      y: h * (0.5 + Math.sin(t / 11) * 0.1),
+      r: Math.min(h * 0.54, 300),
+    }
+  }
+
+  function frame(now) {
+    if (!running) return
+    var t = now / 1000
+    ctx.clearRect(0, 0, w, h)
+
+    var s = sphereAt(t)
+    var cx = w / 2
+    var cy = h / 2
+    var buckets = []
+    for (var b = 0; b < BUCKETS; b++) buckets.push([])
+
+    for (var i = 0; i < dots.length; i++) {
+      var d = dots[i]
+
+      // The whole field breathes: two slow waves crossing each other.
+      var wave = Math.sin(d.x / 190 + t * 0.32) + Math.sin(d.y / 150 - t * 0.24)
+      var dx = wave * 3.4
+      var dy = Math.cos(d.x / 240 - t * 0.21) * 3.0
+
+      // Near the sphere, dots are drawn onto its surface: a shell, densest at
+      // the rim, which is what makes it read as a ball of dots rather than a
+      // smudge. It dissolves as it crosses the middle, so the words are never
+      // competing with it, and gathers again on the far side.
+      var ox = d.x - s.x
+      var oy = d.y - s.y
+      var dist = Math.sqrt(ox * ox + oy * oy) || 0.0001
+      var away = Math.min(1, Math.abs(s.x - cx) / (w * 0.42))
+      var strength = away * away * (3 - 2 * away)     // smooth, 0 in the middle
+      var pull = 0
+      if (strength > 0.01 && dist < s.r * 1.4) {
+        // Where on the shell this dot belongs: the surface of a sphere seen
+        // flat is crowded at the edge, so the radius is pushed outwards.
+        var u = Math.min(1, dist / s.r)
+        var want = s.r * Math.sqrt(Math.min(1, u * 1.06))
+        var band = 1 - Math.min(1, Math.abs(dist - want) / (s.r * 0.9))
+        pull = band * band * strength
+        dx += ((s.x + (ox / dist) * want) - d.x) * pull * 0.95
+        dy += ((s.y + (oy / dist) * want) - d.y) * pull * 0.95
+      }
+
+      // Quiet in the middle of the hero, where the words are.
+      var mx = (d.x - cx) / (w * 0.5)
+      var my = (d.y - cy) / (h * 0.62)
+      var calm = Math.min(1, Math.sqrt(mx * mx + my * my))
+      calm = 0.12 + 0.88 * calm * calm
+
+      var twinkle = 0.62 + 0.38 * Math.sin(t * 0.8 + d.phase)
+      var alpha = (0.1 + 0.26 * twinkle) * calm + pull * 0.5
+      if (alpha < 0.012) continue
+
+      var k = Math.min(BUCKETS - 1, Math.round(alpha * (BUCKETS - 1) / 0.6))
+      buckets[k].push(d.x + dx, d.y + dy, d.size * (1 + pull * 0.85))
+    }
+
+    for (var bi = 0; bi < BUCKETS; bi++) {
+      var list = buckets[bi]
+      if (!list.length) continue
+      ctx.fillStyle = 'rgba(28, 26, 58, ' + (0.6 * (bi + 1) / BUCKETS).toFixed(3) + ')'
+      ctx.beginPath()
+      for (var j = 0; j < list.length; j += 3) {
+        var r = list[j + 2]
+        ctx.moveTo(list[j] + r, list[j + 1])
+        ctx.arc(list[j], list[j + 1], r, 0, 6.2832)
+      }
+      ctx.fill()
+    }
+
+    raf = requestAnimationFrame(frame)
+  }
+
+  var raf = null
+  var running = false
+
+  function start() {
+    if (running || reduced) return
+    running = true
+    raf = requestAnimationFrame(frame)
+  }
+  function stop() {
+    running = false
+    if (raf) cancelAnimationFrame(raf)
+    raf = null
+  }
+
+  build()
+  if (reduced) {
+    // One still frame: the field, without the movement.
+    running = true
+    frame(0)
+    stop()
+  } else {
+    start()
+  }
+
+  // Off screen, it costs nothing.
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { e.isIntersecting ? start() : stop() })
+    }, { threshold: 0 }).observe(hero)
+  }
+
+  var resizeTimer = null
+  function reflow() {
+    clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(function () {
+      build()
+      if (reduced) { running = true; frame(0); stop() }
+    }, 180)
+  }
+  window.addEventListener('resize', reflow)
+  // The hero grows when the webfont lands and the headline rewraps, so the
+  // field is rebuilt for the size it actually ends up being.
+  if ('ResizeObserver' in window) new ResizeObserver(reflow).observe(hero)
+})();
