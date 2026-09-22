@@ -486,7 +486,9 @@ pub fn board(state: State<'_, Arc<AppState>>, since: Option<i64>, max_nodes: Opt
     let store = crate::lock(&state.store);
     let graph = store.graph(max_nodes.unwrap_or(200).min(1000), min_mentions.unwrap_or(1)).map_err(err)?;
     let memories = store
-        .board_memories(since.unwrap_or(0), max_memories.unwrap_or(120).min(500))
+        // The board paints everything it is given and only mounts what you can
+        // reach, so this no longer has to protect the renderer from itself.
+        .board_memories(since.unwrap_or(0), max_memories.unwrap_or(120).min(100_000))
         .map_err(err)?
         .into_iter()
         .map(|(card, entity_ids)| BoardMemoryNode { card, entity_ids })

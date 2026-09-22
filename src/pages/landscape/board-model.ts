@@ -125,6 +125,47 @@ export function seededRandom(seed: number | string): () => number {
   }
 }
 
+
+/** A uniform grid over the points, built without allocating per cell.
+ *  Counting sort into one flat index array: rebuilding it each pass costs
+ *  two linear walks, which is what keeps the layout usable at scale. */
+class Grid {
+  cell: number
+  cols = 0
+  rows = 0
+  minX = 0
+  minY = 0
+  start: Int32Array = new Int32Array(0)
+  items: Int32Array = new Int32Array(0)
+  constructor(cell: number) { this.cell = Math.max(1, cell) }
+
+  build(x: Float64Array, y: Float64Array, n: number) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    for (let i = 0; i < n; i++) {
+      if (x[i] < minX) minX = x[i]; if (x[i] > maxX) maxX = x[i]
+      if (y[i] < minY) minY = y[i]; if (y[i] > maxY) maxY = y[i]
+    }
+    this.minX = minX; this.minY = minY
+    this.cols = Math.max(1, Math.floor((maxX - minX) / this.cell) + 1)
+    this.rows = Math.max(1, Math.floor((maxY - minY) / this.cell) + 1)
+    const cells = this.cols * this.rows
+    if (this.start.length < cells + 1) this.start = new Int32Array(cells + 1)
+    else this.start.fill(0, 0, cells + 1)
+    if (this.items.length < n) this.items = new Int32Array(n)
+
+    const at = (i: number) =>
+      Math.min(this.rows - 1, Math.max(0, Math.floor((y[i] - minY) / this.cell))) * this.cols +
+      Math.min(this.cols - 1, Math.max(0, Math.floor((x[i] - minX) / this.cell)))
+    for (let i = 0; i < n; i++) this.start[at(i) + 1]++
+    for (let c = 0; c < cells; c++) this.start[c + 1] += this.start[c]
+    const cursor = this.start.slice(0, cells)
+    for (let i = 0; i < n; i++) this.items[cursor[at(i)]++] = i
+  }
+
+  col(v: number) { return Math.min(this.cols - 1, Math.max(0, Math.floor((v - this.minX) / this.cell))) }
+  row(v: number) { return Math.min(this.rows - 1, Math.max(0, Math.floor((v - this.minY) / this.cell))) }
+}
+
 export function brainLayout(nodes: GraphNode[], edges: GraphEdge[]): BrainLayout {
   const n = nodes.length
   const centers = new Map<string, XY>()
@@ -173,7 +214,7 @@ export function brainLayout(nodes: GraphNode[], edges: GraphEdge[]): BrainLayout
   })
 
   const fissure = n >= 40 ? Math.max(34, R * 0.08) : 0
-  const iters = n > 250 ? 260 : 320
+  const iters = n > 3000 ? 0 : n > 1200 ? 90 : n > 250 ? 260 : 320
   const decay = 1 - Math.pow(0.001, 1 / iters)
   const linkDist = 80
   const linkK = 0.22
@@ -182,17 +223,35 @@ export function brainLayout(nodes: GraphNode[], edges: GraphEdge[]): BrainLayout
   const maxRep = 420 * 420
   let alpha = 1
 
+  // Repulsion only reaches `maxRep`, so a node can only be pushed by one in
+  // its own cell or a neighbouring one, which makes each pass linear.
+  //
+  // Past a few thousand memories the simulation is skipped altogether. Its
+  // whole job is to make a pleasing brain shape, and at that size no one can
+  // see where an individual dot sits; the seeded placement below already
+  // puts each type in its own wedge, so the picture is the same and the
+  // board opens immediately.
+  const rgrid = new Grid(Math.sqrt(maxRep))
+
   for (let it = 0; it < iters; it++) {
-    // Many-body repulsion (bigger dots push harder).
+    rgrid.build(x, y, n)
     for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        let dx = x[j] - x[i], dy = y[j] - y[i]
-        let d2 = dx * dx + dy * dy
-        if (d2 > maxRep) continue
-        if (d2 < 1) { dx = (i % 7) - 3 + 0.5; dy = (j % 5) - 2 + 0.5; d2 = dx * dx + dy * dy }
-        const f = (-(55 + rad[i] + rad[j]) * alpha) / d2
-        vx[i] += dx * f; vy[i] += dy * f
-        vx[j] -= dx * f; vy[j] -= dy * f
+      const c0 = rgrid.col(x[i]), r0 = rgrid.row(y[i])
+      for (let gy = Math.max(0, r0 - 1); gy <= Math.min(rgrid.rows - 1, r0 + 1); gy++) {
+        for (let gx = Math.max(0, c0 - 1); gx <= Math.min(rgrid.cols - 1, c0 + 1); gx++) {
+          const cellIdx = gy * rgrid.cols + gx
+          for (let k = rgrid.start[cellIdx]; k < rgrid.start[cellIdx + 1]; k++) {
+            const j = rgrid.items[k]
+            if (j <= i) continue
+            let dx = x[j] - x[i], dy = y[j] - y[i]
+            let d2 = dx * dx + dy * dy
+            if (d2 > maxRep) continue
+            if (d2 < 1) { dx = (i % 7) - 3 + 0.5; dy = (j % 5) - 2 + 0.5; d2 = dx * dx + dy * dy }
+            const f = (-(55 + rad[i] + rad[j]) * alpha) / d2
+            vx[i] += dx * f; vy[i] += dy * f
+            vx[j] -= dx * f; vy[j] -= dy * f
+          }
+        }
       }
     }
     // Springs along links.
@@ -239,17 +298,31 @@ export function brainLayout(nodes: GraphNode[], edges: GraphEdge[]): BrainLayout
   // Collision pass: no two dots (plus room for a label) overlap. Small
   // boards get more air so every title can show at a normal zoom.
   const pad = n <= 30 ? 120 : n <= 80 ? 50 : 24
-  for (let pass = 0; pass < 6; pass++) {
+  // Two dots can only overlap if they are within one cell of each other.
+  let maxRad = 0
+  for (let i = 0; i < n; i++) if (rad[i] > maxRad) maxRad = rad[i]
+  const cgrid = new Grid(maxRad * 2 + pad)
+  const passes = n > 20000 ? 2 : n > 5000 ? 3 : 6
+  for (let pass = 0; pass < passes; pass++) {
+    cgrid.build(x, y, n)
     for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const min = rad[i] + rad[j] + pad
-        const dx = x[j] - x[i], dy = y[j] - y[i]
-        const d2 = dx * dx + dy * dy
-        if (d2 >= min * min) continue
-        const d = Math.sqrt(d2) || 0.01
-        const push = ((min - d) / d) * 0.5
-        x[i] -= dx * push; y[i] -= dy * push
-        x[j] += dx * push; y[j] += dy * push
+      const c0 = cgrid.col(x[i]), r0 = cgrid.row(y[i])
+      for (let gy = Math.max(0, r0 - 1); gy <= Math.min(cgrid.rows - 1, r0 + 1); gy++) {
+        for (let gx = Math.max(0, c0 - 1); gx <= Math.min(cgrid.cols - 1, c0 + 1); gx++) {
+          const cellIdx = gy * cgrid.cols + gx
+          for (let k = cgrid.start[cellIdx]; k < cgrid.start[cellIdx + 1]; k++) {
+            const j = cgrid.items[k]
+            if (j <= i) continue
+            const min = rad[i] + rad[j] + pad
+            const dx = x[j] - x[i], dy = y[j] - y[i]
+            const d2 = dx * dx + dy * dy
+            if (d2 >= min * min) continue
+            const d = Math.sqrt(d2) || 0.01
+            const push = ((min - d) / d) * 0.5
+            x[i] -= dx * push; y[i] -= dy * push
+            x[j] += dx * push; y[j] += dy * push
+          }
+        }
       }
     }
   }

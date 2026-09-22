@@ -26,6 +26,7 @@
 
 import './board.css'
 import galaxy from '@/assets/galaxy.jpg'
+import { ConstellationCanvas, type CanvasLink, type CanvasPoint } from './board-canvas'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow, ReactFlowProvider, Background, BackgroundVariant, MiniMap, useReactFlow, useNodesState,
@@ -43,6 +44,7 @@ import { api, type BoardData, type MemoryCard } from '@/lib/api'
 import {
   TYPE_META, TYPE_ORDER, brainLayout, arrivalPoint, dotSize, seededRandom, useIsDark,
   loadPositions, savePositions, clearPositions, relationMeta,
+  MIN_DOT,
   type GraphNode, type GraphEdge, type RecordType, type XY, type BrainLayout,
 } from './board-model'
 import {
@@ -88,7 +90,12 @@ function boundsOf(points: XY[], pad = 60) {
 const TIP_KEY = 'lane:board:tip:v1'
 // How many memories the board draws. The layout settles 1500 dots in about
 // 1.5s; past that the wait is worse than the missing tail.
-const BOARD_LIMIT = 400
+const BOARD_LIMIT = 20000
+// React Flow puts an element on the page for every node it is handed, so it
+// is only ever handed this many: the ones nearest the middle of what you are
+// looking at. The rest are painted on the canvas underneath. Nine hundred is
+// well beyond what fits on a screen at a zoom you could click at.
+const MOUNT_BUDGET = 900
 
 function isTyping(t: EventTarget | null) {
   const el = t as HTMLElement | null
@@ -187,6 +194,11 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
 
   // ── Layout ────────────────────────────────────────────────────────
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+  // The middle of the view, in board coordinates, and a counter that says
+  // it has settled somewhere new.
+  const centreRef = useRef({ x: 0, y: 0 })
+  const nodesLenRef = useRef(0)
+  const [viewTick, setViewTick] = useState(0)
   const baseRef = useRef<BrainLayout | null>(null)
   const savedRef = useRef<Map<string, XY>>(new Map()) // dot centres the person placed
   const didFitRef = useRef(false)
@@ -509,6 +521,8 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
   // after mount), only by leaving the page.
   const fitTimer = useRef<number | null>(null)
   useEffect(() => () => { if (fitTimer.current) window.clearTimeout(fitTimer.current) }, [])
+  useEffect(() => { nodesLenRef.current = nodes.length }, [nodes.length])
+
   useEffect(() => {
     if (didFitRef.current || !records || nodes.length === 0) return
     didFitRef.current = true
@@ -547,6 +561,66 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
     }
     return out
   }, [links, picker, hiddenIds])
+
+  // ── What is painted, and what is mounted ──────────────────────────
+  // The canvas takes every memory and every link. React Flow takes only the
+  // memories near the middle of the view, up to the budget, so the page
+  // never holds more elements than a person could actually interact with.
+  const shownNodes = useMemo(() => {
+    if (nodes.length <= MOUNT_BUDGET) return nodes
+    const c = centreRef.current
+    const scored = nodes.map((n) => {
+      const dx = n.position.x - c.x, dy = n.position.y - c.y
+      // Hubs win ties, so the memories worth reaching are the reachable ones.
+      const pull = ((n.data as MemoryData)?.degree ?? 0) * 900
+      return { n, d: dx * dx + dy * dy - pull }
+    })
+    scored.sort((a, b) => a.d - b.d)
+    return scored.slice(0, MOUNT_BUDGET).map((v) => v.n)
+  }, [nodes, viewTick])
+
+  // Only the memories React Flow is not going to mount. Below the budget
+  // that is none of them, so the canvas draws nothing and the board is
+  // exactly what it was before any of this existed.
+  const overBudget = nodes.length > MOUNT_BUDGET
+
+  const canvasPoints = useMemo<CanvasPoint[]>(() => {
+    if (!overBudget) return []
+    const mounted = new Set(shownNodes.map((n) => n.id))
+    const out: CanvasPoint[] = []
+    for (const n of nodes) {
+      if (mounted.has(n.id)) continue
+      const d = n.data as MemoryData
+      const size = d?.size ?? MIN_DOT
+      out.push({
+        x: n.position.x + size / 2,
+        y: n.position.y + size / 2,
+        r: size / 2,
+        ink: TYPE_META[d?.type]?.ink ?? TYPE_META.note.ink,
+      })
+    }
+    return out
+  }, [nodes, shownNodes, overBudget])
+
+  const canvasLinks = useMemo<CanvasLink[]>(() => {
+    if (!overBudget) return []
+    const at = new Map(nodes.map((n) => {
+      const size = (n.data as MemoryData)?.size ?? MIN_DOT
+      return [n.id, { x: n.position.x + size / 2, y: n.position.y + size / 2 }]
+    }))
+    const out: CanvasLink[] = []
+    for (const l of links) {
+      const a = at.get(l.from), b = at.get(l.to)
+      if (a && b) out.push({ ax: a.x, ay: a.y, bx: b.x, by: b.y })
+    }
+    return out
+  }, [nodes, links, overBudget])
+
+  const shownEdges = useMemo(() => {
+    if (nodes.length <= MOUNT_BUDGET) return edges
+    const live = new Set(shownNodes.map((n) => n.id))
+    return edges.filter((e) => live.has(e.source) && live.has(e.target))
+  }, [edges, shownNodes, nodes.length])
 
   // ── Link operations ───────────────────────────────────────────────
   const findLinkId = (from: string, to: string) =>
@@ -927,6 +1001,13 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
     if (!el) return
     el.style.setProperty('--rb-label-scale', String(Math.min(6, Math.max(1, 1 / vp.zoom))))
     el.style.setProperty('--rb-dot-label-scale', String(Math.min(2.2, Math.max(1, 1 / vp.zoom))))
+    // Where the middle of the window falls on the board, which is what
+    // decides the memories worth mounting. Kept in a ref during the gesture
+    // and published once it ends, so panning never re-renders the list.
+    centreRef.current = {
+      x: (el.clientWidth / 2 - vp.x) / vp.zoom,
+      y: (el.clientHeight / 2 - vp.y) / vp.zoom,
+    }
   }, [])
   // Relation labels keep a steady on-screen size (the CSS scale above).
   // Like Obsidian, a zoomed-out brain shows the shape, not the words: all
@@ -938,6 +1019,8 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
   const zoomRef = useRef(1)
   const onMoveEnd = useCallback((_: unknown, vp: Viewport) => {
     zoomRef.current = vp.zoom
+    // Only now does the mounted set get recomputed.
+    if (nodesLenRef.current > MOUNT_BUDGET) setViewTick((t) => t + 1)
     setZoomPct(Math.round(vp.zoom * 100))
     // Titles need ~110px of screen room each; show them only when the dots
     // are that far apart on screen (hubs need less, they are few). Relation
@@ -1121,8 +1204,8 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
       <div className="rb-sky" aria-hidden="true" style={{ backgroundImage: `url(${galaxy})` }} />
 
       <ReactFlow
-          nodes={nodes}
-          edges={edges}
+          nodes={shownNodes}
+          edges={shownEdges}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
@@ -1153,6 +1236,9 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
           nodesDraggable={!animating}
           proOptions={{ hideAttribution: true }}
         >
+          {/* Every memory and every link, painted. The mounted nodes above
+              draw the same dots in the same places, so the two agree. */}
+          <ConstellationCanvas points={canvasPoints} links={canvasLinks} />
           {/* The sky is drawn by the stylesheet; this stays for React Flow's own sizing. */}
           <Background variant={BackgroundVariant.Dots} gap={24} size={0} className="rb-bg" />
           {showMap && !animating && (
