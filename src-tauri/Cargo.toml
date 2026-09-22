@@ -1,6 +1,6 @@
 [package]
 name = "rat-mac"
-version = "0.1.0"
+version = "1.0.0"
 description = "Lane: local-first memory of what you do on your computer, powered by Rabbit"
 edition = "2021"
 
