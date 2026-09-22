@@ -111,7 +111,10 @@ CTA = '''  <section class="access" id="access">
       <div class="cta-txt rv">
         <span class="label">Early access</span>
         <h2 class="display">Two months free. Then $9.</h2>
-        <p>Leave your email and we send you the build, the moment your seat opens. The first 200 people on the list can buy Lane once, for $499, and keep it for life.</p>
+        <p>Free for two months, everything switched on, no card to start. The first 200 people can buy Lane once, for $499, and keep it for life.</p>
+        <div class="actions" style="margin:2px 0 4px">
+          <a class="btn btn-primary btn-lg" href="/download/mac?source=cta"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v12M7 11l5 5 5-5M4.5 20.5h15"/></svg> Download for Mac</a>
+        </div>
         <form class="wait" id="wait" novalidate>
           <div class="wait-row">
             <input id="wait-email" name="email" type="email" autocomplete="email" placeholder="you@work.com" aria-label="Your email" required>
@@ -185,8 +188,8 @@ def page(slug: str, title: str, desc: str, kicker: str, h1: str, lede: str, body
       <h1 class="display">{h1}</h1>
       <p class="lede">{lede}</p>
       <div class="actions">
-        <a class="btn btn-primary btn-lg" href="#access">Get early access</a>
-        <a class="btn btn-ghost btn-lg" href="/features">See every feature</a>
+        <a class="btn btn-primary btn-lg" href="/download/mac?source={slug}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v12M7 11l5 5 5-5M4.5 20.5h15"/></svg> Download for Mac</a>
+        <a class="btn btn-ghost btn-lg" href="/pricing">See pricing</a>
       </div>
     </div>
   </section>"""}
