@@ -1037,11 +1037,15 @@
   background-repeat: no-repeat;
 }
 /* A touch of shade at the edges, so the panels have something to sit on. */
+/* The photograph is a real night sky and far brighter than a drawn one,
+   especially along the milky way. Without shade over it the white memories
+   stop reading as points of light, so it is darkened overall and more so at
+   the edges, where the rail, the legend and the map sit. */
 .rb-sky::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(120% 90% at 50% 50%, transparent 40%, rgba(3, 4, 10, .55) 100%),
-    linear-gradient(180deg, rgba(3, 4, 10, .35), transparent 22%, transparent 74%, rgba(3, 4, 10, .5));
+    radial-gradient(120% 95% at 50% 45%, rgba(4, 5, 12, .34) 0%, rgba(4, 5, 12, .52) 46%, rgba(3, 4, 10, .78) 100%),
+    linear-gradient(180deg, rgba(3, 4, 10, .45), transparent 20%, transparent 62%, rgba(3, 4, 10, .72));
 }
