@@ -110,10 +110,12 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; text-wrap: balance; }
     radial-gradient(90% 40% at 50% 100%, rgba(226,222,236,.9), rgba(226,222,236,0) 70%),
     linear-gradient(180deg, #e3dcff 0%, #ede4f7 38%, #f6eef2 70%, #f3f0f4 100%);
 }
+.hero-pic { position: absolute; inset: 0; z-index: -1; display: block; }
 .hero-art {
-  position: absolute; inset: 0; z-index: -1;
   width: 100%; height: 100%; display: block;
-  object-fit: cover; object-position: 62% 50%;
+  /* The figure stands at 71% of the picture's width; this keeps him at 71%
+     of the screen however the picture is cropped. app.js reads it. */
+  object-fit: cover; object-position: 71% 50%;
 }
 /* A wash of mist over the left half, so the words sit on something calm
    whatever the picture is doing there. */
@@ -168,11 +170,17 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; text-wrap: balance; }
 .tick-ic { display: grid; place-items: center; width: 24px; height: 24px; color: var(--accent); flex: none; }
 .hero .ticks li:nth-child(3) .tick-ic { color: #1e9e6a; }
 
-/* The right half: the figure lives in the picture; these float around it. */
-.hero-scene { position: relative; min-height: 520px; }
-.orbit { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* The right half of the grid is empty on purpose: the figure in the picture
+   stands there. The chips live in a layer over the whole hero and are placed
+   on the picture itself, so they hug him at every screen size. */
+.hero-scene { position: relative; min-height: 480px; }
+.hero-figure { display: none; }
+.hero-float { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.orbit { position: absolute; opacity: 0; transition: opacity .6s ease .2s; }
+.hero-float.is-placed .orbit { opacity: 1; }
 .hchip {
   position: absolute; display: inline-flex; align-items: center; gap: 10px;
+  transform: translate(-50%, -50%); opacity: 0; transition: opacity .5s ease;
   height: 52px; padding: 0 20px 0 16px; border-radius: 14px;
   background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.85);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -181,11 +189,11 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; text-wrap: balance; }
   animation: chip-float 7s ease-in-out infinite;
 }
 .hchip svg { color: var(--accent); }
-.hchip.c1 { left: 2%;  top: 5%; }
-.hchip.c2 { left: 1%;  top: 31%; animation-delay: -2.2s; }
-.hchip.c3 { left: 71%; top: 12%; animation-delay: -4.1s; }
-.hchip.c4 { left: 74%; top: 38%; animation-delay: -5.6s; }
-@keyframes chip-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.hero-float.is-placed .hchip { opacity: 1; }
+.hchip.c2 { animation-delay: -2.2s; }
+.hchip.c3 { animation-delay: -4.1s; }
+.hchip.c4 { animation-delay: -5.6s; }
+@keyframes chip-float { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% - 6px)); } }
 @media (prefers-reduced-motion: reduce) { .hchip { animation: none; } }
 
 /* The two small things at the foot of the picture. */
@@ -208,20 +216,17 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; text-wrap: balance; }
   .hero { min-height: 0; }
   .hero-in { padding-block: 96px 120px; }
   .hero::before { background: linear-gradient(180deg, rgba(246,242,252,.78) 0%, rgba(246,242,252,.55) 45%, rgba(246,242,252,0) 75%); }
-  .hero-art { object-position: 62% 100%; }
-  .hero-scene { min-height: 300px; }
-  .hchip { height: 44px; font-size: 14px; padding: 0 16px 0 13px; }
-  .hchip.c1 { left: 4%;  top: 8%; }
-  .hchip.c2 { left: 2%;  top: 52%; }
-  .hchip.c3 { left: auto; right: 4%; top: 18%; }
-  .hchip.c4 { left: auto; right: 2%; top: 62%; }
+  /* Narrow: the wide scene would put him behind the words, so the sky stays
+     and he sits below the copy on his own. */
+  .hero-pic, .hero-float { display: none; }
+  .hero-scene { min-height: 0; display: grid; justify-items: center; }
+  .hero-figure { display: block; width: min(300px, 70vw); margin-top: -10px; filter: drop-shadow(0 30px 40px rgba(60,40,120,.28)); }
+  .hero-figure img { width: 100%; height: auto; display: block; }
   .hero-quote { display: none; }
 }
 @media (max-width: 560px) {
   .hero .ticks li { border-right: 0; margin-right: 0; padding-right: 0; width: 100%; }
   .hero .btn-lg { height: 52px; font-size: 16px; }
-  .hchip { display: none; }
-  .hero-scene { min-height: 0; display: none; }
 }
 
 /* ---------- product shot ---------- */
@@ -457,6 +462,17 @@ section[id], [id="access"] { scroll-margin-top: 78px; }
 .sec.dark h2 { color: #fff; }
 .sec.dark .fact svg { color: #a79bff; }
 
+/* His back to the room: nothing leaves. A soft violet light behind him. */
+.vault-figure {
+  position: relative; margin: 44px 0 0; width: min(360px, 80%);
+}
+.vault-figure::before {
+  content: ""; position: absolute; left: 50%; top: 58%; width: 130%; height: 90%; transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(167,155,255,.35), rgba(167,155,255,0));
+  filter: blur(6px); pointer-events: none;
+}
+.vault-figure img { position: relative; width: 100%; height: auto; display: block; filter: drop-shadow(0 30px 50px rgba(0,0,0,.55)); }
+
 /* ---------- tinted bento ---------- */
 .tile.t-peach { background: linear-gradient(180deg, #fff5ec, #fffdfb); border-color: rgba(214,132,60,.18); }
 .tile.t-lilac { background: linear-gradient(180deg, #f3effe, #fdfcff); border-color: rgba(108,88,224,.16); }
@@ -519,8 +535,8 @@ section[id], [id="access"] { scroll-margin-top: 78px; }
 .seats-note { font-size: 13.5px !important; color: #6b523a !important; margin: 10px 0 0 !important; max-width: none !important; }
 .seats-note b { color: #241a10; font-weight: 620; }
 
-.cta-art { position: relative; }
-.cta-art .notch-card { transform: rotate(-1.6deg); box-shadow: 0 34px 70px -26px rgba(90,50,10,.45); }
+.cta-art { position: relative; align-self: end; justify-self: center; margin-bottom: calc(-1 * clamp(30px, 5vw, 58px)); }
+.cta-art img { display: block; width: min(420px, 100%); height: auto; transform: scaleX(-1); filter: drop-shadow(0 30px 50px rgba(90,50,10,.35)); }
 @media (max-width: 899px) { .cta-art { display: none; } }
 
 /* ================= the desktop scene under the menu bar ================= */

@@ -280,3 +280,46 @@
       });
   });
 })();
+
+/* ================= the chips around the figure =================
+   The hero picture is cropped to cover the section, so where the figure
+   lands depends on the screen. The chips carry their place on the picture
+   (data-x, data-y, in the picture's own pixels); this works out where the
+   picture actually sits and puts each chip there, and the arcs with them. */
+(function () {
+  var hero = document.querySelector('.hero')
+  var img = document.querySelector('.hero-art')
+  var layer = document.querySelector('.hero-float')
+  if (!hero || !img || !layer) return
+
+  var chips = Array.prototype.slice.call(layer.querySelectorAll('.hchip'))
+  var orbit = layer.querySelector('.orbit')
+  var IW = 1672, IH = 941
+
+  function place() {
+    var pic = img.closest('picture') || img
+    if (!pic.offsetParent && getComputedStyle(pic).display === 'none') { layer.classList.remove('is-placed'); return }
+    var cw = hero.clientWidth, ch = hero.clientHeight
+    var pos = (getComputedStyle(img).objectPosition || '71% 50%').split(' ')
+    var px = parseFloat(pos[0]) / 100, py = parseFloat(pos[1] || '50%') / 100
+    var s = Math.max(cw / IW, ch / IH)
+    var w = IW * s, h = IH * s
+    var left = (cw - w) * px, top = (ch - h) * py
+
+    chips.forEach(function (c) {
+      c.style.left = (left + Number(c.dataset.x) * s) + 'px'
+      c.style.top = (top + Number(c.dataset.y) * s) + 'px'
+    })
+    if (orbit) {
+      orbit.style.left = left + 'px'; orbit.style.top = top + 'px'
+      orbit.style.width = w + 'px'; orbit.style.height = h + 'px'
+    }
+    // Only when there is room for them: on a narrow screen the scene is hidden anyway.
+    layer.classList.toggle('is-placed', cw >= 960)
+  }
+
+  place()
+  if (img.complete) place(); else img.addEventListener('load', place)
+  window.addEventListener('resize', place)
+  if ('ResizeObserver' in window) new ResizeObserver(place).observe(hero)
+})();

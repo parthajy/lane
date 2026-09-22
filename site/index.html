@@ -63,8 +63,11 @@
 <main id="main">
 
   <section class="hero">
-    <!-- The scene: one picture across the whole hero. Drop it in as site/hero.jpg; until then the sky gradient stands in. -->
-    <img class="hero-art" src="hero.jpg" alt="" width="1672" height="941" fetchpriority="high" decoding="async" onerror="this.remove()">
+    <!-- The scene, across the whole hero. The chips are placed on it in image space (see app.js). -->
+    <picture class="hero-pic">
+      <source srcset="hero.webp" type="image/webp">
+      <img class="hero-art" src="hero.jpg" alt="" width="1672" height="941" fetchpriority="high" decoding="async">
+    </picture>
     <div class="wrap hero-in">
       <div class="hero-copy">
         <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.6 3.9 2.6 6.9 6.5 7.5-3.9.6-5.9 3.6-6.5 7.5-.6-3.9-2.6-6.9-6.5-7.5 3.9-.6 5.9-3.6 6.5-7.5z"/><path d="M19 14c.3 1.8 1.2 3.2 3 3.5-1.8.3-2.7 1.7-3 3.5-.3-1.8-1.2-3.2-3-3.5 1.8-.3 2.7-1.7 3-3.5z" opacity=".7"/></svg><b>Lane 1.0 for Mac</b><i class="pill-sep"></i><span class="tag">Invite only</span></span>
@@ -81,16 +84,23 @@
         </ul>
       </div>
       <div class="hero-scene" aria-hidden="true">
-        <svg class="orbit" viewBox="0 0 620 560" fill="none" preserveAspectRatio="none">
-          <ellipse cx="318" cy="205" rx="292" ry="118" stroke="url(#orb)" stroke-width="1.2" stroke-dasharray="3 7" />
-          <path d="M40 300c40 110 190 150 318 118 60-15 120-45 152-92" stroke="url(#orb)" stroke-width="1.2" stroke-dasharray="3 7" />
-          <defs><linearGradient id="orb" x1="0" x2="1"><stop offset="0" stop-color="#8b7dff" stop-opacity=".0"/><stop offset=".5" stop-color="#8b7dff" stop-opacity=".75"/><stop offset="1" stop-color="#8b7dff" stop-opacity=".0"/></linearGradient></defs>
-        </svg>
-        <span class="hchip c1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="3.5" width="15" height="17" rx="2.5"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/></svg> Web pages</span>
-        <span class="hchip c2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7a2.5 2.5 0 0 0-2.5 2.5v12A2.5 2.5 0 0 0 7 20.5h10a2.5 2.5 0 0 0 2.5-2.5V9z"/><path d="M14 3.5V9h5.5M8.5 13h7M8.5 16.5h5"/></svg> Documents</span>
-        <span class="hchip c3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h3.5l1.7 4.2-2.2 1.6a10 10 0 0 0 5.7 5.7l1.6-2.2 4.2 1.7V19a1.5 1.5 0 0 1-1.6 1.5C10.4 20 4 13.6 3.5 6.1A1.5 1.5 0 0 1 5 4.5z"/></svg> Calls</span>
-        <span class="hchip c4"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M8.5 12.2l2.4 2.4 4.8-5"/></svg> Promises</span>
+        <!-- On a phone the wide scene is hidden and he sits here instead. -->
+        <picture class="hero-figure">
+          <source srcset="sadhu-front.webp" type="image/webp">
+          <img src="sadhu-front.png" alt="" width="760" height="966" loading="lazy" decoding="async">
+        </picture>
       </div>
+    </div>
+    <div class="hero-float" aria-hidden="true">
+      <svg class="orbit" viewBox="0 0 1672 941" fill="none" preserveAspectRatio="none">
+        <defs><linearGradient id="orb" x1="0" x2="1"><stop offset="0" stop-color="#6f5ff0" stop-opacity=".05"/><stop offset=".5" stop-color="#6f5ff0" stop-opacity=".6"/><stop offset="1" stop-color="#6f5ff0" stop-opacity=".05"/></linearGradient></defs>
+        <path d="M928 222 Q1140 100 1335 258" stroke="url(#orb)" stroke-width="1.4" stroke-dasharray="3 8" vector-effect="non-scaling-stroke"/>
+        <path d="M922 362 Q1150 540 1365 400" stroke="url(#orb)" stroke-width="1.4" stroke-dasharray="3 8" vector-effect="non-scaling-stroke"/>
+      </svg>
+        <span class="hchip c1" data-x="928" data-y="222"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="3.5" width="15" height="17" rx="2.5"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/></svg> Web pages</span>
+        <span class="hchip c2" data-x="922" data-y="362"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7a2.5 2.5 0 0 0-2.5 2.5v12A2.5 2.5 0 0 0 7 20.5h10a2.5 2.5 0 0 0 2.5-2.5V9z"/><path d="M14 3.5V9h5.5M8.5 13h7M8.5 16.5h5"/></svg> Documents</span>
+        <span class="hchip c3" data-x="1335" data-y="258"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h3.5l1.7 4.2-2.2 1.6a10 10 0 0 0 5.7 5.7l1.6-2.2 4.2 1.7V19a1.5 1.5 0 0 1-1.6 1.5C10.4 20 4 13.6 3.5 6.1A1.5 1.5 0 0 1 5 4.5z"/></svg> Calls</span>
+        <span class="hchip c4" data-x="1365" data-y="400"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M8.5 12.2l2.4 2.4 4.8-5"/></svg> Promises</span>
     </div>
     <a class="hero-cue" href="#product"><i></i><span>A calmer, clearer you</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
     <p class="hero-quote">“A more present you,<br>for a more meaningful tomorrow.”<i></i></p>
@@ -429,6 +439,12 @@
         <h2 class="display" style="margin-block:16px">Your memory should never become someone else's dataset.</h2>
         <p class="lede">A record of everything you do is the single worst thing to hand to a server. So Lane does not have one. There is nothing to breach, because there is nothing to send.</p>
         <p class="lede" style="margin-top:14px">That is also why Rabbit exists. A memory app that has to call a model elsewhere is a memory app that ships your day elsewhere.</p>
+        <figure class="vault-figure" aria-hidden="true">
+          <picture>
+            <source srcset="sadhu-back.webp" type="image/webp">
+            <img src="sadhu-back.png" alt="" width="760" height="976" loading="lazy" decoding="async">
+          </picture>
+        </figure>
       </div>
       <div class="facts rv">
         <div class="fact"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><b>It stays on your machine</b><p>Reading, writing and answering all happen on your Mac. No account, no sync, no server holding your day.</p></div></div>
@@ -512,15 +528,10 @@
           <p class="cta-note">macOS 13+ · Apple silicon · 28 MB · no account · cancel in a click</p>
         </div>
         <div class="cta-art" aria-hidden="true">
-          <div class="notch-card">
-            <div class="notch-top"><img src="logo.png" alt="" width="18"><span class="label">Good morning</span></div>
-            <div class="notch-b">
-              <div class="notch-row"><span class="k">Three things</span><span class="v">1. Compliance certificate · due tomorrow</span></div>
-              <div class="notch-row"><span class="k"></span><span class="v">2. The pilot domain expires today</span></div>
-              <div class="notch-row"><span class="k"></span><span class="v">3. Call the district office back</span></div>
-              <div class="notch-ask">Ask your memory…</div>
-            </div>
-          </div>
+          <picture>
+            <source srcset="sadhu-side.webp" type="image/webp">
+            <img src="sadhu-side.png" alt="" width="760" height="944" loading="lazy" decoding="async">
+          </picture>
         </div>
       </div>
     </div>
