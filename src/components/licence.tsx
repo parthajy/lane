@@ -52,20 +52,20 @@ export function LicenceKey({ onApplied, compact }: { onApplied: (l: Licence) => 
   )
 }
 
-/** Shown once the seven weeks are up. Nothing is deleted; Lane simply stops. */
+/** Shown once the two months are up. Nothing is deleted; Lane simply stops. */
 export function LicenceWall({ lic, onApplied }: { lic: Licence; onApplied: (l: Licence) => void }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/90 backdrop-blur-xl p-6">
       <div className="w-full max-w-lg rounded-3xl border bg-card p-8 shadow-2xl">
         <span className="h-12 w-12 rounded-2xl tone-violet grid place-items-center text-primary"><ShieldCheck className="h-6 w-6" /></span>
-        <h1 className="text-[26px] font-semibold tracking-tight mt-5">Your seven weeks are up</h1>
+        <h1 className="text-[26px] font-semibold tracking-tight mt-5">Your two months are up</h1>
         <p className="text-[14.5px] text-muted-foreground mt-2 leading-relaxed">
           Lane has stopped reading and stopped making memories. Nothing has been deleted: everything you have is still
           here, still on this Mac, and comes back the moment you unlock it.
         </p>
         <div className="mt-6 grid gap-2.5">
           <a href={BUY} target="_blank" rel="noreferrer" className="h-11 rounded-xl bg-primary text-primary-foreground grid place-items-center text-[14px] font-medium hover:brightness-110">
-            $9 a month · $90 a year · $500 once
+            $9 a month · $89 a year · $499 once
           </a>
           <LicenceKey onApplied={onApplied} compact />
         </div>
@@ -92,7 +92,7 @@ export function LicenceCard({ lic, onChanged }: { lic: Licence; onChanged: (l: L
           <div className="text-[12.5px] text-muted-foreground">
             {lic.state === 'licensed'
               ? (lic.email.includes('@') ? lic.email : 'Thank you. Lane is yours.')
-              : 'Seven weeks, everything switched on, no card to start.'}
+              : 'Two months, everything switched on, no card to start.'}
           </div>
         </div>
         {lic.state === 'licensed' && (
@@ -104,7 +104,7 @@ export function LicenceCard({ lic, onChanged }: { lic: Licence; onChanged: (l: L
       {lic.state !== 'licensed' && (
         <>
           <a href={BUY} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center rounded-xl bg-primary px-4 text-[13.5px] font-medium text-primary-foreground hover:brightness-110">
-            $9 a month · $90 a year · $500 once
+            $9 a month · $89 a year · $499 once
           </a>
           <LicenceKey onApplied={onChanged} />
         </>

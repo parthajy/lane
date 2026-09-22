@@ -24,11 +24,11 @@ Copy rule on the site: **Rabbit is named** — it is our own model and the reaso
 
 ## What Lane costs
 
-Seven weeks free with everything on and no card, then $9 a month, $90 a year, or $500 once for a lifetime licence. There is no free tier: a memory app funded by anything other than the person using it is a contradiction. The site, its FAQ and its structured data all carry these numbers.
+Two months free with everything on and no card, then $9 a month, $89 a year, or $499 once for a lifetime licence (the first 200 only). There is no free tier: a memory app funded by anything other than the person using it is a contradiction. The site, its FAQ and its structured data all carry these numbers.
 
 ## Licence, trial and feedback
 
-The trial is seven weeks (`licence::TRIAL_DAYS = 49`), started the first time Lane runs and kept in the Keychain under `so.lane.app.trial`, so deleting the app and its data does not hand out another seven weeks. A licence is a signed note, not an account: `lane1|<email>|<plan>|<issued ms>::<signature>`, verified offline in `licence.rs` against the public half of the updater key (`src/licence_pubkey.txt`). The signature travels as base64 of the whole minisign signature file, so a key is one pasteable line, and `PublicKey::from_base64` is what parses the key (`decode` takes bytes and silently fails).
+The trial is two months (`licence::TRIAL_DAYS = 60`), started the first time Lane runs and kept in the Keychain under `so.lane.app.trial`, so deleting the app and its data does not hand out another seven weeks. A licence is a signed note, not an account: `lane1|<email>|<plan>|<issued ms>::<signature>`, verified offline in `licence.rs` against the public half of the updater key (`src/licence_pubkey.txt`). The signature travels as base64 of the whole minisign signature file, so a key is one pasteable line, and `PublicKey::from_base64` is what parses the key (`decode` takes bytes and silently fails).
 
 Issue one with `node scripts/licence.mjs sign <email> <monthly|yearly|lifetime>`, signed with `~/.tauri/lane-licence.json`. Node has Ed25519 and BLAKE2b built in, so the signer needs no dependencies. Two keys are trusted by the app: the licence key and the key that signs updates. Every minted key carries a random nonce, because a batch minted inside one millisecond would otherwise sign the same payload and hand several buyers the same key. `cargo test --lib licence` checks that an issued key verifies and an edited one does not, and `-- --ignored` also runs the Keychain round trip.
 

@@ -188,7 +188,7 @@ export function SettingsPage({
           <Card id="settings-licence">
             <CardHeader>
               <CardTitle className="text-base">Your licence</CardTitle>
-              <CardDescription>Seven weeks free, then $9 a month, $90 a year, or $500 once. Checked on this Mac; no account, nothing sent anywhere.</CardDescription>
+              <CardDescription>Two months free, then $9 a month, $89 a year, or $499 once. Checked on this Mac; no account, nothing sent anywhere.</CardDescription>
             </CardHeader>
             <CardContent>
               <LicenceCard lic={lic} onChanged={setLic} />

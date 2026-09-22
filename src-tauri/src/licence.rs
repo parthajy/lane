@@ -9,8 +9,8 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Seven weeks, as promised on the site.
-pub const TRIAL_DAYS: i64 = 49;
+/// Two months, as promised on the site.
+pub const TRIAL_DAYS: i64 = 60;
 const TRIAL_SERVICE: &str = "so.lane.app.trial";
 const LICENCE_SERVICE: &str = "so.lane.app.licence";
 
