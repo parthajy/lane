@@ -491,6 +491,52 @@ section[id], [id="access"] { scroll-margin-top: 78px; }
 .pcard p { font-size: 14.5px; color: var(--body); line-height: 1.5; }
 .pcard .tlink { margin-top: 2px; }
 
+/* ---------- long text pages: terms, privacy, security ---------- */
+.doc { display: grid; gap: 36px; align-items: start; }
+@media (min-width: 960px) { .doc { grid-template-columns: 216px minmax(0, 1fr); gap: 64px; } }
+.doc-toc { display: grid; gap: 8px; align-content: start; }
+@media (min-width: 960px) { .doc-toc { position: sticky; top: 84px; } }
+.doc-toc .label { margin-bottom: 2px; }
+.doc-toc a { font-size: 14px; color: var(--body); text-decoration: none; }
+.doc-toc a:hover { color: var(--accent); }
+.doc-when { font-size: 12.5px; color: var(--faint); margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+.doc-body { display: grid; gap: 34px; max-width: 70ch; }
+.doc-sec h2 { font-size: clamp(20px, 2.4vw, 25px); letter-spacing: -.028em; margin-bottom: 12px; }
+.doc-sec p { color: var(--body); font-size: 16px; line-height: 1.65; margin-bottom: 12px; }
+.doc-sec p:last-child { margin-bottom: 0; }
+.doc-sec ul { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 8px; }
+.doc-sec li { color: var(--body); font-size: 15.5px; line-height: 1.6; }
+.doc-sec li b, .doc-sec p b { color: var(--ink); font-weight: 600; }
+.doc-sec a { color: var(--accent); }
+
+/* ---------- pricing ---------- */
+.pricetable { display: grid; gap: 14px; }
+@media (min-width: 880px) { .pricetable { grid-template-columns: 1.15fr 1fr 1fr; align-items: start; } }
+.pcol {
+  display: grid; gap: 10px; justify-items: start; padding: 26px;
+  border-radius: 18px; background: var(--paper); border: 1px solid var(--line);
+}
+.pcol.is-first { background: linear-gradient(150deg, #f7f5ff, #ffffff); border-color: rgba(90,81,229,.3); box-shadow: 0 20px 44px -26px rgba(60,40,140,.5); }
+.pcol b { font-size: 15px; font-weight: 600; }
+.pcol p { font-size: 14.5px; color: var(--body); line-height: 1.5; }
+.pcol .btn { margin-top: 6px; }
+
+/* ---------- changelog ---------- */
+.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.log li { display: grid; gap: 10px; padding-block: 26px; border-top: 1px solid var(--line); }
+@media (min-width: 820px) { .log li { grid-template-columns: 180px minmax(0, 1fr); gap: 32px; } }
+.log li:last-child { border-bottom: 1px solid var(--line); }
+.log-when { display: grid; gap: 2px; align-content: start; }
+.log-when b { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 15px; font-weight: 500; }
+.log-when span { font-size: 13px; color: var(--faint); }
+.log-what p { color: var(--body); font-size: 15.5px; line-height: 1.6; max-width: 62ch; }
+.log-note { margin-top: 10px; font-size: 14px !important; }
+
+/* ---------- an empty page that is not embarrassing ---------- */
+.empty { padding: clamp(32px, 5vw, 56px); border-radius: 18px; background: var(--mist); border: 1px solid var(--line); max-width: 62ch; display: grid; gap: 12px; }
+.empty b { font-size: 18px; }
+.empty p { color: var(--body); font-size: 15.5px; line-height: 1.6; }
+
 /* ---------- early access, full width ---------- */
 .access {
   padding-block: clamp(64px, 8vw, 104px);

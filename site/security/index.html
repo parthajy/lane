@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Security · Lane for Mac</title>
+<meta name="description" content="How Lane is built, where your data sits, what it reads, how the code is signed, and how to report a problem.">
+<link rel="canonical" href="https://lane.so/security">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lane">
+<meta property="og:title" content="Security · Lane for Mac">
+<meta property="og:description" content="How Lane is built, where your data sits, what it reads, how the code is signed, and how to report a problem.">
+<meta property="og:url" content="https://lane.so/security">
+<meta property="og:image" content="https://lane.so/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Security · Lane for Mac">
+<meta name="twitter:description" content="How Lane is built, where your data sits, what it reads, how the code is signed, and how to report a problem.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="/" aria-label="Lane, home"><img src="/logo.png" alt="" width="26"> Lane</a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#product">Product</a>
+      <a href="/#how">How it works</a>
+      <a href="/#rabbit">Rabbit</a>
+      <a href="/#privacy">Privacy</a>
+      <a href="/#faq">FAQ</a>
+    </nav>
+    <div class="nav-end">
+      <a class="plain" href="/#access">Sign in</a>
+      <a class="btn btn-primary btn-sm" href="/#access">Get early access</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="subhero">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Lane</a><span>/</span><span>Security</span></nav>
+      <h1 class="display">Nothing to breach, because nothing&nbsp;is&nbsp;sent</h1>
+      <p class="lede">The strongest security claim a memory app can make is that there is no copy of your day anywhere else. That is the only claim Lane makes, and everything below is how it holds.</p>
+      <div class="actions">
+        <a class="btn btn-primary btn-lg" href="#access">Get early access</a>
+        <a class="btn btn-ghost btn-lg" href="/features">See every feature</a>
+      </div>
+    </div>
+  </section>
+<section class="sec"><div class="wrap doc"><nav class="doc-toc" aria-label="On this page"><span class="label">On this page</span><a href="#how-lane-is-built">How Lane is built</a><a href="#where-your-data-sits">Where your data sits</a><a href="#what-lane-reads">What Lane reads</a><a href="#the-code-you-run">The code you run</a><a href="#our-website">Our website</a><a href="#reporting-something">Reporting something</a><p class="doc-when">Last updated 22 September 2026</p></nav><div class="doc-body"><section class="doc-sec" id="how-lane-is-built"><h2>How Lane is built</h2><p>Lane is a Mac app that does its work on your machine. It has no server, no account system and no network calls for anything it does with your data. That is not a configuration you can get wrong; it is the shape of the program.</p><p>There are exactly two moments Lane touches the network, and both are optional and visible: checking for an update, and downloading the model the first time you run it.</p></section><section class="doc-sec" id="where-your-data-sits"><h2>Where your data sits</h2><p>Memories, activities, files and transcripts live in an encrypted store on your disk, using SQLCipher. The key is generated on your machine and kept in your login Keychain, not in a file beside the database and not with us.</p><p>Backups are sealed with a passphrase you choose. A backup is useless to anyone who does not have it, including us.</p></section><section class="doc-sec" id="what-lane-reads"><h2>What Lane reads</h2><p>By default, Lane reads the text your applications already publish through macOS accessibility, which is the same information a screen reader uses. That is text, not pixels.</p><p>Screen recording is off unless you switch it on, and is used only to keep a small picture with a memory, or to record a walkthrough you asked for. The microphone is used only while you are recording a meeting or dictating, and you start both.</p><ul><li>Accessibility, so Lane can read text from windows. Required.</li><li>Microphone, for meetings and dictation. Only while recording.</li><li>Screen Recording, optional, for screenshots and the system audio side of a call.</li><li>Calendar and Contacts, optional, for meeting prep and names.</li></ul></section><section class="doc-sec" id="the-code-you-run"><h2>The code you run</h2><p>The app is signed with an Apple Developer ID and notarised by Apple, so macOS can verify it came from us and has not been altered.</p><p>Updates are signed with a key we hold offline. The app checks the signature before installing anything, so an update that did not come from us is refused.</p><p>Licence keys are signed the same way and checked on your machine, which is why unlocking Lane needs no server.</p></section><section class="doc-sec" id="our-website"><h2>Our website</h2><p>lane.so is a static site. It sets no cookies and runs no analytics. If you join the waitlist, your email address is stored so we can write to you. If you buy, our payment processor handles the card and we never see it.</p><p>The full detail is in the <a href="/privacy">privacy policy</a>.</p></section><section class="doc-sec" id="reporting-something"><h2>Reporting something</h2><p>If you find a security problem, please tell us before you tell anyone else, and give us a reasonable chance to fix it. Write to <a href="mailto:pb@lane.so">pb@lane.so</a>.</p><p>We will confirm we have received it, keep you posted, and credit you when it is fixed, unless you would rather we did not.</p></section></div></div></section>
+  <section class="access" id="access">
+    <div class="wrap access-in">
+      <div class="cta-txt rv">
+        <span class="label">Early access</span>
+        <h2 class="display">Two months free. Then $9.</h2>
+        <p>Leave your email and we send you the build, the moment your seat opens. The first 200 people on the list can buy Lane once, for $499, and keep it for life.</p>
+        <form class="wait" id="wait" novalidate>
+          <div class="wait-row">
+            <input id="wait-email" name="email" type="email" autocomplete="email" placeholder="you@work.com" aria-label="Your email" required>
+            <button class="btn btn-dark" type="submit">Join the waitlist</button>
+          </div>
+          <p class="wait-msg" id="wait-msg" role="status" aria-live="polite"></p>
+        </form>
+        <p class="cta-note">macOS 13+ · Apple silicon · 28 MB · no account · cancel in a click</p>
+      </div>
+      <div class="plans rv">
+        <a class="plan is-first" href="/buy/lifetime">
+          <span class="plan-top"><b>Lifetime</b><span class="plan-tag">Only 200 spots</span></span>
+          <span class="plan-p">$499<i>once</i></span>
+          <span class="plan-d">Every update, every version, no renewal, ever.</span>
+          <span class="seats" id="seats">
+            <span class="seats-bar"><i id="seats-fill" style="width:0%"></i></span>
+            <span class="seats-n"><b id="seats-left">200</b> seats left</span>
+          </span>
+        </a>
+        <div class="plan-pair">
+          <a class="plan" href="/buy/monthly"><span class="plan-top"><b>Monthly</b></span><span class="plan-p">$9<i>a month</i></span></a>
+          <a class="plan" href="/buy/yearly"><span class="plan-top"><b>Yearly</b><span class="plan-tag is-quiet">Two months off</span></span><span class="plan-p">$89<i>a year</i></span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="/"><img src="/logo.png" alt="" width="26"> Lane</a>
+        <p>Your AI second brain, on your Mac. Remembers the work you already did, and answers in your own words.</p>
+        <div class="social">
+          <a href="https://x.com/" aria-label="Lane on X"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.2 2H21l-6.6 7.5L22 22h-6.3l-4.9-6.4L5.1 22H2.3l7-8L2 2h6.4l4.4 5.8zm-1 18h1.6L7.9 3.7H6.2z"/></svg></a>
+          <a href="https://github.com/" aria-label="Lane on GitHub"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.8c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.7.4-1.1.6-1.4-2.2-.2-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.6 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.3.2 2.3.1 2.6.6.7 1 1.6 1 2.7 0 3.9-2.4 4.8-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></svg></a>
+          <a href="mailto:pb@lane.so" aria-label="Email Lane"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></a>
+        </div>
+      </div>
+
+      <div class="foot-col">
+        <h4 class="label">Use cases</h4>
+        <a href="/for/founders">Founders</a><a href="/for/consultants">Consultants</a><a href="/for/researchers">Researchers</a><a href="/for/engineers">Engineers</a><a href="/for/sales">Sales teams</a><a href="/for/lawyers">Lawyers</a><a href="/for/students">Students</a>
+      </div>
+
+      <div class="foot-col">
+        <h4 class="label">Product</h4>
+        <a href="/features">All features</a><a href="/features/ask">Ask your memory</a><a href="/features/three-things">Three things</a><a href="/features/meetings">Meeting notes</a><a href="/features/recall">Recall overlay</a><a href="/features/dictation">Dictation</a><a href="/features/notch">The notch tab</a><a href="/features/commitments">Commitments</a><a href="/rabbit">Rabbit, the model</a>
+      </div>
+
+      <div class="foot-col">
+        <h4 class="label">Compare</h4>
+        <a href="/compare/rewind">vs Rewind</a><a href="/compare/limitless">vs Limitless</a><a href="/compare/granola">vs Granola</a><a href="/compare/otter">vs Otter</a><a href="/compare/notion">vs Notion</a><a href="/compare/obsidian">vs Obsidian</a><a href="/compare/apple-notes">vs Apple Notes</a><a href="/compare">All comparisons →</a>
+      </div>
+
+      <div class="foot-col">
+        <h4 class="label">Company</h4>
+        <a href="/pricing">Pricing</a><a href="/privacy-explained">Privacy, explained</a><a href="/security">Security</a><a href="/changelog">Changelog</a><a href="/roadmap">Roadmap</a><a href="/blog">Blog</a><a href="mailto:pb@lane.so">Contact</a><a href="/#access">Early access</a>
+      </div>
+    </div>
+
+    <div class="foot-end">
+      <span>© 2026 Lane. Available for Mac. Windows coming soon.</span>
+      <nav aria-label="Legal"><a href="/terms">Terms</a><a href="/privacy">Privacy policy</a><a href="/sitemap.xml">Sitemap</a></nav>
+    </div>
+  </div>
+</footer>
+<script src="/app.js"></script>
+</body>
+</html>
