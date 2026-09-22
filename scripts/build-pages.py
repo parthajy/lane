@@ -129,7 +129,8 @@ CTA = '''  <section class="access" id="access">
   </section>'''
 
 
-def page(slug: str, title: str, desc: str, kicker: str, h1: str, lede: str, body: str) -> None:
+def page(slug: str, title: str, desc: str, kicker: str, h1: str, lede: str, body: str,
+         body_class: str = "", head: str = "", hero: str = "") -> None:
     doc = f'''<!doctype html>
 <html lang="en">
 <head>
@@ -153,13 +154,14 @@ def page(slug: str, title: str, desc: str, kicker: str, h1: str, lede: str, body
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
+{head}
 </head>
-<body>
+<body class="{body_class}">
 <a class="skip" href="#main">Skip to content</a>
 {HEADER}
 
 <main id="main">
-  <section class="subhero">
+{hero or f"""  <section class="subhero">
     <div class="wrap">
       <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Lane</a><span>/</span><span>{html.escape(kicker)}</span></nav>
       <h1 class="display">{h1}</h1>
@@ -169,7 +171,7 @@ def page(slug: str, title: str, desc: str, kicker: str, h1: str, lede: str, body
         <a class="btn btn-ghost btn-lg" href="/features">See every feature</a>
       </div>
     </div>
-  </section>
+  </section>"""}
 {body}
 {CTA}
 </main>
@@ -773,30 +775,6 @@ def build_rest() -> list[str]:
                          "Every one of these is good at something. Here is what each is built for, where Lane differs, and when you should pick the other one.",
                          body)))
 
-    # ---- Rabbit ----
-    body = (
-        sec("Why", "A memory app that calls a model elsewhere ships your day elsewhere",
-            p("Every other way of building this ends with your working day on somebody's server: to answer a question about your week, the week has to be sent somewhere to be read. That is not a policy problem you can solve with a promise. It is an architecture problem, and the only honest fix is to do the thinking on the machine that already has the day on it.",
-              "So we trained and shipped our own. Rabbit runs inside Lane, on your Mac. There is no API key to paste, no account to make, no usage bill, and no request to intercept, because there is no request."),
-            "sec mist")
-        + sec("What it does", "Four jobs, all of them local",
-              facts([("eye", "Decides what is worth keeping", "Most of what crosses a screen is noise. Rabbit decides what deserves to become a memory, and most things do not."),
-                     ("file", "Writes the memory", "A title, a summary, the people and projects in it, the decisions, and anything promised, each checked back against the text it came from."),
-                     ("list", "Ranks the day", "Scores everything open against the why you wrote, and lifts out three things with the reason each one made the list."),
-                     ("ask", "Answers the question", "Finds what it saw, answers in your words, cites the memory, and says so when your memory does not contain the answer.")]))
-        + sec("Honest about it", "What a model on a laptop can and cannot do",
-              facts([("bar", "It is sized to your Mac", "A smaller model on an 8 GB machine, a larger one where there is 16 GB or more. Lane picks the tier and downloads it once."),
-                     ("check", "It is held to the source", "Extractions are verified against the text they came from, and answers carry citations, because a confident invention is worse than no answer."),
-                     ("clock", "It is not the fastest thing in the world", "The first words of an answer arrive in a few seconds on a cold start, quicker once it is warm. That is the price of not sending your day away."),
-                     ("lock", "It never phones home", "No telemetry, no prompts logged anywhere, no usage counted. We cannot see what you ask it, by construction.")]),
-              "sec mist")
-        + sec("More", "The parts it powers", cards([(f["icon"], f["nav"], f["card"], "/" + f["slug"]) for f in FEATURES[:3]]))
-    )
-    made.append(str(page("rabbit", "Rabbit, the model · Lane for Mac",
-                         "Rabbit is the model that does Lane's thinking. It runs inside the app, on your Mac, which is the only way a memory app can honestly promise privacy.",
-                         "Rabbit", "Our own model, inside&nbsp;the&nbsp;app",
-                         "No OpenAI, no Anthropic, no Google, no API key. Rabbit reads your day, writes the memories, ranks what matters and answers your questions, and it does all of it on your machine.",
-                         body)))
     return made
 
 
@@ -1051,6 +1029,161 @@ def build_updates() -> list[str]:
     return made
 
 
+
+
+# ── Rabbit, on its own dark page ──────────────────────────────────────────
+#
+# Everything in the diagram lives in one 1000 x 760 coordinate space: the
+# chips are positioned in percentages of it and the connectors are drawn in
+# an SVG with the same viewBox, so the lines meet the chips at every width.
+
+RCHIP_IN = [("Web pages", "compass", 130), ("Documents", "doc", 225), ("Calls", "phone", 320),
+            ("Notes", "note", 415), ("Search", "search", 510)]
+RCHIP_OUT = [("Summaries", "doc", 150), ("Answers", "spark", 245), ("Actions", "bolt", 340), ("Insights", "chart", 435)]
+
+RICON = {
+    "compass": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>',
+    "doc": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3.5H7A2.5 2.5 0 0 0 4.5 6v12A2.5 2.5 0 0 0 7 20.5h10a2.5 2.5 0 0 0 2.5-2.5V9z"/><path d="M14 3.5V9h5.5M8 13h8M8 16.5h5"/></svg>',
+    "phone": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h3.5l1.7 4.2-2.2 1.6a10 10 0 0 0 5.7 5.7l1.6-2.2 4.2 1.7V19a1.5 1.5 0 0 1-1.6 1.5C10.4 20 4 13.6 3.5 6.1A1.5 1.5 0 0 1 5 4.5z"/></svg>',
+    "note": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3.5" width="15" height="17" rx="2.5"/><path d="M8 8.5h8M8 12h8M8 15.5h4"/></svg>',
+    "search": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>',
+    "spark": '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c.6 3.9 2.6 6.9 6.5 7.5-3.9.6-5.9 3.6-6.5 7.5-.6-3.9-2.6-6.9-6.5-7.5 3.9-.6 5.9-3.6 6.5-7.5z"/><path d="M19 15c.25 1.6 1.05 2.85 2.7 3.15-1.65.3-2.45 1.55-2.7 3.15-.25-1.6-1.05-2.85-2.7-3.15 1.65-.3 2.45-1.55 2.7-3.15z" opacity=".65"/></svg>',
+    "bolt": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2.5 5 13.5h6l-1 8 8-11h-6z"/></svg>',
+    "chart": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V5M16 20v-6M22 20H2"/></svg>',
+    "code": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m8.5 8-4.5 4 4.5 4M15.5 8l4.5 4-4.5 4"/></svg>',
+    "mac": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="5.5" width="15" height="10" rx="2"/><path d="M2.5 19h19"/></svg>',
+    "lock": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/></svg>',
+    "stack": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6"/><path d="M4.5 12v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg>',
+}
+
+PIPE = [("Retrieval", 476, 196), ("Memory", 512, 176), ("Reasoning", 548, 156), ("Response", 584, 136)]
+
+
+def rdiagram() -> str:
+    ins = "".join(
+        f'<span class="rchip rin" style="top:{(y - 31) / 760 * 100:.2f}%"><i>{RICON[i]}</i>{html.escape(t)}</span>'
+        for t, i, y in RCHIP_IN)
+    outs = "".join(
+        f'<span class="rchip rout" style="top:{(y - 31) / 760 * 100:.2f}%"><i>{RICON[i]}</i>{html.escape(t)}</span>'
+        for t, i, y in RCHIP_OUT)
+    wires_in = "".join(
+        f'<path d="M196 {y} C 300 {y}, 330 {290 + (y - 290) * .22:.0f}, 392 {290 + (y - 290) * .1:.0f}" '
+        f'stroke="url(#w-in)" stroke-width="1.6" fill="none"/>' for _, _, y in RCHIP_IN)
+    wires_out = "".join(
+        f'<path d="M728 {290 + (y - 290) * .1:.0f} C 790 {290 + (y - 290) * .22:.0f}, 760 {y}, 800 {y}" '
+        f'stroke="url(#w-out)" stroke-width="1.6" fill="none"/>' for _, _, y in RCHIP_OUT)
+    rings = "".join(
+        f'<ellipse cx="560" cy="{y}" rx="{rx}" ry="{rx * .17:.0f}" stroke="rgba(150,170,255,.3)" stroke-width="1" fill="none"/>'
+        f'<text x="560" y="{y + 4}" class="rpipe">{t.upper()}</text>' for t, y, rx in PIPE)
+    dots = "".join(
+        f'<circle cx="{560 - rx}" cy="{y}" r="2.4" fill="#9db0ff" opacity=".8"/>'
+        f'<circle cx="{560 + rx}" cy="{y}" r="2.4" fill="#9db0ff" opacity=".8"/>' for _, y, rx in PIPE)
+    return f'''      <div class="rdiagram">
+        <svg class="rwires" viewBox="0 0 1000 760" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="w-in" x1="0" x2="1"><stop offset="0" stop-color="#6f7dff" stop-opacity=".1"/><stop offset="1" stop-color="#9db0ff" stop-opacity=".85"/></linearGradient>
+            <linearGradient id="w-out" x1="0" x2="1"><stop offset="0" stop-color="#9db0ff" stop-opacity=".85"/><stop offset="1" stop-color="#6f7dff" stop-opacity=".1"/></linearGradient>
+            <radialGradient id="r-core" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#ffffff"/><stop offset=".22" stop-color="#cfd6ff"/>
+              <stop offset=".55" stop-color="#6a5cf0" stop-opacity=".85"/><stop offset="1" stop-color="#2a1f7a" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="r-halo" cx="50%" cy="50%" r="50%">
+              <stop offset=".45" stop-color="#5b4ae0" stop-opacity=".34"/><stop offset=".78" stop-color="#5b4ae0" stop-opacity=".1"/><stop offset="1" stop-color="#5b4ae0" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="r-ring" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#7ee8ff" stop-opacity=".1"/><stop offset=".35" stop-color="#9db0ff" stop-opacity=".95"/>
+              <stop offset=".7" stop-color="#c39bff" stop-opacity=".9"/><stop offset="1" stop-color="#7ee8ff" stop-opacity=".1"/>
+            </linearGradient>
+            <filter id="r-glow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="16"/></filter>
+            <filter id="r-soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
+          </defs>
+
+          <g class="rwire-lines">{wires_in}{wires_out}</g>
+
+          <circle cx="560" cy="290" r="280" fill="url(#r-halo)"/>
+          <g class="rorbits" style="transform-origin:560px 290px">
+            <ellipse cx="560" cy="290" rx="228" ry="96" stroke="url(#r-ring)" stroke-width="2" transform="rotate(-24 560 290)" filter="url(#r-soft)"/>
+            <ellipse cx="560" cy="290" rx="220" ry="84" stroke="url(#r-ring)" stroke-width="1.6" transform="rotate(28 560 290)" filter="url(#r-soft)"/>
+            <ellipse cx="560" cy="290" rx="196" ry="150" stroke="url(#r-ring)" stroke-width="1.4" transform="rotate(72 560 290)" filter="url(#r-soft)"/>
+            <ellipse cx="560" cy="290" rx="206" ry="122" stroke="url(#r-ring)" stroke-width="1.2" transform="rotate(-62 560 290)" filter="url(#r-soft)"/>
+          </g>
+          <circle cx="560" cy="290" r="172" fill="url(#r-core)" filter="url(#r-glow)"/>
+          <circle cx="560" cy="290" r="104" fill="#1a1550" opacity=".55"/>
+          <circle cx="560" cy="290" r="104" stroke="rgba(180,190,255,.45)" stroke-width="1"/>
+          <circle cx="560" cy="290" r="54" fill="#dfe3ff" opacity=".32" filter="url(#r-glow)"/>
+
+          <text x="560" y="284" class="rname">Rabbit</text>
+          <text x="560" y="310" class="rsub">LANE AI MODEL</text>
+
+          {rings}{dots}
+        </svg>
+
+        <span class="rtop"><b>Your context</b><b>Our intelligence</b><i></i></span>
+        {ins}{outs}
+        <span class="rfoot"><i>{RICON["mac"]}</i>All on your Mac</span>
+        <span class="rnote rnote-a">Turn information<br>into progress.</span>
+        <span class="rnote rnote-b">Private intelligence.<br>A more capable you.</span>
+      </div>'''
+
+
+def build_rabbit() -> list[str]:
+    hero = f'''  <section class="rhero">
+    <div class="wrap rhero-in">
+      <div class="rhero-copy">
+        <span class="rpill"><i></i>Rabbit <span>·</span> Built in-house</span>
+        <h1 class="display">Meet Rabbit,<br><span class="soft">the AI model we built.</span></h1>
+        <p class="lede">Rabbit powers Lane locally on your Mac. It reads web pages, documents, calls and notes, and helps you find, reason and act across everything you do. No cloud. No data leaves your device. Ever.</p>
+        <div class="actions">
+          <a class="btn btn-primary btn-lg" href="#access">Get early access <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn btn-clear btn-lg" href="/features"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="11" stroke="currentColor" stroke-width="1.4"/><path d="M10 8.3v7.4l6-3.7z" fill="currentColor"/></svg> See it work</a>
+        </div>
+        <ul class="rpoints">
+          <li><span class="rp-ic">{RICON["code"]}</span><div><b>Built by us</b><p>An original model from Lane.</p></div></li>
+          <li><span class="rp-ic">{RICON["mac"]}</span><div><b>Runs locally</b><p>On your Mac. No cloud dependency.</p></div></li>
+          <li><span class="rp-ic">{RICON["lock"]}</span><div><b>Private by design</b><p>Your data stays on your device.</p></div></li>
+        </ul>
+      </div>
+{rdiagram()}
+    </div>
+  </section>'''
+
+    understood = '''<section class="sec rband"><div class="wrap rband-in">
+      <div class="rv">
+        <span class="label on">A more capable, private you</span>
+        <h2 class="display">Your world, understood</h2>
+        <p class="lede">Rabbit connects the dots across your pages, files, calls and notes, so you can move from information to action without going looking for it first.</p>
+      </div>
+      <div class="rcards rv">
+        <div class="rcard"><span class="rc-ic">''' + RICON["stack"] + '''</span><b>Understands your full context</b><p>Web, documents, calls, notes and files, in one place, in the order they happened.</p></div>
+        <div class="rcard"><span class="rc-ic">''' + RICON["bolt"] + '''</span><b>Fast, local, powerful</b><p>Runs entirely on your Mac, so an answer costs nothing and waits for nobody.</p></div>
+        <div class="rcard"><span class="rc-ic">''' + RICON["lock"] + '''</span><b>Designed for your trust</b><p>No cloud, no data sharing, no telemetry. Your information stays yours.</p></div>
+      </div>
+    </div></section>'''
+
+    body = (
+        understood
+        + sec("Why", "A memory app that calls a model elsewhere ships your day elsewhere",
+              p("Every other way of building this ends with your working day on somebody's server: to answer a question about your week, the week has to be sent somewhere to be read. That is not a policy problem you can solve with a promise. It is an architecture problem, and the only honest fix is to do the thinking on the machine that already has the day on it.",
+                "So we trained and shipped our own. Rabbit runs inside Lane, on your Mac. There is no API key to paste, no account to make, no usage bill, and no request to intercept, because there is no request."))
+        + sec("What it does", "Four jobs, all of them local",
+              facts([("eye", "Decides what is worth keeping", "Most of what crosses a screen is noise. Rabbit decides what deserves to become a memory, and most things do not."),
+                     ("file", "Writes the memory", "A title, a summary, the people and projects in it, the decisions, and anything promised, each checked back against the text it came from."),
+                     ("list", "Ranks the day", "Scores everything open against the why you wrote, and lifts out three things with the reason each one made the list."),
+                     ("ask", "Answers the question", "Finds what it saw, answers in your words, cites the memory, and says so when your memory does not contain the answer.")]),
+              "sec rmist")
+        + sec("Honest about it", "What a model on a laptop can and cannot do",
+              facts([("bar", "It is sized to your Mac", "A smaller model on an 8 GB machine, a larger one where there is 16 GB or more. Lane picks the tier and downloads it once."),
+                     ("check", "It is held to the source", "Extractions are verified against the text they came from, and answers carry citations, because a confident invention is worse than no answer."),
+                     ("clock", "It is not the fastest thing in the world", "The first words of an answer arrive in a few seconds on a cold start, quicker once it is warm. That is the price of not sending your day away."),
+                     ("lock", "It never phones home", "No telemetry, no prompts logged anywhere, no usage counted. We cannot see what you ask it, by construction.")]))
+        + sec("More", "The parts it powers", cards([(f["icon"], f["nav"], f["card"], "/" + f["slug"]) for f in FEATURES[:3]]), "sec rmist")
+    )
+    head = '<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap" rel="stylesheet">'
+    return [str(page("rabbit", "Rabbit, the model we built · Lane for Mac",
+                     "Rabbit is the model that does Lane's thinking. It runs inside the app, on your Mac. No cloud, no API key, and no data leaving your device.",
+                     "Rabbit", "", "", body, body_class="dark-page", head=head, hero=hero))]
+
+
 if __name__ == "__main__":
-    for f in build() + build_rest() + build_company() + build_legal() + build_updates():
+    for f in build() + build_rest() + build_company() + build_legal() + build_updates() + build_rabbit():
         print("wrote", f.replace(str(ROOT) + "/", ""))
