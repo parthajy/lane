@@ -63,47 +63,100 @@
 <main id="main">
 
   <section class="hero">
-    <!-- The scene, across the whole hero. The chips are placed on it in image space (see app.js). -->
-    <picture class="hero-pic">
-      <source srcset="hero.webp" type="image/webp">
-      <img class="hero-art" src="hero.jpg" alt="" width="1672" height="941" fetchpriority="high" decoding="async">
-    </picture>
     <div class="wrap hero-in">
       <div class="hero-copy">
-        <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.6 3.9 2.6 6.9 6.5 7.5-3.9.6-5.9 3.6-6.5 7.5-.6-3.9-2.6-6.9-6.5-7.5 3.9-.6 5.9-3.6 6.5-7.5z"/><path d="M19 14c.3 1.8 1.2 3.2 3 3.5-1.8.3-2.7 1.7-3 3.5-.3-1.8-1.2-3.2-3-3.5 1.8-.3 2.7-1.7 3-3.5z" opacity=".7"/></svg><b>Lane 1.0 for Mac</b><i class="pill-sep"></i><span class="tag">Invite only</span></span>
+        <span class="pill"><b>Lane 1.0 for Mac</b><i class="pill-sep"></i><span class="tag">Invite only</span></span>
         <h1 class="display">Your AI second brain, on&nbsp;your&nbsp;Mac</h1>
-        <p class="lede">Lane remembers every page, document, call and promise from your working day, then answers in your own words. It runs on Rabbit, the model we built ourselves. No OpenAI, no Anthropic, no Google, no API key, no request leaving your Mac — ever.</p>
+        <p class="lede">Lane remembers every page, document, call and promise from your working day, then answers in your own words. It runs on your Mac, built for you. No cloud, no accounts, no API keys — ever.</p>
         <div class="actions">
           <a class="btn btn-primary btn-lg" href="#access">Get early access <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          <a class="btn btn-ghost btn-lg" href="#product"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--accent)"/><path d="M10 8.3v7.4l6-3.7z" fill="#fff"/></svg> See it work</a>
+          <a class="btn btn-ghost btn-lg" href="#product"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#171727"/><path d="M10 8.3v7.4l6-3.7z" fill="#fff"/></svg> See it work</a>
         </div>
         <ul class="ticks">
-          <li><span class="tick-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/></svg></span><span>Nothing leaves<br>your Mac</span></li>
-          <li><span class="tick-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.6 3.9 2.6 6.9 6.5 7.5-3.9.6-5.9 3.6-6.5 7.5-.6-3.9-2.6-6.9-6.5-7.5 3.9-.6 5.9-3.6 6.5-7.5z"/><path d="M19 14c.3 1.8 1.2 3.2 3 3.5-1.8.3-2.7 1.7-3 3.5-.3-1.8-1.2-3.2-3-3.5 1.8-.3 2.7-1.7 3-3.5z" opacity=".7"/></svg></span><span>No account,<br>no cloud</span></li>
-          <li><span class="tick-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20c4-9 10-13 16-14-1 6-5 12-14 14"/><path d="M4 20c3-4 6-7 10-9"/></svg></span><span>Seven weeks free,<br>then $9</span></li>
+          <li><span class="tick-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><circle cx="12" cy="15.8" r="1.1" fill="currentColor" stroke="none"/></svg></span><span>Nothing leaves<br>your Mac</span></li>
+          <li><span class="tick-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="10" rx="2"/><path d="M2.5 19h19"/></svg></span><span>No account,<br>no cloud</span></li>
+          <li><span class="tick-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2.5 5 13.5h6l-1 8 8-11h-6z"/></svg></span><span>Seven weeks free,<br>then $9</span></li>
         </ul>
       </div>
-      <div class="hero-scene" aria-hidden="true">
-        <!-- On a phone the wide scene is hidden and he sits here instead. -->
-        <picture class="hero-figure">
-          <source srcset="sadhu-front.webp" type="image/webp">
-          <img src="sadhu-front.png" alt="" width="760" height="966" loading="lazy" decoding="async">
-        </picture>
+      <div class="hero-orb" aria-hidden="true">
+        <svg class="orb" viewBox="0 0 720 720" fill="none">
+          <defs>
+            <radialGradient id="g-glass" cx="38%" cy="30%" r="75%">
+              <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+              <stop offset=".55" stop-color="#f1eeff" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#d9d3ff" stop-opacity=".85"/>
+            </radialGradient>
+            <radialGradient id="g-core" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#ffffff"/>
+              <stop offset=".35" stop-color="#e9e3ff" stop-opacity=".9"/>
+              <stop offset="1" stop-color="#8f7dff" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="g-blade" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#2a2472"/><stop offset=".42" stop-color="#5b4de6"/><stop offset=".8" stop-color="#a99bff"/><stop offset="1" stop-color="#e6e0ff"/>
+            </linearGradient>
+            <linearGradient id="g-fold" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#7b6cff"/><stop offset=".6" stop-color="#cfc5ff"/><stop offset="1" stop-color="#ffffff"/>
+            </linearGradient>
+            <linearGradient id="g-arc" x1="0" x2="1"><stop offset="0" stop-color="#8b7dff" stop-opacity="0"/><stop offset=".5" stop-color="#8b7dff" stop-opacity=".7"/><stop offset="1" stop-color="#8b7dff" stop-opacity="0"/></linearGradient>
+            <filter id="f-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
+            <filter id="f-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="22"/></filter>
+            <filter id="f-shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="18"/></filter>
+            <clipPath id="c-sphere"><circle cx="360" cy="350" r="286"/></clipPath>
+          </defs>
+
+          <!-- the shadow the sphere casts on the page -->
+          <ellipse cx="360" cy="672" rx="230" ry="26" fill="#3a2f8f" opacity=".16" filter="url(#f-shadow)"/>
+
+          <!-- the glass -->
+          <circle cx="360" cy="350" r="286" fill="url(#g-glass)"/>
+
+          <!-- the ribbons: four blades of violet sweeping out from the centre and
+               turning slowly, each with a paler inner fold and a lit edge -->
+          <g clip-path="url(#c-sphere)">
+            <g class="orb-ribbons">
+             <g transform="translate(362 352) scale(1.2) translate(-362 -352)">
+              <g id="blade">
+                <path d="M362 352 C 330 250, 240 190, 150 240 C 128 252, 118 275, 124 296 C 205 246, 300 282, 362 352 Z" fill="#241f66" opacity=".35" filter="url(#f-soft)" transform="translate(10 14)"/>
+                <path d="M362 352 C 330 250, 240 190, 150 240 C 128 252, 118 275, 124 296 C 205 246, 300 282, 362 352 Z" fill="url(#g-blade)"/>
+                <path d="M362 352 C 335 275, 262 226, 186 246 C 176 250, 170 258, 172 268 C 235 245, 305 285, 362 352 Z" fill="url(#g-fold)" opacity=".9"/>
+                <path d="M150 240 C 240 190, 330 250, 362 352" stroke="#fff" stroke-opacity=".6" stroke-width="2.2" stroke-linecap="round"/>
+              </g>
+              <use href="#blade" transform="rotate(90 362 352)"/>
+              <use href="#blade" transform="rotate(180 362 352)"/>
+              <use href="#blade" transform="rotate(270 362 352)"/>
+             </g>
+            </g>
+            <circle cx="362" cy="352" r="110" fill="url(#g-core)" filter="url(#f-glow)"/>
+            <circle cx="362" cy="352" r="30" fill="#fff" filter="url(#f-soft)"/>
+            <circle cx="362" cy="352" r="12" fill="#fff"/>
+          </g>
+
+          <!-- the sheen: a rim of light and a soft highlight -->
+          <circle cx="360" cy="350" r="286" stroke="#ffffff" stroke-opacity=".9" stroke-width="1.5"/>
+          <circle cx="360" cy="350" r="284" stroke="#8b7dff" stroke-opacity=".22" stroke-width="1"/>
+          <ellipse cx="248" cy="200" rx="130" ry="76" fill="#fff" opacity=".55" filter="url(#f-soft)" transform="rotate(-28 248 200)"/>
+          <path d="M120 300 A 250 250 0 0 1 300 96" stroke="#fff" stroke-opacity=".9" stroke-width="3" stroke-linecap="round" filter="url(#f-soft)"/>
+
+          <!-- the orbits -->
+          <ellipse cx="360" cy="350" rx="318" ry="126" stroke="url(#g-arc)" stroke-width="1.2" transform="rotate(-22 360 350)"/>
+          <ellipse cx="360" cy="350" rx="330" ry="150" stroke="url(#g-arc)" stroke-width="1" transform="rotate(34 360 350)"/>
+          <circle cx="83" cy="410" r="5" fill="#b9a7ff"/><circle cx="83" cy="410" r="9" fill="#8b7dff" opacity=".18"/>
+          <circle cx="652" cy="330" r="5" fill="#b9a7ff"/><circle cx="652" cy="330" r="9" fill="#8b7dff" opacity=".18"/>
+        </svg>
+
+        <!-- the four things it remembers, floating in the glass -->
+        <span class="orb-card oc1"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2.2"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4"/></svg></span>
+        <span class="orb-card oc2"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7h11M9 12h11M9 17h11"/><circle cx="5" cy="7" r=".9" fill="currentColor"/><circle cx="5" cy="12" r=".9" fill="currentColor"/><circle cx="5" cy="17" r=".9" fill="currentColor"/></svg></span>
+        <span class="orb-card oc3"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.2"/><path d="M3.5 9.5h17M7 7.3h.01M9.5 7.3h.01"/></svg></span>
+        <span class="orb-card oc4"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 18.5h5M10.5 21h3M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg></span>
+
+        <!-- the labels outside, each tied to the glass by a hairline -->
+        <span class="orb-tag ot1"><b>Pages</b><i></i></span>
+        <span class="orb-tag ot2"><i></i><b>Documents</b></span>
+        <span class="orb-tag ot3"><b>Calls</b><i></i></span>
+        <span class="orb-tag ot4"><i></i><b>Ideas</b></span>
       </div>
     </div>
-    <div class="hero-float" aria-hidden="true">
-      <svg class="orbit" viewBox="0 0 1672 941" fill="none" preserveAspectRatio="none">
-        <defs><linearGradient id="orb" x1="0" x2="1"><stop offset="0" stop-color="#6f5ff0" stop-opacity=".05"/><stop offset=".5" stop-color="#6f5ff0" stop-opacity=".6"/><stop offset="1" stop-color="#6f5ff0" stop-opacity=".05"/></linearGradient></defs>
-        <path d="M928 222 Q1140 100 1335 258" stroke="url(#orb)" stroke-width="1.4" stroke-dasharray="3 8" vector-effect="non-scaling-stroke"/>
-        <path d="M922 362 Q1150 540 1365 400" stroke="url(#orb)" stroke-width="1.4" stroke-dasharray="3 8" vector-effect="non-scaling-stroke"/>
-      </svg>
-        <span class="hchip c1" data-x="928" data-y="222"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="3.5" width="15" height="17" rx="2.5"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/></svg> Web pages</span>
-        <span class="hchip c2" data-x="922" data-y="362"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7a2.5 2.5 0 0 0-2.5 2.5v12A2.5 2.5 0 0 0 7 20.5h10a2.5 2.5 0 0 0 2.5-2.5V9z"/><path d="M14 3.5V9h5.5M8.5 13h7M8.5 16.5h5"/></svg> Documents</span>
-        <span class="hchip c3" data-x="1335" data-y="258"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h3.5l1.7 4.2-2.2 1.6a10 10 0 0 0 5.7 5.7l1.6-2.2 4.2 1.7V19a1.5 1.5 0 0 1-1.6 1.5C10.4 20 4 13.6 3.5 6.1A1.5 1.5 0 0 1 5 4.5z"/></svg> Calls</span>
-        <span class="hchip c4" data-x="1365" data-y="400"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M8.5 12.2l2.4 2.4 4.8-5"/></svg> Promises</span>
-    </div>
-    <a class="hero-cue" href="#product"><i></i><span>A calmer, clearer you</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
-    <p class="hero-quote">“A more present you,<br>for a more meaningful tomorrow.”<i></i></p>
   </section>
 
   <section class="stage" id="product">
@@ -439,12 +492,6 @@
         <h2 class="display" style="margin-block:16px">Your memory should never become someone else's dataset.</h2>
         <p class="lede">A record of everything you do is the single worst thing to hand to a server. So Lane does not have one. There is nothing to breach, because there is nothing to send.</p>
         <p class="lede" style="margin-top:14px">That is also why Rabbit exists. A memory app that has to call a model elsewhere is a memory app that ships your day elsewhere.</p>
-        <figure class="vault-figure" aria-hidden="true">
-          <picture>
-            <source srcset="sadhu-back.webp" type="image/webp">
-            <img src="sadhu-back.png" alt="" width="760" height="976" loading="lazy" decoding="async">
-          </picture>
-        </figure>
       </div>
       <div class="facts rv">
         <div class="fact"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><b>It stays on your machine</b><p>Reading, writing and answering all happen on your Mac. No account, no sync, no server holding your day.</p></div></div>
@@ -528,10 +575,15 @@
           <p class="cta-note">macOS 13+ · Apple silicon · 28 MB · no account · cancel in a click</p>
         </div>
         <div class="cta-art" aria-hidden="true">
-          <picture>
-            <source srcset="sadhu-side.webp" type="image/webp">
-            <img src="sadhu-side.png" alt="" width="760" height="944" loading="lazy" decoding="async">
-          </picture>
+          <div class="notch-card">
+            <div class="notch-top"><img src="logo.png" alt="" width="18"><span class="label">Good morning</span></div>
+            <div class="notch-b">
+              <div class="notch-row"><span class="k">Three things</span><span class="v">1. Compliance certificate · due tomorrow</span></div>
+              <div class="notch-row"><span class="k"></span><span class="v">2. The pilot domain expires today</span></div>
+              <div class="notch-row"><span class="k"></span><span class="v">3. Call the district office back</span></div>
+              <div class="notch-ask">Ask your memory…</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
