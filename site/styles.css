@@ -77,9 +77,6 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; text-wrap: balance; }
 .btn-clear { background: transparent; border-color: rgba(16,16,26,.28); color: var(--ink); }
 .btn-clear:hover { background: rgba(255,255,255,.5); }
 .btn-lg { height: 52px; padding: 0 26px; font-size: 16px; border-radius: 11px; }
-.ticks { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 26px; }
-.ticks li { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; color: var(--body); }
-.ticks svg { color: #16a34a; }
 .btn-sm { height: 34px; padding: 0 14px; font-size: 13.5px; border-radius: 8px; }
 .arrow { transition: transform .18s ease; }
 .btn:hover .arrow, .tlink:hover .arrow { transform: translateX(2px); }
@@ -100,42 +97,132 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; text-wrap: balance; }
 @media (min-width: 560px) { .nav-end .plain { display: inline; } }
 
 /* ---------- hero ---------- */
+/* One picture across the whole hero, the copy on the left where the picture
+   is mist, and four glass chips floating around the figure on the right. */
 .hero {
   position: relative; isolation: isolate; overflow: hidden;
+  min-height: clamp(640px, 100vh, 960px);
+  display: grid; align-content: center;
+  color: #171727;
   background:
-    radial-gradient(64% 52% at 10% -6%, rgba(122,106,255,.3), rgba(122,106,255,0) 62%),
-    radial-gradient(56% 46% at 90% 2%, rgba(255,150,112,.28), rgba(255,150,112,0) 64%),
-    radial-gradient(70% 46% at 50% 104%, rgba(255,231,214,.85), rgba(255,231,214,0) 72%),
-    linear-gradient(180deg, #eceaff 0%, #f4effc 30%, #fdf1e9 64%, #fffcfa 88%, #fff 100%);
+    radial-gradient(70% 60% at 22% 0%, rgba(150,140,255,.38), rgba(150,140,255,0) 62%),
+    radial-gradient(60% 50% at 82% 4%, rgba(255,190,210,.42), rgba(255,190,210,0) 60%),
+    radial-gradient(90% 40% at 50% 100%, rgba(226,222,236,.9), rgba(226,222,236,0) 70%),
+    linear-gradient(180deg, #e3dcff 0%, #ede4f7 38%, #f6eef2 70%, #f3f0f4 100%);
 }
-/* The dot field across the whole width of the hero. It is drawn below the
-   grain and below the white fade at the bottom, so it never fights the copy. */
-.hero-dots {
+.hero-art {
   position: absolute; inset: 0; z-index: -1;
-  width: 100%; height: 100%; display: block; pointer-events: none;
+  width: 100%; height: 100%; display: block;
+  object-fit: cover; object-position: 62% 50%;
 }
-
+/* A wash of mist over the left half, so the words sit on something calm
+   whatever the picture is doing there. */
 .hero::before {
-  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
-  mix-blend-mode: soft-light;
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(246,242,252,.78) 0%, rgba(246,242,252,.55) 30%, rgba(246,242,252,.12) 52%, rgba(246,242,252,0) 64%),
+    linear-gradient(180deg, rgba(246,242,252,.35), rgba(246,242,252,0) 26%);
 }
 .hero::after {
-  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 120px; z-index: -1; pointer-events: none;
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 110px; z-index: -1; pointer-events: none;
   background: linear-gradient(180deg, rgba(255,255,255,0), #fff);
 }
-.hero-in { gap: 20px; padding-block: clamp(70px, 9vw, 120px) clamp(54px, 7vw, 92px); display: grid; justify-items: center; text-align: center; }
-.pill { display: inline-flex; align-items: center; gap: 9px; height: 32px; padding: 0 6px 0 13px; border-radius: 999px; border: 1px solid rgba(16,16,26,.14); background: rgba(255,255,255,.72); backdrop-filter: blur(8px); box-shadow: 0 1px 2px rgba(16,16,26,.06); font-size: 13px; color: var(--body); }
+.hero-in {
+  display: grid; gap: 36px; align-items: center;
+  padding-block: clamp(96px, 12vh, 150px) clamp(110px, 14vh, 160px);
+}
+@media (min-width: 960px) {
+  .hero-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+}
+.hero-copy { display: grid; gap: 22px; justify-items: start; text-align: left; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 9px; height: 34px; padding: 0 14px 0 12px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.7); background: rgba(255,255,255,.62); backdrop-filter: blur(10px);
+  box-shadow: 0 1px 2px rgba(16,16,26,.06), 0 8px 24px -14px rgba(60,40,120,.35);
+  font-size: 13.5px; color: var(--body);
+}
+.pill > svg { color: var(--accent); }
 .pill b { color: var(--ink); font-weight: 500; }
-.pill .tag { background: var(--accent-soft); color: var(--accent-ink); border-radius: 999px; padding: 2px 8px; font-size: 11.5px; font-weight: 500; }
-.hero h1 { font-size: clamp(40px, 6.8vw, 82px); max-width: 15ch; letter-spacing: -0.042em; font-weight: 600; color: #171727; }
+.pill-sep { width: 1px; height: 14px; background: rgba(16,16,26,.16); display: inline-block; }
+.pill .tag { color: var(--accent); font-weight: 500; }
+
+.hero h1 { font-size: clamp(40px, 4.5vw, 68px); max-width: 15ch; letter-spacing: -0.045em; font-weight: 600; line-height: 1.04; color: #171727; }
 /* On a narrow phone the longest line, "brain, on your Mac", is wider than
    the screen at the clamp's floor, so it steps down once more. */
 @media (max-width: 430px) { .hero h1 { font-size: 34px; } }
-.hero .lede { font-size: clamp(16.5px, 2vw, 19.5px); max-width: min(58ch, 100%); color: #4a4a5d; }
-.actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.note { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 14px; color: var(--faint); font-size: 13px; }
-.dot-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--line-2); }
+.hero .lede { font-size: clamp(16.5px, 1.5vw, 19.5px); max-width: 32em; color: #3f3f55; line-height: 1.55; }
+.hero .actions { justify-content: flex-start; gap: 14px; margin-top: 2px; }
+.hero .btn-lg { height: 56px; padding: 0 26px; border-radius: 12px; font-size: 17px; }
+.hero .btn-primary { gap: 10px; box-shadow: 0 10px 28px -12px rgba(90,81,229,.6), inset 0 1px 0 rgba(255,255,255,.2); }
+.hero .btn-ghost { background: rgba(255,255,255,.86); backdrop-filter: blur(8px); gap: 10px; }
+
+/* Three quiet reasons, each with its icon, kept apart by hairlines. */
+.hero .ticks { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 12px 0; }
+.hero .ticks li {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding-right: 22px; margin-right: 22px; border-right: 1px solid rgba(16,16,26,.14);
+  font-size: 15px; line-height: 1.35; color: #3f3f55;
+}
+.hero .ticks li:last-child { padding-right: 0; margin-right: 0; border-right: 0; }
+.tick-ic { display: grid; place-items: center; width: 24px; height: 24px; color: var(--accent); flex: none; }
+.hero .ticks li:nth-child(3) .tick-ic { color: #1e9e6a; }
+
+/* The right half: the figure lives in the picture; these float around it. */
+.hero-scene { position: relative; min-height: 520px; }
+.orbit { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.hchip {
+  position: absolute; display: inline-flex; align-items: center; gap: 10px;
+  height: 52px; padding: 0 20px 0 16px; border-radius: 14px;
+  background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.85);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 1px 2px rgba(16,16,26,.05), 0 18px 40px -22px rgba(60,40,120,.5);
+  font-size: 15px; font-weight: 500; color: #23233a; white-space: nowrap;
+  animation: chip-float 7s ease-in-out infinite;
+}
+.hchip svg { color: var(--accent); }
+.hchip.c1 { left: 2%;  top: 5%; }
+.hchip.c2 { left: 1%;  top: 31%; animation-delay: -2.2s; }
+.hchip.c3 { left: 71%; top: 12%; animation-delay: -4.1s; }
+.hchip.c4 { left: 74%; top: 38%; animation-delay: -5.6s; }
+@keyframes chip-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .hchip { animation: none; } }
+
+/* The two small things at the foot of the picture. */
+.hero-cue {
+  position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 1;
+  display: grid; justify-items: center; gap: 8px;
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
+  color: #4a4a5d; text-decoration: none;
+}
+.hero-cue i { display: block; width: 1px; height: 26px; background: rgba(16,16,26,.28); }
+.hero-cue svg { animation: cue-nod 2.4s ease-in-out infinite; }
+@keyframes cue-nod { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+.hero-quote {
+  position: absolute; right: clamp(16px, 4vw, 60px); bottom: 72px; z-index: 1; margin: 0;
+  font-style: italic; font-size: 13.5px; line-height: 1.5; text-align: right; color: #3f3f55;
+}
+.hero-quote i { display: block; width: 18px; height: 1px; background: rgba(16,16,26,.35); margin: 12px 0 0 auto; }
+
+@media (max-width: 959px) {
+  .hero { min-height: 0; }
+  .hero-in { padding-block: 96px 120px; }
+  .hero::before { background: linear-gradient(180deg, rgba(246,242,252,.78) 0%, rgba(246,242,252,.55) 45%, rgba(246,242,252,0) 75%); }
+  .hero-art { object-position: 62% 100%; }
+  .hero-scene { min-height: 300px; }
+  .hchip { height: 44px; font-size: 14px; padding: 0 16px 0 13px; }
+  .hchip.c1 { left: 4%;  top: 8%; }
+  .hchip.c2 { left: 2%;  top: 52%; }
+  .hchip.c3 { left: auto; right: 4%; top: 18%; }
+  .hchip.c4 { left: auto; right: 2%; top: 62%; }
+  .hero-quote { display: none; }
+}
+@media (max-width: 560px) {
+  .hero .ticks li { border-right: 0; margin-right: 0; padding-right: 0; width: 100%; }
+  .hero .btn-lg { height: 52px; font-size: 16px; }
+  .hchip { display: none; }
+  .hero-scene { min-height: 0; display: none; }
+}
 
 /* ---------- product shot ---------- */
 .stage { padding-bottom: clamp(40px, 6vw, 80px); position: relative; }
