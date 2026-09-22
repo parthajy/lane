@@ -1147,7 +1147,8 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
           nodesDraggable={!animating}
           proOptions={{ hideAttribution: true }}
         >
-          <Background variant={BackgroundVariant.Dots} gap={24} size={1.6} className="rb-bg" />
+          {/* The sky is drawn by the stylesheet; this stays for React Flow's own sizing. */}
+          <Background variant={BackgroundVariant.Dots} gap={24} size={0} className="rb-bg" />
           {showMap && !animating && (
             <MiniMap
               className="rb-minimap"
@@ -1312,6 +1313,9 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
           <button type="button" onClick={() => rf.zoomIn({ duration: 180 })} title="Zoom in (+)" aria-label="Zoom in"><Plus size={15} /></button>
           <button type="button" onClick={() => rf.fitView({ padding: 0.12, maxZoom: 1, duration: 400 })} title="Fit everything (F)" aria-label="Fit to screen"><Maximize size={15} /></button>
         </div>
+
+        {/* One quiet line in the margin */}
+        <div className="rb-sky-note" aria-hidden="true">Thoughts<br />connect<br />worlds<i /></div>
 
         {/* Hint strip */}
         {hint ? (

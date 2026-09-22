@@ -918,268 +918,111 @@
 
 /* A vignette, so the edges fall away and the centre reads first. */
 .rb-root::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  background: radial-gradient(120% 100% at 50% 45%, transparent 38%, rgba(2, 3, 9, 0.55) 100%);
-}
-
-.rb-root .react-flow__background.rb-bg { background: transparent; }
-.rb-root .react-flow__background.rb-bg circle { fill: rgba(150, 170, 255, 0.07); }
-
-/* ── Bodies ─────────────────────────────────────────────────────────── */
-.rb-root .rb-dot-core,
-.dark .rb-root .rb-dot-core {
-  background:
-    radial-gradient(circle at 50% 50%,
-      #ffffff 0%,
-      color-mix(in srgb, var(--ink) 35%, #ffffff) 26%,
-      var(--ink) 58%,
-      color-mix(in srgb, var(--ink) 60%, transparent) 78%,
-      transparent 100%);
-  box-shadow:
-    0 0 10px 1px color-mix(in srgb, var(--ink) 60%, transparent),
-    0 0 30px 6px color-mix(in srgb, var(--ink) 28%, transparent);
-  outline-color: transparent;
-}
-.rb-root .rb-dot:hover .rb-dot-core,
-.rb-root .rb-dot.is-lit .rb-dot-core {
-  transform: scale(1.3);
-  box-shadow:
-    0 0 16px 3px color-mix(in srgb, var(--ink) 75%, transparent),
-    0 0 52px 14px color-mix(in srgb, var(--ink) 38%, transparent);
-}
-.rb-root .rb-dot.is-faded { opacity: 0.16; }
-.rb-root .rb-dot.is-hub .rb-dot-core {
-  box-shadow:
-    0 0 20px 4px color-mix(in srgb, var(--ink) 70%, transparent),
-    0 0 60px 18px color-mix(in srgb, var(--ink) 34%, transparent);
-}
-
-/* ── Labels: a readout chip on a hairline, as in a star census ─────── */
-.rb-root .rb-dot-label {
-  top: calc(100% + 12px);
-  max-width: 190px;
-  padding: 3px 8px;
-  border-radius: 5px;
-  background: rgba(4, 6, 14, 0.82);
-  border: 1px solid rgba(180, 200, 255, 0.16);
-  backdrop-filter: blur(3px);
-  font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: #d7ddf2;
-  text-shadow: none;
-  -webkit-line-clamp: 1;
-}
-.rb-root .rb-dot-label::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  width: 1px;
-  height: 9px;
-  background: linear-gradient(180deg, rgba(180, 200, 255, 0), rgba(180, 200, 255, 0.5));
-}
-.rb-root .rb-dot.is-lit .rb-dot-label,
-.rb-root .rb-dot:hover .rb-dot-label { color: #fff; border-color: rgba(180, 200, 255, 0.4); }
-
-/* ── Threads between bodies ─────────────────────────────────────────── */
-.rb-root .react-flow__edge-path { stroke: rgba(170, 190, 255, 0.22); }
-.rb-root .react-flow__edge.selected .react-flow__edge-path,
-.rb-root .react-flow__edge:hover .react-flow__edge-path { stroke: rgba(200, 215, 255, 0.75); filter: drop-shadow(0 0 6px rgba(140, 170, 255, 0.55)); }
-
-/* ── Chrome: dark glass over the field ──────────────────────────────── */
-.rb-root .rb-panel {
-  background: var(--rb-panel);
-  backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: var(--rb-shadow), 0 0 0 1px rgba(180, 200, 255, 0.12);
-  color: var(--rb-ink);
-}
-.rb-root .rb-brand .board { color: var(--rb-ink-3); }
-.rb-root .rb-back {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  margin-right: 2px;
-  border-radius: 8px;
-  color: var(--rb-ink-2);
-  background: rgba(255, 255, 255, 0.06);
-}
-.rb-root .rb-back:hover { color: #fff; background: rgba(255, 255, 255, 0.14); }
-.rb-root input, .rb-root textarea { color: var(--rb-ink); }
-.rb-root .react-flow__minimap { background: rgba(6, 8, 18, 0.8); }
-.rb-root .react-flow__minimap-mask { fill: rgba(4, 6, 14, 0.6); }
-
-/* A census reads as stars first, names second: only hubs carry a label at
-   rest, everything else names itself when you touch it or search for it. */
-.rb-root .rb-dot-label { opacity: 0; }
-.rb-root .rb-dot.is-hub .rb-dot-label,
-.rb-root .rb-dot:hover .rb-dot-label,
-.rb-root .rb-dot.is-lit .rb-dot-label,
-.rb-root .rb-dot.is-open .rb-dot-label,
-.rb-root .rb-dot.is-selected .rb-dot-label,
-.rb-root .rb-dot.is-match .rb-dot-label,
-.rb-root .rb-dot.is-fresh .rb-dot-label { opacity: 1; }
-
-/* The relation picker renders above the field in a portal, so it carries its
-   own colours rather than the board's translucent panel: over a star field a
-   see-through popover is unreadable. */
-.rb-picker {
-  background: rgba(9, 11, 22, 0.97);
-  backdrop-filter: blur(24px) saturate(150%);
-  box-shadow: 0 30px 80px -18px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(180, 200, 255, 0.2);
-  color: #e9ecf8;
-}
-.rb-picker .rb-picker-q { color: #fff; }
-.rb-picker .rb-picker-pair { color: #aeb6d4; }
-.rb-picker .rb-picker-pair .t { background: rgba(255, 255, 255, 0.07); color: #d8ddf0; }
-.rb-picker .rb-rel { color: #e9ecf8; }
-.rb-picker .rb-rel:hover { background: rgba(255, 255, 255, 0.09); }
-.rb-picker .rb-rel kbd, .rb-picker kbd {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.16);
-  color: #aeb6d4;
-}
-.rb-picker .rb-picker-foot { border-top-color: rgba(180, 200, 255, 0.16); }
-.rb-picker .rb-picker-foot button { color: #c9d0e8; }
-.rb-picker .rb-picker-foot button:hover { background: rgba(255, 255, 255, 0.1); }
-
-/* Same for anything else that floats over the field. */
-.rb-root .rb-drawer, .rb-root .rb-composer { background: rgba(9, 11, 22, 0.96); backdrop-filter: blur(20px); }
-
-/* ── Depth: two soft clouds behind the field, so it is space and not a
-      black rectangle. Very low contrast, and they never move. ────────── */
-.rb-root .react-flow::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    radial-gradient(52% 44% at 24% 30%, rgba(96, 86, 220, 0.16), transparent 70%),
-    radial-gradient(44% 40% at 78% 66%, rgba(34, 150, 160, 0.12), transparent 72%),
-    radial-gradient(60% 50% at 62% 12%, rgba(120, 70, 190, 0.10), transparent 74%);
-  filter: blur(6px);
+  /* Three depths of star, each tiling at its own size, so the field reads
+     as distance rather than as a repeated pattern. */
+  background-image:
+    radial-gradient(1.5px 1.5px at 40px 60px, rgba(255,255,255,.95), transparent),
+    radial-gradient(1.2px 1.2px at 170px 30px, rgba(226,236,255,.85), transparent),
+    radial-gradient(1.7px 1.7px at 300px 210px, rgba(255,248,235,.9), transparent),
+    radial-gradient(1.1px 1.1px at 95px 250px, rgba(255,255,255,.8), transparent),
+    radial-gradient(1px 1px at 240px 120px, rgba(210,225,255,.75), transparent),
+    radial-gradient(1px 1px at 20px 180px, rgba(255,255,255,.7), transparent),
+    radial-gradient(.9px .9px at 60px 40px, rgba(255,255,255,.7), transparent),
+    radial-gradient(.9px .9px at 150px 160px, rgba(200,215,255,.6), transparent),
+    radial-gradient(.8px .8px at 210px 60px, rgba(255,255,255,.6), transparent),
+    radial-gradient(.7px .7px at 30px 110px, rgba(220,230,255,.5), transparent),
+    radial-gradient(.7px .7px at 120px 90px, rgba(255,255,255,.45), transparent),
+    radial-gradient(.6px .6px at 180px 200px, rgba(210,220,255,.45), transparent);
+  background-size:
+    620px 460px, 620px 460px, 620px 460px,
+    380px 300px, 380px 300px, 380px 300px,
+    260px 210px, 260px 210px, 260px 210px,
+    170px 140px, 170px 140px, 170px 140px;
+  background-repeat: repeat;
 }
 
-/* ── HUD: mono, quiet, and out of the way of the field ──────────────── */
-.rb-root .rb-brand .app { letter-spacing: -0.01em; }
-.rb-root .rb-brand .board {
-  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.rb-root .rb-legend, .rb-root .rb-zoom, .rb-root .rb-counts {
-  font-variant-numeric: tabular-nums;
-}
-.rb-root .rb-legend button { transition: opacity .15s ease, background .15s ease; }
-.rb-root .rb-legend button:hover { background: rgba(255, 255, 255, 0.08); }
+/* The canvas and its contents sit above the sky. */
+.rb-root .react-flow { position: relative; z-index: 1; background: transparent; }
+.rb-root .react-flow__background.rb-bg { background: transparent; }
+.rb-root .react-flow__background.rb-bg circle { fill: transparent; }
 
-/* The minimap reads as a chart of the same sky. */
+/* A dot is a star: a white core, its own colour around it, and a halo. */
+.rb-dot-core {
+  background: radial-gradient(circle at 50% 50%,
+    #ffffff 0%,
+    color-mix(in srgb, var(--ink) 55%, #ffffff) 26%,
+    var(--ink) 52%,
+    color-mix(in srgb, var(--ink) 60%, transparent) 76%,
+    transparent 100%);
+  box-shadow:
+    0 0 4px color-mix(in srgb, var(--ink) 80%, transparent),
+    0 0 11px color-mix(in srgb, var(--ink) 42%, transparent),
+    0 0 22px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+.rb-dot.is-hub .rb-dot-core,
+.rb-dot.is-lit .rb-dot-core {
+  box-shadow:
+    0 0 8px #fff,
+    0 0 22px color-mix(in srgb, var(--ink) 90%, transparent),
+    0 0 52px color-mix(in srgb, var(--ink) 55%, transparent);
+}
+.rb-dot.is-faded { opacity: .22; }
+.rb-dot-label { color: var(--rb-ink-2); text-shadow: 0 1px 6px rgba(0, 0, 0, .9); }
+
+/* Links are threads of light, brightest where they meet. */
+.rb-root .react-flow__edge-path {
+  stroke: rgba(180, 196, 255, .46);
+  stroke-width: 1;
+  filter: drop-shadow(0 0 3px rgba(150, 175, 255, .65));
+}
+.rb-root .react-flow__edge.selected .react-flow__edge-path,
+.rb-root .react-flow__edge:hover .react-flow__edge-path {
+  stroke: rgba(225, 235, 255, .95);
+  filter: drop-shadow(0 0 6px rgba(160, 190, 255, .9));
+}
+
+/* Panels: smoked glass with a hairline of light. */
+.rb-panel {
+  background: var(--rb-panel);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: var(--rb-shadow), inset 0 1px 0 rgba(255, 255, 255, .07), 0 0 0 1px var(--rb-line);
+}
+.rb-tool:hover, .rb-zoom button:hover { background: rgba(255, 255, 255, .08); }
+.rb-tool.is-on { background: rgba(142, 162, 255, .22); color: #fff; }
+.rb-search input, .rb-composer textarea, .rb-composer input {
+  background: rgba(255, 255, 255, .05);
+  color: var(--rb-ink);
+  border-color: var(--rb-line);
+}
+.rb-search input::placeholder { color: var(--rb-ink-3); }
+
+/* The map in the corner, and the sky inside it. */
 .rb-root .react-flow__minimap {
-  border-radius: 14px;
-  box-shadow: 0 0 0 1px rgba(180, 200, 255, 0.14), 0 20px 50px -20px rgba(0, 0, 0, 0.9);
+  background: rgba(10, 12, 26, .8);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 0 0 1px var(--rb-line);
 }
+.rb-root .react-flow__minimap-mask { fill: rgba(5, 6, 13, .6); stroke: rgba(160, 180, 255, .35); stroke-width: 2; }
 
-/* ── A walk down memory lane ─────────────────────────────────────────
-   While it plays the board keeps only the field and the caption: the
-   rail, the search, the counts, the legend and the map step out. */
-.rb-root.is-tour .rb-rail,
-.rb-root.is-tour .rb-top-right,
-.rb-root.is-tour .rb-legend,
-.rb-root.is-tour .rb-hint,
-.rb-root.is-tour .rb-brand,
-.rb-root.is-tour .rb-zoom,
-.rb-root.is-tour .react-flow__minimap { opacity: 0; pointer-events: none; transition: opacity .4s ease; }
-.rb-root.is-tour .react-flow__pane { cursor: default; }
-
-.rb-tour { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
-.rb-tour::after {
-  content: '';
+/* One quiet line in the margin, the way a chart has a note. */
+.rb-root .rb-sky-note {
   position: absolute;
-  inset: 0;
+  right: 26px;
+  top: 46%;
+  z-index: 5;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(2,3,9,.72) 0%, rgba(2,3,9,0) 22%, rgba(2,3,9,0) 52%, rgba(2,3,9,.86) 100%);
-}
-.rb-tour-top {
-  position: absolute;
-  z-index: 2;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 10px 8px 14px;
-  border-radius: 999px;
-  background: rgba(9, 11, 22, 0.82);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 0 0 1px rgba(180, 200, 255, 0.16);
-  pointer-events: auto;
-}
-.rb-tour-count {
-  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
-  font-size: 11px;
-  letter-spacing: .1em;
-  color: #aeb6d4;
-  font-variant-numeric: tabular-nums;
-}
-.rb-tour-bar { width: 180px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.14); overflow: hidden; }
-.rb-tour-bar span { display: block; height: 100%; border-radius: 2px; background: #8aa0ff; transition: width .6s ease; }
-.rb-tour-top button {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  color: #d7ddf2;
-  background: rgba(255,255,255,.08);
-}
-.rb-tour-top button:hover { background: rgba(255,255,255,.18); color: #fff; }
-
-.rb-tour-card {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  bottom: 56px;
-  transform: translateX(-50%);
-  width: min(620px, calc(100vw - 80px));
-  text-align: center;
-  color: #eef1fb;
-  animation: rb-tour-in 700ms cubic-bezier(.2,.9,.3,1) both;
-}
-@keyframes rb-tour-in { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
-.rb-tour-card .k {
   font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
   font-size: 10.5px;
-  letter-spacing: .16em;
+  letter-spacing: .22em;
+  line-height: 1.9;
   text-transform: uppercase;
+  color: rgba(180, 190, 225, .5);
 }
-.rb-tour-card h2 {
-  margin: 10px 0 8px;
-  font-size: 26px;
-  line-height: 1.22;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  text-wrap: balance;
-  text-shadow: 0 2px 24px rgba(0,0,0,.6);
-}
-.rb-tour-card p { margin: 0; font-size: 13px; color: #aeb6d4; }
-@media (prefers-reduced-motion: reduce) { .rb-tour-card { animation: none; } }
-
-/* Relation labels belong to the night too. */
-.rb-root .rb-edge-label, .rb-root .react-flow__edge-textbg + .react-flow__edge-text { fill: #d7ddf2; }
-.rb-root .rb-edge-label {
-  background: rgba(9, 11, 22, 0.9);
-  border: 1px solid rgba(180, 200, 255, 0.18);
-  color: #d7ddf2;
-  backdrop-filter: blur(4px);
-}
-.rb-root.is-tour .rb-edge-label { opacity: .5; }
+.rb-root .rb-sky-note i { display: block; width: 26px; height: 1px; background: rgba(180, 190, 225, .4); margin-top: 10px; }
+@media (max-width: 1100px) { .rb-root .rb-sky-note { display: none; } }

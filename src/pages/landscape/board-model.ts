@@ -47,15 +47,18 @@ export type XY = { x: number; y: number }
 // Sticky-note palette per memory type. `fill` is the card, `ink` the accent
 // (type label, left bar, minimap). Dark mode swaps fills in board.css via
 // the data-type attribute, so only the light values live here.
+// The board is a night sky, so these are the colours of stars rather than of
+// ink on paper: each one has to glow on near-black and stay apart from its
+// neighbours at the size of a dot.
 export const TYPE_META: Record<RecordType, { label: string; plural: string; ink: string; fill: string }> = {
-  decision:   { label: 'Decision',   plural: 'Decisions',   ink: '#6d4aff', fill: '#ece6ff' },
-  meeting:    { label: 'Meeting',    plural: 'Meetings',    ink: '#3559e0', fill: '#e1e8ff' },
-  insight:    { label: 'Insight',    plural: 'Insights',    ink: '#0e8a82', fill: '#d9f4f0' },
-  idea:       { label: 'Idea',       plural: 'Ideas',       ink: '#b7791f', fill: '#fff1b8' },
-  tasklike:   { label: 'Task',       plural: 'Tasks',       ink: '#d9480f', fill: '#ffe3d6' },
-  note:       { label: 'Note',       plural: 'Notes',       ink: '#4d7c2a', fill: '#eaf5d6' },
-  context:    { label: 'Context',    plural: 'Context',     ink: '#5f6b7a', fill: '#eceff3' },
-  transcript: { label: 'Transcript', plural: 'Transcripts', ink: '#c2255c', fill: '#fde2ee' },
+  decision:   { label: 'Decision',   plural: 'Decisions',   ink: '#a855f7', fill: '#ece6ff' },
+  meeting:    { label: 'Meeting',    plural: 'Meetings',    ink: '#3b82f6', fill: '#e1e8ff' },
+  insight:    { label: 'Insight',    plural: 'Insights',    ink: '#2dd4bf', fill: '#d9f4f0' },
+  idea:       { label: 'Idea',       plural: 'Ideas',       ink: '#f5a524', fill: '#fff1b8' },
+  tasklike:   { label: 'Task',       plural: 'Tasks',       ink: '#fb7185', fill: '#ffe3d6' },
+  note:       { label: 'Note',       plural: 'Notes',       ink: '#a3e635', fill: '#eaf5d6' },
+  context:    { label: 'Context',    plural: 'Context',     ink: '#e6ebff', fill: '#eceff3' },
+  transcript: { label: 'Transcript', plural: 'Transcripts', ink: '#f472b6', fill: '#fde2ee' },
 }
 
 export const TYPE_ORDER: RecordType[] = ['decision', 'meeting', 'insight', 'idea', 'tasklike', 'note', 'transcript', 'context']
