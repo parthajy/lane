@@ -132,10 +132,13 @@ export function Connector({ id, source, target, data, markerEnd }: EdgeProps<Edg
         markerEnd={markerEnd}
         interactionWidth={18}
         style={{
-          stroke: rel.color,
-          strokeWidth: active ? 2.2 : 1.1,
-          strokeDasharray: data.pending ? '7 6' : data.manual ? undefined : '4 4',
-          opacity: faded ? 0.08 : active ? 1 : 0.5,
+          // On the night sky a link is a thread of light. It only takes the
+          // relation's colour once you touch it; at rest the web should read
+          // as one thing rather than as a scatter of coloured lines.
+          stroke: active ? rel.color : 'rgba(188, 205, 255, 0.72)',
+          strokeWidth: active ? 2 : 0.9,
+          strokeDasharray: data.pending ? '7 6' : undefined,
+          opacity: faded ? 0.07 : active ? 1 : 0.62,
           transition: 'opacity 160ms ease, stroke-width 160ms ease',
         }}
       />

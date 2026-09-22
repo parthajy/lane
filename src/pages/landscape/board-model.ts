@@ -93,11 +93,13 @@ export function relationMeta(kind: string) {
 // Past ~40 memories a soft centre line splits it into two hemispheres.
 // Seeded from each memory's id, so the same board lays out the same way.
 
-export const MIN_DOT = 14
+export const MIN_DOT = 9
 
 // Dot diameter grows with how connected a memory is.
 export function dotSize(degree: number): number {
-  return Math.round(MIN_DOT + Math.min(26, Math.sqrt(degree) * 7))
+  // Small enough to read as a star rather than a bead, with the busiest
+  // memories only about twice the size of the quietest.
+  return Math.round(MIN_DOT + Math.min(15, Math.sqrt(degree) * 4.4))
 }
 
 export interface BrainLayout {

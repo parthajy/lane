@@ -1114,7 +1114,17 @@ function Board({ onAsk, onOpenMemory, onExit }: { onAsk: (q: string) => void; on
           if ((e.target as HTMLElement).closest('.react-flow__pane')) placeComposer(e.clientX, e.clientY)
         }}
       >
-        <ReactFlow
+        {/* Deep space, behind everything: a galaxy, two nebulae and the band
+          of the milky way. Drawn rather than photographed, so it costs
+          nothing to ship and scales to any window. */}
+      <div className="rb-sky" aria-hidden="true">
+        <i className="rb-galaxy" />
+        <i className="rb-neb rb-neb-a" />
+        <i className="rb-neb rb-neb-b" />
+        <i className="rb-milky" />
+      </div>
+
+      <ReactFlow
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
