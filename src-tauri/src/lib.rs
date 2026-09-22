@@ -1109,7 +1109,7 @@ mod hygiene_tests {
     #[test]
     fn commands_run_off_the_main_thread() {
         // Only window and dialog work belongs on the main thread.
-        let allowed = ["show_overlay", "hide_overlay", "open_main", "restart_app", "choose_backup_file", "copy_text", "open_settings_pane", "quit_app", "notch_show", "notch_hide", "notch_resize"];
+        let allowed = ["show_overlay", "hide_overlay", "open_main", "restart_app", "choose_backup_file", "copy_text", "open_settings_pane", "quit_app", "notch_show", "notch_hide", "notch_resize", "set_fullscreen"];
         let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/src/commands.rs")).unwrap();
         let mut offenders = Vec::new();
         for (i, line) in text.lines().enumerate() {

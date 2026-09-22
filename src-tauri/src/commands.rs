@@ -1577,7 +1577,7 @@ fn _platform_link() -> bool {
 }
 
 /// The icon for the source of a memory: the site's own, else the app's.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn source_icon(state: State<'_, Arc<AppState>>, app: String, url: Option<String>) -> Option<String> {
     // host of the page, without the scheme, port or www.
     let domain = url.as_deref().and_then(|u| {
@@ -1717,13 +1717,13 @@ fn b64_decode(s: &str) -> Option<Vec<u8>> {
 }
 
 /// Where this Mac stands: trial, licensed, or out of time.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn licence_status() -> crate::licence::Licence {
     crate::licence::status()
 }
 
 /// Paste the key from a receipt.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn apply_licence(app: AppHandle, key: String) -> Res<crate::licence::Licence> {
     let out = crate::licence::apply(&key)?;
     let _ = app.emit("licence-changed", ());
@@ -1731,7 +1731,7 @@ pub fn apply_licence(app: AppHandle, key: String) -> Res<crate::licence::Licence
 }
 
 /// Take the key off this Mac, for moving to another one.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn clear_licence(app: AppHandle) -> crate::licence::Licence {
     let out = crate::licence::clear();
     let _ = app.emit("licence-changed", ());
