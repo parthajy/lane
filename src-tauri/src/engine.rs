@@ -3593,6 +3593,19 @@ pub fn stop_meeting(app: AppHandle, state: Arc<AppState>) {
     let _ = crate::lock(&state.store).set_meeting_status(meeting_id, "transcribing", "", Some(ended));
     let _ = crate::lock(&state.store).extend_activity_of_meeting(meeting_id, ended);
     let _ = app.emit("meetings-changed", ());
+    finish_meeting(app, state, dir, meeting_id, started_at);
+}
+
+/// Transcribe a finished recording and write it up. Split out of
+/// `stop_meeting` so a recording that was interrupted, by a crash, a quit or
+/// the freeze of 2026-09-24, can be picked up again when Lane next starts.
+pub fn finish_meeting(
+    app: AppHandle,
+    state: Arc<AppState>,
+    dir: std::path::PathBuf,
+    meeting_id: i64,
+    started_at: i64,
+) {
     std::thread::Builder::new()
         .name("transcribe".into())
         .spawn(move || {
@@ -3601,7 +3614,14 @@ pub fn stop_meeting(app: AppHandle, state: Arc<AppState>) {
             // memory names the people who were there.
             let (screen, attendees) = take_meeting_screen();
             if !screen.is_empty() {
-                if let Ok(activity) = crate::lock(&state.store).meeting_activity(meeting_id) {
+                // Read, then drop the guard, then take it again. Written as
+                // `if let Ok(a) = lock(..).meeting_activity(..)` the guard
+                // lives to the end of the block, so the lock inside waits on
+                // the thread already holding it and the whole app stops:
+                // transcription, the engine, capture and every worker queue
+                // behind the store. That is not hypothetical, it happened.
+                let found = crate::lock(&state.store).meeting_activity(meeting_id);
+                if let Ok(activity) = found {
                     let _ = crate::lock(&state.store).add_snapshot(activity, &format!("On screen during the meeting:\n{screen}"), started_at);
                 }
             }
@@ -3631,6 +3651,35 @@ pub fn stop_meeting(app: AppHandle, state: Arc<AppState>) {
             let _ = app.emit("meetings-changed", ());
         })
         .expect("spawn transcribe");
+}
+
+/// A recording only exists on disk while its meeting is unfinished: the
+/// folder is removed once the transcript is written. So anything still there
+/// at startup is work that was interrupted, and is picked up again.
+pub fn resume_unfinished_meetings(app: &AppHandle, state: &Arc<AppState>) {
+    let root = state.db_path.with_file_name("recordings");
+    let Ok(entries) = std::fs::read_dir(&root) else { return };
+    let meetings = match crate::lock(&state.store).list_meetings(500) {
+        Ok(m) => m,
+        Err(e) => {
+            log::warn!("resume: could not list meetings: {e}");
+            return;
+        }
+    };
+    for entry in entries.flatten() {
+        let dir = entry.path();
+        if !dir.is_dir() || !dir.join("mic.wav").is_file() {
+            continue;
+        }
+        // The folder is named for the moment the recording started.
+        let Some(started_at) = dir.file_name().and_then(|n| n.to_str()).and_then(|n| n.parse::<i64>().ok()) else { continue };
+        let Some(m) = meetings.iter().find(|m| (m.started_at - started_at).abs() < 2_000) else { continue };
+        if m.status == "done" {
+            continue;
+        }
+        log::info!("resume: meeting {} was left unfinished, transcribing it now", m.id);
+        finish_meeting(app.clone(), Arc::clone(state), dir, m.id, started_at);
+    }
 }
 
 fn transcribe_meeting(state: &AppState, dir: &std::path::Path, meeting_id: i64, started_at: i64) -> Result<usize, String> {

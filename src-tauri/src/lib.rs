@@ -905,6 +905,9 @@ pub fn run() {
                 engine::apply_mail_setting(&state);
             }
             engine::spawn(app.handle().clone(), state.clone());
+            // Anything still in the recordings folder is a meeting that was
+            // interrupted rather than finished, so pick it up again.
+            engine::resume_unfinished_meetings(app.handle(), &state);
             engine::start_file_watcher(&state);
             Ok(())
         })
@@ -1104,6 +1107,66 @@ mod hygiene_tests {
             }
         }
         assert!(offenders.is_empty(), "double locks:\n{}", offenders.join("\n"));
+    }
+
+    #[test]
+    fn no_mutex_is_held_across_a_scrutinee_block() {
+        // `if let Ok(x) = lock(&s).f() { .. }` keeps the guard alive for the
+        // whole block, unlike a plain `if`. Taking the same lock inside then
+        // waits on the thread already holding it. This froze every meeting
+        // that ended with a call window on 2026-09-24, and the statement
+        // check above cannot see it: the two locks are separate statements.
+        let mut offenders = Vec::new();
+        for (file, whole) in sources() {
+            // Comments are not code. A comment explaining this very rule
+            // would otherwise report itself, which is how the first version
+            // of this test spent its afternoon.
+            let text: String = whole
+                .lines()
+                .map(|l| match l.find("//") {
+                    Some(i) => &l[..i],
+                    None => l,
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            let b = text.as_bytes();
+            for kw in ["if let ", "while let ", "match "] {
+                let mut from = 0usize;
+                while let Some(rel) = text[from..].find(kw) {
+                    let start = from + rel;
+                    from = start + kw.len();
+                    let Some(open) = text[start..].find('{').map(|i| start + i) else { break };
+                    let scrutinee = &text[start..open];
+                    let Some(pos) = scrutinee.find("lock(&") else { continue };
+                    let after = &scrutinee[pos + 6..];
+                    let Some(close) = after.find(')') else { continue };
+                    let target = &after[..close];
+
+                    let mut depth = 0usize;
+                    let mut end = open;
+                    for i in open..b.len() {
+                        if b[i] == b'{' {
+                            depth += 1;
+                        } else if b[i] == b'}' {
+                            depth -= 1;
+                            if depth == 0 {
+                                end = i;
+                                break;
+                            }
+                        }
+                    }
+                    let needle = format!("lock(&{target})");
+                    if text[open..end].contains(&needle) {
+                        let line = text[..start].matches('\n').count() + 1;
+                        offenders.push(format!(
+                            "{file}:{line}: `{}` holds `{target}` for the whole block and takes it again inside",
+                            kw.trim()
+                        ));
+                    }
+                }
+            }
+        }
+        assert!(offenders.is_empty(), "locks held across a block:\n{}", offenders.join("\n"));
     }
 
     #[test]

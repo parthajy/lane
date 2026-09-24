@@ -280,11 +280,53 @@ pub struct Segment {
     pub text: String,
 }
 
+/// Put the sizes back into a WAV header that was never finalised.
+///
+/// A recorder writes the RIFF and data lengths when it closes the file. If it
+/// is killed first, the header still claims whatever it was when the file was
+/// opened, and every reader sees a few kilobytes of a file that is megabytes
+/// long. whisper then refuses it, and, unhelpfully, still exits zero.
+///
+/// The audio itself is intact, so the fix is to write the two lengths the
+/// file actually has. Returns true when it repaired something.
+pub fn repair_wav(path: &Path) -> bool {
+    let Ok(mut b) = std::fs::read(path) else { return false };
+    let size = b.len();
+    if size < 44 || &b[0..4] != b"RIFF" || &b[8..12] != b"WAVE" {
+        return false;
+    }
+    let get = |b: &[u8], i: usize| u32::from_le_bytes([b[i], b[i + 1], b[i + 2], b[i + 3]]) as usize;
+    let declared = get(&b, 4);
+    if declared == size - 8 {
+        return false; // already sound
+    }
+
+    let mut i = 12;
+    while i + 8 <= size {
+        let id = [b[i], b[i + 1], b[i + 2], b[i + 3]];
+        let len = get(&b, i + 4);
+        if &id == b"data" {
+            let real = (size - (i + 8)) as u32;
+            b[4..8].copy_from_slice(&((size - 8) as u32).to_le_bytes());
+            b[i + 4..i + 8].copy_from_slice(&real.to_le_bytes());
+            if std::fs::write(path, &b).is_err() {
+                return false;
+            }
+            log::info!("audio: repaired the header of {} ({} bytes of sound)", path.display(), real);
+            return true;
+        }
+        // A chunk's length excludes its own header and is padded to even.
+        i += 8 + len + (len & 1);
+    }
+    false
+}
+
 /// Run whisper-cli on one WAV file. Returns timed segments.
 pub fn transcribe(whisper: &Path, model: &Path, wav: &Path, language: &str) -> Result<Vec<Segment>, String> {
     if !wav.is_file() || std::fs::metadata(wav).map(|m| m.len()).unwrap_or(0) < 16_000 {
         return Ok(vec![]);
     }
+    repair_wav(wav);
     let out_base = wav.with_extension("");
     let status = Command::new(whisper)
         .args(["-m", &model.display().to_string(), "-f", &wav.display().to_string(), "-oj", "-of", &out_base.display().to_string(), "-l", language, "-np"])
@@ -297,6 +339,13 @@ pub fn transcribe(whisper: &Path, model: &Path, wav: &Path, language: &str) -> R
         return Err(format!("speech model failed ({status})"));
     }
     let json_path = out_base.with_extension("json");
+    if !json_path.is_file() {
+        // whisper-cli returns zero even when it fails to read the audio, so
+        // a missing transcript is the only signal that it did not work. The
+        // error used to surface as a bare "No such file or directory", which
+        // says nothing about what actually went wrong.
+        return Err(format!("the speech model could not read {}", wav.file_name().unwrap_or_default().to_string_lossy()));
+    }
     let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&json_path).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
     let mut segs = Vec::new();
     for s in v["transcription"].as_array().unwrap_or(&vec![]) {
