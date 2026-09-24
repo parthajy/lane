@@ -10,6 +10,7 @@ chrome can never drift: change the home page and run this again.
 from __future__ import annotations
 
 import html
+import json
 import pathlib
 import re
 
@@ -1206,6 +1207,164 @@ def build_rabbit() -> list[str]:
                      "Rabbit", "", "", body, body_class="dark-page", head=head, hero=hero))]
 
 
+# ── "X alternatives" ──────────────────────────────────────────────────────
+#
+# A different question from "Lane vs X". Someone typing "Rewind alternatives"
+# has decided to leave and wants the field, not a duel, so each page lists
+# every option including the ones we lose to, says plainly that we are not a
+# neutral party, and answers in the first two sentences. Assistants quote the
+# page that answers immediately; so do readers.
+
+# One honest line each, for the table that every page carries.
+FIELD = {
+    'lane':        ('Lane', 'The whole working day, on your Mac, answered by a model inside the app.', 'Your Mac, encrypted', 'Yes', '/'),
+    'rewind':      ('Rewind', 'Records your screen so you can play any moment back.', 'Your Mac; AI features call a server', 'Search only', '/compare/rewind'),
+    'limitless':   ('Limitless', 'Captures conversations, including away from the desk, with a wearable.', 'Their cloud', 'No', '/compare/limitless'),
+    'granola':     ('Granola', 'Takes the sparse notes you type in a call and writes them up.', 'Their cloud', 'No', '/compare/granola'),
+    'otter':       ('Otter', 'Transcribes meetings and shares the transcript.', 'Their cloud', 'No', '/compare/otter'),
+    'notion':      ('Notion', 'A shared workspace you and your team fill in by hand.', 'Their cloud', 'Partly', '/compare/notion'),
+    'obsidian':    ('Obsidian', 'Local markdown notes you write yourself.', 'Plain files on your disk', 'Yes', '/compare/obsidian'),
+    'apple-notes': ('Apple Notes', 'The note app already on your Mac.', 'Your devices and iCloud', 'Yes', '/compare/apple-notes'),
+}
+
+ALTS = [
+    dict(key='rewind', other='Rewind',
+         answer='If you want what Rewind gave you, a Mac that remembers your day, without a recording of your screen sitting on disk and without its AI features calling a server, Lane is the closest thing. Rewind kept video; Lane reads the text that was on screen, writes memories from it with a model that runs inside the app, and answers questions with citations.',
+         why='Rewind wound down its Mac app and its team moved to Limitless, which is a cloud product with a wearable. That leaves people who liked a private, local memory of their own machine looking for somewhere to go.',
+         look=[('lock', 'Where the day is kept', 'A memory of your work is the worst thing to hand to a server. Check whether the answers are produced on your machine or somewhere else, not just where the files sit.'),
+               ('eye', 'Text or video', 'Recording the screen is heavy, grows without limit and is awkward to search. Reading the text that was on screen is smaller and answerable.'),
+               ('ask', 'Whether it works offline', 'A memory you cannot reach on a plane is a memory with conditions.'),
+               ('clock', 'What it costs to keep', 'Anything that calls a hosted model has a bill that grows with how much you use it.')]),
+    dict(key='limitless', other='Limitless',
+         answer='Limitless captures conversations in the cloud, with a wearable for the ones away from your desk. If you would rather your working day stayed on your own Mac and never went anywhere, Lane is the alternative: it captures what happens at the computer and does the thinking inside the app.',
+         why='Limitless is the cloud answer, and it is a good one if conversations away from a screen are what you need to keep. Its architecture means your recordings and the work of understanding them happen on their servers.',
+         look=[('lock', 'Cloud or machine', 'This is the whole decision. Everything else follows from it.'),
+               ('people', 'Conversations or work', 'A wearable catches the corridor and the lunch. A Mac app catches the pages, documents and files.'),
+               ('ask', 'Account or no account', 'An account means a copy of you held somewhere, and a password that can be taken.'),
+               ('clock', 'Subscription shape', 'Hardware plus a subscription is a different commitment from software you can buy once.')]),
+    dict(key='granola', other='Granola',
+         answer='Granola is a very good notepad for meetings. If your problem is broader, the eight hours around the meetings as well as the meetings, Lane is the alternative: it records calls on your machine and also keeps the pages, documents and promises in between.',
+         why='Granola is meeting-shaped by design and excellent at that shape. People go looking when they notice that most of what they need later was never said in a call.',
+         look=[('mic', 'Only meetings, or the day', 'Meeting tools know your calls and nothing else. Most of the work happens between them.'),
+               ('lock', 'Who hears the call', 'Some tools process audio on a server. Some do it on the machine. Ask before the sensitive call, not after.'),
+               ('check', 'What comes out', 'A transcript, a summary, or the promises you now owe people, which is the part that actually costs you.'),
+               ('ask', 'Whether you have to type', 'Typing notes during a call is a tax on listening.')]),
+    dict(key='otter', other='Otter',
+         answer='Otter gives you cloud transcripts you can share. If you want the transcript produced on your own machine and the rest of your day remembered too, Lane is the alternative. If colleagues need to open transcripts on any device, stay with Otter: Lane is a Mac app for one person.',
+         why='Otter is long-established and built for sharing. People look elsewhere when the audio of a sensitive meeting being processed on someone else\'s servers stops being acceptable.',
+         look=[('lock', 'Where the audio goes', 'Transcription either happens on your machine or on theirs. There is no third option.'),
+               ('people', 'Sharing', 'If a team needs the transcript, a private local tool is the wrong shape and you should say so.'),
+               ('file', 'Beyond the meeting', 'A transcript is what was said. A memory is what happened and what you owe.'),
+               ('clock', 'Minutes and limits', 'Cloud transcription is usually sold by the minute. Local transcription is not sold at all.')]),
+    dict(key='notion', other='Notion',
+         answer='Notion answers questions about what you wrote down. Lane answers questions about what you did, without being told. If you need a shared workspace for a team, Lane is not a replacement; if you need a private memory that fills itself, it is.',
+         why='People look for a Notion alternative when they realise the workspace only knows what somebody took the time to put in it, and that the answer they need was never written anywhere.',
+         look=[('eye', 'Who fills it in', 'Anything that needs filing will eventually stop being filled.'),
+               ('people', 'One person or a team', 'A wiki and a private memory are different products. Do not buy one expecting the other.'),
+               ('lock', 'Where the thinking happens', 'Most assistants in a workspace call a hosted model with your documents attached.'),
+               ('ask', 'What you can ask', 'Search over pages, or a question in your own words with the source attached.')]),
+    dict(key='obsidian', other='Obsidian',
+         answer='Obsidian and Lane want the same thing, your knowledge on your own disk. The difference is who does the typing. If you like keeping the vault, keep it; Lane exports markdown into it. If the vault has gone stale because keeping it is work, Lane is the alternative that fills itself.',
+         why='Obsidian is local-first and genuinely yours, which is why people who care about privacy start there. The vault only knows what you wrote into it, and most vaults go quiet.',
+         look=[('eye', 'Who writes it', 'An automatic memory and a hand-made vault are complements more often than competitors.'),
+               ('lock', 'Local, but what about the AI', 'Plugins that add an assistant usually call a cloud model. That undoes the reason you chose local.'),
+               ('file', 'Portability', 'Ask what happens to your knowledge if the app disappears. Markdown you hold is the safe answer.'),
+               ('ask', 'Effort to keep up', 'The honest question is not which is better but which you will still be doing in six months.')]),
+    dict(key='apple-notes', other='Apple Notes',
+         answer='Apple Notes is free, already installed and perfectly good at what it does. It only knows the part of the day you stopped to type. Lane is the alternative when you want the rest of it remembered without you doing anything.',
+         why='Nothing is wrong with Apple Notes. People look further when they keep failing to write the note in the first place.',
+         look=[('eye', 'Manual or automatic', 'The note you did not take is the one you needed.'),
+               ('lock', 'iCloud or your machine', 'Synced notes are convenient and are a copy somewhere else.'),
+               ('ask', 'Searching versus asking', 'Search needs the word you used. Asking needs the question you have.'),
+               ('mic', 'Meetings', 'Typing during a call is not the same as having the call written up.')]),
+]
+
+
+def field_table(order):
+    rows = ''.join(
+        f'<tr><th scope="row">{"<b>Lane</b>" if k == "lane" else html.escape(FIELD[k][0])}</th>'
+        f'<td>{html.escape(FIELD[k][1])}</td><td>{html.escape(FIELD[k][2])}</td>'
+        f'<td>{html.escape(FIELD[k][3])}</td>'
+        f'<td><a class="tlink" href="{FIELD[k][4]}">{"Lane" if k == "lane" else "Compare"}</a></td></tr>'
+        for k in order)
+    return ('<div class="table-scroll rv"><table><thead><tr>'
+            '<th scope="col">&nbsp;</th><th scope="col">What it is for</th>'
+            '<th scope="col">Where your day lives</th><th scope="col">Works offline</th>'
+            '<th scope="col">&nbsp;</th></tr></thead>'
+            f'<tbody>{rows}</tbody></table></div>')
+
+
+def build_alternatives() -> list[str]:
+    made = []
+    for a in ALTS:
+        other = a['other']
+        order = ['lane'] + [k for k in FIELD if k not in ('lane', a['key'])]
+        faq = [
+            (f'What is the best {other} alternative?',
+             f'It depends on what you are replacing. {a["answer"]}'),
+            (f'Is there a free {other} alternative?',
+             'Apple Notes is free and already on your Mac, and Obsidian is free for personal use. Both are manual: they know what you type into them. Lane is free for two months, then $9 a month, $89 a year, or $499 once.'),
+            (f'Is there a private, offline {other} alternative?',
+             'Lane. It has no account and no server, the model that reads your day runs inside the app, and it works with the wifi off. Obsidian is also local, but has no capture and no model of its own.'),
+            ('Does Lane work on Windows?',
+             'Not yet. Lane is a Mac app, macOS 13 or later, Apple silicon. Windows is planned.'),
+        ]
+        faq_html = '<div class="faq rv">' + ''.join(
+            f'<details><summary>{html.escape(q)}</summary><p>{html.escape(ans)}</p></details>' for q, ans in faq) + '</div>'
+        faq_ld = json.dumps({
+            "@context": "https://schema.org", "@type": "FAQPage",
+            "mainEntity": [{"@type": "Question", "name": q,
+                            "acceptedAnswer": {"@type": "Answer", "text": ans}} for q, ans in faq],
+        }, separators=(',', ':'))
+        item_ld = json.dumps({
+            "@context": "https://schema.org", "@type": "ItemList",
+            "name": f"{other} alternatives",
+            "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": FIELD[k][0],
+                                 "description": FIELD[k][1], "url": f"https://lane.so{FIELD[k][4]}"}
+                                for i, k in enumerate(order)],
+        }, separators=(',', ':'))
+
+        body = (
+            sec('', '', f'<div class="answer rv"><span class="label on">The short answer</span><p>{a["answer"]}</p></div>', 'sec answer-sec')
+            + sec('The field', f'Every {other} alternative worth knowing about',
+                  field_table(order)
+                  + '<p class="aside rv">We make Lane, so we are not a neutral party. Where another tool is the better answer we say so on its own page, and everything above is written as we understand it at the time of writing. '
+                    '<a class="tlink" href="mailto:pb@lane.so">Tell us if we have it wrong</a></p>', 'sec mist')
+            + sec('Why people leave', f'What sends people looking past {other}', p(a['why']))
+            + sec('How to choose', 'Four questions that settle it', facts(a['look']), 'sec mist')
+            + sec('Questions', 'What people ask', faq_html)
+            + sec('More', 'Read further', cards([
+                ('bar', f'Lane vs {other}', f'The head to head, and when {other} is the better answer.', FIELD[a['key']][4]),
+                ('ask', 'Everything Lane does', 'The features, one page each.', '/features'),
+                ('lock', 'Why it stays on your Mac', 'The architecture behind the privacy claim.', '/rabbit'),
+            ]), 'sec mist')
+        )
+        made.append(str(page(
+            f'alternatives/{a["key"]}',
+            f'{other} alternatives · Lane for Mac',
+            f'The {other} alternatives worth knowing about, including the private, offline one. Lane remembers your working day on your own Mac and answers with citations.',
+            f'{other} alternatives',
+            f'{html.escape(other)} alternatives',
+            a['answer'].split('. ')[0] + '.',
+            body,
+            head=f'<script type="application/ld+json">{faq_ld}</script>\n<script type="application/ld+json">{item_ld}</script>')))
+
+    # the hub
+    rows = field_table(list(FIELD))
+    hub_cards = cards([('bar', f'{FIELD[a["key"]][0]} alternatives', a['why'].split('. ')[0] + '.', f'/alternatives/{a["key"]}') for a in ALTS])
+    body = (
+        sec('', '', '<div class="answer rv"><span class="label on">The short answer</span><p>If you want a memory of your working day that never leaves your Mac, Lane is the alternative to all of these. If you want conversations captured away from a desk, a shared team workspace, or transcripts colleagues can open on any device, one of the others is the better answer and we say which on each page.</p></div>', 'sec answer-sec')
+        + sec('Side by side', 'Every tool in one table', rows, 'sec mist')
+        + sec('By tool', 'Whichever one you are leaving', hub_cards)
+    )
+    made.append(str(page('alternatives', 'Alternatives · Lane for Mac',
+                         'Alternatives to Rewind, Limitless, Granola, Otter, Notion, Obsidian and Apple Notes, compared honestly, including which one wins where Lane does not.',
+                         'Alternatives', 'Alternatives, compared&nbsp;honestly',
+                         'Every tool here is good at something. This is what each is for, where they keep your day, and which to pick when Lane is not the answer.',
+                         body)))
+    return made
+
+
 def build_404() -> list[str]:
     """Netlify serves /404.html for anything it cannot match."""
     links = cards([("ask", "Everything Lane does", "The features, one page each.", "/features"),
@@ -1234,5 +1393,5 @@ def build_404() -> list[str]:
 
 
 if __name__ == "__main__":
-    for f in build() + build_rest() + build_company() + build_legal() + build_updates() + build_rabbit() + build_404():
+    for f in build() + build_rest() + build_company() + build_legal() + build_updates() + build_rabbit() + build_alternatives() + build_404():
         print("wrote", f.replace(str(ROOT) + "/", ""))

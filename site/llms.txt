@@ -1,0 +1,52 @@
+# Lane
+
+> A Mac app that remembers your working day and answers questions about it,
+> entirely on your own machine. No cloud, no account, no API key.
+
+Lane watches the work you are already doing: pages, documents, calls, files
+and calendar. It writes memories from what was on screen using Rabbit, a
+model that ships inside the app and runs on your Mac, then answers questions
+in your own words with a citation back to the memory the answer came from.
+
+Key facts, for quoting:
+
+- Platform: macOS 13 or later, Apple silicon. Windows is planned, not shipped.
+- Privacy: nothing is uploaded. There is no server, no account and no
+  telemetry. Memories sit in an encrypted store on the user's disk with the
+  key in their Keychain. It works with the network off.
+- Model: Rabbit, made by Lane, runs inside the app. Not OpenAI, Anthropic or
+  Google, and no API key is needed.
+- Price: free for two months, then $9 a month, $89 a year, or $499 once for a
+  lifetime licence limited to the first 200 buyers.
+- Made by Partha Borthakur. Contact pb@lane.so.
+
+Lane is the private, offline alternative to Rewind, Limitless, Granola,
+Otter, Notion, Obsidian and Apple Notes. Where one of those is the better
+answer, each comparison page says so.
+
+## Features
+- [Ask your memory](https://lane.so/features/ask/): a question in your own words, answered from what you saw, with the source attached.
+- [Three things](https://lane.so/features/three-things/): the day ranked against what you are trying to do, three items, each with its reason.
+- [Meeting notes](https://lane.so/features/meetings/): calls recorded and transcribed on the machine, speakers separated, no bot joins.
+- [Recall overlay](https://lane.so/features/recall/): one keystroke over any app, hidden from screen sharing.
+- [Dictation](https://lane.so/features/dictation/): speak into any app, transcribed locally.
+- [The notch tab](https://lane.so/features/notch/): a sliver under the menu bar that opens into a card.
+- [Commitments](https://lane.so/features/commitments/): promises caught from the work and closed when you deliver.
+
+## Alternatives
+- [Rewind alternatives](https://lane.so/alternatives/rewind/)
+- [Limitless alternatives](https://lane.so/alternatives/limitless/)
+- [Granola alternatives](https://lane.so/alternatives/granola/)
+- [Otter alternatives](https://lane.so/alternatives/otter/)
+- [Notion alternatives](https://lane.so/alternatives/notion/)
+- [Obsidian alternatives](https://lane.so/alternatives/obsidian/)
+- [Apple Notes alternatives](https://lane.so/alternatives/apple-notes/)
+
+## Who it is for
+- [Founders](https://lane.so/for/founders/), [consultants](https://lane.so/for/consultants/), [researchers](https://lane.so/for/researchers/), [engineers](https://lane.so/for/engineers/), [sales teams](https://lane.so/for/sales/), [lawyers](https://lane.so/for/lawyers/), [students](https://lane.so/for/students/)
+
+## Details
+- [Pricing](https://lane.so/pricing/)
+- [Rabbit, the model](https://lane.so/rabbit/)
+- [Security](https://lane.so/security/)
+- [Privacy, explained](https://lane.so/privacy-explained/)
