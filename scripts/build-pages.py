@@ -827,7 +827,7 @@ def build_company() -> list[str]:
               "sec mist")
         + sec("Billing", "The dull but important part",
               facts([("clock", "The trial is two months", "It starts the first time Lane runs, and it is kept on your machine, so reinstalling does not restart it and does not extend it."),
-                     ("bar", "Payments are handled by Polar", "Polar is our merchant of record: they handle the card and the tax. We never see your card details."),
+                     ("bar", "Payments are handled by Dodo Payments", "Dodo Payments is our merchant of record: they handle the card and the tax. We never see your card details."),
                      ("check", "Changed your mind", "Write within 14 days of buying and we refund you, no argument. The trial exists so it should not come to that."),
                      ("file", "When the trial ends", "Lane stops reading and stops making memories. Nothing is deleted: everything you already have stays on your Mac and comes back the moment you unlock it.")]))
         + sec("Questions", "The ones people ask about money",
@@ -925,7 +925,7 @@ def build_legal() -> list[str]:
          p("<b>Analytics.</b> The website uses Google Analytics to count visits and see which pages people read. It sets cookies in your browser and sends Google your IP address, which Google uses to approximate your location and then discards. We use it to understand which pages are worth writing, nothing more. We run no advertising scripts and we do not use analytics to build a profile of you. Lawful basis: our legitimate interest in knowing whether the site works. Any blocker, or the Google Analytics opt-out add-on, stops it, and the site works exactly the same." + "<p>Your browser also stores one flag locally to remember that you have already joined the waitlist; that flag never leaves your browser.</p>")),
         ("Who else is involved", p("We use these processors, and no others:"),
          ul("<b>Supabase</b> hosts the database holding the waitlist, feedback and purchase records.",
-            "<b>Polar</b> processes payments and acts as merchant of record. They handle your card details; we never receive them.",
+            "<b>Dodo Payments</b> processes payments and acts as merchant of record. They handle your card details; we never receive them.",
             "<b>Netlify</b> serves the website and, like any web server, processes requests in order to answer them.",
             "<b>Google Analytics</b> counts visits to the website. It sees nothing that happens inside the application."),
          p("We do not sell your data, share it for advertising, or use it to train any model.")),
@@ -957,7 +957,7 @@ def build_legal() -> list[str]:
             "Lane runs in full for two months from the first time you open it, with no payment details required. The trial is recorded on your own machine, so reinstalling neither restarts nor extends it.",
             "When the trial ends, Lane stops reading and stops writing new memories. It does not delete anything: everything already on your disk stays there, and becomes available again as soon as you enter a licence key.")),
         ("Paying", p(
-            "Prices are shown on the pricing page and are in US dollars. Payments are taken by Polar, who act as merchant of record and who handle the tax.",
+            "Prices are shown on the pricing page and are in US dollars. Payments are taken by Dodo Payments, who act as merchant of record and who handle the tax.",
             "Subscriptions renew automatically until cancelled, and you can cancel at any time; cancelling stops the next payment and leaves your current period running.",
             "The lifetime plan is a single payment for all future versions of Lane for Mac, limited to the first 200 purchasers. If we ever make a separate product, it is a separate product.",
             "If you change your mind, write to us within 14 days of buying and we will refund you in full.")),

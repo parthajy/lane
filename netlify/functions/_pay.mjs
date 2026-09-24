@@ -10,6 +10,9 @@
  * are the secrets, and they only ever live in Netlify.
  */
 
+// Dodo takes the money. Polar is kept here, working and unused, so that
+// switching to it is one environment variable rather than a rewrite:
+// PAY_ORDER=polar, or PAY_ORDER=dodo,polar to fall back to it.
 export const GATEWAYS = ['dodo', 'polar']
 
 const DODO_PRODUCTS = () => ({
@@ -33,7 +36,7 @@ const polarBase = () =>
 
 /** Which gateways are actually configured, in the order they are tried. */
 export function ready() {
-  const order = (process.env.PAY_ORDER || 'dodo,polar').split(',').map((s) => s.trim())
+  const order = (process.env.PAY_ORDER || 'dodo').split(',').map((s) => s.trim())
   return order.filter((g) =>
     (g === 'dodo' && process.env.DODO_API_KEY && DODO_PRODUCTS().lifetime) ||
     (g === 'polar' && process.env.POLAR_ACCESS_TOKEN))

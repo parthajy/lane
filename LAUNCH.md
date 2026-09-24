@@ -2,7 +2,7 @@
 
 Four places hold the launch: this Mac builds the app, GitHub holds the code,
 Supabase holds the database, Netlify serves the site and the few functions,
-and Polar takes the money. The app itself talks to none of them.
+and Dodo Payments takes the money. The app itself talks to none of them.
 
 ## 1. Supabase (five minutes, do it first)
 
@@ -32,8 +32,7 @@ Import the repository `parthajy/lane` and take the settings it offers, because
 `netlify.toml` already says the site is `site/`, the functions are
 `netlify/functions/`, and there is no build step.
 
-Everything public is in the code already: the Supabase project URL, the Polar
-product ids, the download link. Only four variables need setting, in Site
+Everything public is in the code already: the Supabase project URL, the download link. Only four variables need setting, in Site
 configuration → Environment variables, and three of them are secrets that must
 never be committed to this repository:
 
@@ -50,12 +49,12 @@ Two more are worth setting when you go live: `DODO_MODE=live`, and the three
 Your dashboard is then `https://lane.so/admin?token=<your token>`: downloads by
 day, the waitlist, seats left, sales, keys still in the pool, and feedback.
 
-## 3. Payments: Dodo first, Polar behind it
+## 3. Payments: Dodo
 
-`/buy/lifetime` tries each configured gateway in order and sends the buyer to
-the first that works. If Dodo is down or refuses, they go to Polar instead of
-seeing an error. The receipt carries which one took the money, so the licence
-is verified against the right place.
+Dodo Payments takes the money and is merchant of record, so it handles the
+card and the tax. Polar is still wired up and working, unused: setting
+`PAY_ORDER=dodo,polar` makes it the fallback, and `PAY_ORDER=polar` switches
+to it outright. Neither needs a code change.
 
 Set in Netlify:
 
