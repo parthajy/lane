@@ -59,7 +59,8 @@
 <script>
 (function () {
   var q = new URLSearchParams(location.search);
-  var id = q.get('checkout_id') || q.get('payment_id') || q.get('id') || '';
+  var id = q.get('payment_id') || q.get('checkout_id') || q.get('subscription_id') || q.get('id') || '';
+  var gw = q.get('gw') || '';
   var head = document.getElementById('head');
   var say = document.getElementById('say');
   var box = document.getElementById('keybox');
@@ -78,7 +79,7 @@
     return;
   }
 
-  fetch('/.netlify/functions/claim?checkout_id=' + encodeURIComponent(id))
+  fetch('/.netlify/functions/claim?id=' + encodeURIComponent(id) + (gw ? '&gw=' + encodeURIComponent(gw) : ''))
     .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
     .then(function (res) {
       if (!res.ok || !res.d.ok) { fail(res.d.error || 'Something went wrong. Write to pb@lane.so and we will sort it out.'); return; }

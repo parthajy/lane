@@ -29,17 +29,12 @@ const QUICK: { label: string; icon: typeof CalendarClock; tone: string; run: (as
   { label: 'Summarise my day', icon: User, tone: 'ic-green', run: (ask) => ask('Summarise my day so far.') },
 ]
 
-/** The Lane mark: the rabbit, on its own chip, so the card is recognisably ours. */
+/** The Lane mark: the wave, which is the logo. (The rabbit is Rabbit, the
+ *  model inside; it is not the product's mark.) */
 function LaneMark({ className }: { className?: string }) {
   return (
     <span className={cn('nc-mark', className)}>
-      <svg viewBox="0 0 40 40" aria-hidden="true">
-        <ellipse cx="15.2" cy="11.5" rx="3.1" ry="8.4" transform="rotate(-16 15.2 11.5)" />
-        <ellipse cx="24.8" cy="11.5" rx="3.1" ry="8.4" transform="rotate(16 24.8 11.5)" />
-        <ellipse cx="20" cy="27" rx="9.6" ry="8.2" />
-        <circle cx="16.6" cy="26" r="1.15" className="eye" />
-        <circle cx="23.4" cy="26" r="1.15" className="eye" />
-      </svg>
+      <img src="/white.png" alt="" draggable={false} />
     </span>
   )
 }

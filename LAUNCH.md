@@ -50,19 +50,32 @@ Two more are worth setting when you go live: `DODO_MODE=live`, and the three
 Your dashboard is then `https://lane.so/admin?token=<your token>`: downloads by
 day, the waitlist, seats left, sales, keys still in the pool, and feedback.
 
-## 3. Polar
+## 3. Payments: Dodo first, Polar behind it
 
-The three products exist in Polar: monthly, yearly and lifetime. Their ids are
-in `netlify/functions/buy.mjs`, which is fine in the open; the token that
-creates a checkout is the secret, and it lives only in Netlify.
+`/buy/lifetime` tries each configured gateway in order and sends the buyer to
+the first that works. If Dodo is down or refuses, they go to Polar instead of
+seeing an error. The receipt carries which one took the money, so the licence
+is verified against the right place.
 
-The flow needs nothing else: `/buy/lifetime` creates a Polar checkout and sends the buyer to it, Polar sends
-them back to `/thanks/`, and that page asks Netlify for their key. The key is
-claimed from the pool once per payment, so a reloaded page shows the same key
-rather than burning another.
+Set in Netlify:
 
-**Test it before you announce anything.** Buy the lifetime plan with a test card, check the key appears on `/thanks/`, paste it into Lane under
-Settings → Your licence, and confirm the sale shows on `/admin`.
+| Name | Value |
+| --- | --- |
+| `DODO_API_KEY` | the live Dodo secret key |
+| `DODO_PRODUCT_LIFETIME` | the live product id for $499 |
+| `DODO_PRODUCT_MONTHLY` | the live product id for $9 |
+| `DODO_PRODUCT_YEARLY` | the live product id for $89 |
+| `POLAR_ACCESS_TOKEN` | the Polar organization access token |
+| `PAY_ORDER` | optional; `dodo,polar` is the default |
+| `DODO_MODE` | optional; set to `test` to use Dodo's test environment |
+| `POLAR_MODE` | optional; set to `sandbox` for Polar's |
+
+Polar's three product ids are already in the code. Dodo's are not, because
+the live ones do not exist until you make them.
+
+**Test before you announce anything.** Buy the lifetime plan, check the key
+appears on `/thanks/`, paste it into Lane under Settings and Your licence, and
+confirm the sale shows on `/admin`.
 
 ## 4. Notarise and ship the app
 
