@@ -13,6 +13,25 @@ use serde::{Deserialize, Serialize};
 pub const TRIAL_DAYS: i64 = 60;
 const TRIAL_SERVICE: &str = "so.lane.app.trial";
 const LICENCE_SERVICE: &str = "so.lane.app.licence";
+/// When the key now in use was first accepted on this Mac.
+const SINCE_SERVICE: &str = "so.lane.app.licence.since";
+
+/// How long a plan lasts. Keys are signed in batches long before anyone
+/// buys one, so the date inside a key is when it was made, not when it was
+/// sold: a monthly key minted in March would arrive at its buyer in June
+/// already dead. The term therefore runs from the day the key is first
+/// accepted here, which is also the day the buyer started getting Lane.
+fn term_days(plan: &str) -> Option<i64> {
+    match plan {
+        "monthly" => Some(31),
+        "yearly" => Some(366),
+        _ => None, // lifetime, and anything we do not recognise, do not run out
+    }
+}
+
+/// Days after a subscription ends before Lane stops. Long enough for a
+/// renewal to arrive and be pasted in, short enough not to be a free month.
+const GRACE_DAYS: i64 = 5;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -117,11 +136,52 @@ fn b64_decode(s: &str) -> Option<Vec<u8>> {
     Some(out)
 }
 
+/// A subscription's clock starts the first time its key is used here. The
+/// answer is remembered per key, so pasting a different one starts again
+/// and pasting the same one back does not.
+fn started_on(key: &str) -> i64 {
+    let stamp = fingerprint(key);
+    if let Some(v) = crate::vault::keychain_get(SINCE_SERVICE) {
+        if let Some((seen, at)) = v.split_once(':') {
+            if seen == stamp {
+                if let Ok(at) = at.parse::<i64>() {
+                    if at > 0 {
+                        return at;
+                    }
+                }
+            }
+        }
+    }
+    let now = now_ms();
+    let _ = crate::vault::keychain_set(SINCE_SERVICE, &format!("{stamp}:{now}"));
+    now
+}
+
+/// Enough of a key to tell it from another one, without keeping the key
+/// twice over.
+fn fingerprint(key: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let mut h = Sha256::new();
+    h.update(key.trim().as_bytes());
+    hex::encode(&h.finalize()[..8])
+}
+
 /// Where this Mac stands right now.
 pub fn status() -> Licence {
     if let Some(stored) = crate::vault::keychain_get(LICENCE_SERVICE) {
         if let Some((email, plan)) = verify(&stored) {
-            return Licence { state: "licensed".into(), days_left: 0, plan, email, trial_started_at: trial_start(), blocked: false };
+            let Some(days) = term_days(&plan) else {
+                // Bought outright: nothing to count down.
+                return Licence { state: "licensed".into(), days_left: 0, plan, email, trial_started_at: trial_start(), blocked: false };
+            };
+            let used = (now_ms() - started_on(&stored)) / 86_400_000;
+            let left = days - used;
+            if left > -GRACE_DAYS {
+                return Licence { state: "licensed".into(), days_left: left.max(0), plan, email, trial_started_at: trial_start(), blocked: false };
+            }
+            // The term is over. Say which plan ran out, so the app can offer
+            // the right thing rather than a bare "expired".
+            return Licence { state: "expired".into(), days_left: 0, plan, email, trial_started_at: trial_start(), blocked: true };
         }
     }
     let started = trial_start();
@@ -144,6 +204,8 @@ pub fn apply(key: &str) -> Result<Licence, String> {
         return Err("That key is not valid for this version of Lane. Check you copied all of it.".into());
     }
     crate::vault::keychain_set(LICENCE_SERVICE, key)?;
+    // Start the term now if this key has not been seen before.
+    let _ = started_on(key);
     Ok(status())
 }
 
@@ -154,7 +216,40 @@ pub fn clear() -> Licence {
 }
 
 #[cfg(test)]
+pub(crate) fn days_left_for(plan: &str, started_at: i64, now: i64) -> Option<i64> {
+    let days = term_days(plan)?;
+    Some(days - (now - started_at) / 86_400_000)
+}
+
+#[cfg(test)]
 mod tests {
+    const DAY: i64 = 86_400_000;
+
+    #[test]
+    fn a_subscription_runs_from_the_day_it_is_used() {
+        let start = 1_700_000_000_000;
+        assert_eq!(super::days_left_for("monthly", start, start), Some(31));
+        assert_eq!(super::days_left_for("monthly", start, start + 30 * DAY), Some(1));
+        assert_eq!(super::days_left_for("yearly", start, start + 100 * DAY), Some(266));
+    }
+
+    #[test]
+    fn bought_outright_never_runs_out() {
+        assert_eq!(super::days_left_for("lifetime", 0, 1_700_000_000_000), None);
+        assert_eq!(super::term_days("lifetime"), None);
+        // An unknown plan is treated as bought outright rather than locking
+        // someone out of an app they paid for.
+        assert_eq!(super::term_days("team"), None);
+    }
+
+    #[test]
+    fn the_grace_is_days_not_weeks() {
+        assert_eq!(super::GRACE_DAYS, 5);
+        // A month gone by is over, but not yet shut off.
+        let left = super::days_left_for("monthly", 0, 33 * DAY).unwrap();
+        assert!(left < 0 && left > -super::GRACE_DAYS);
+    }
+
     /// Round trip: a key made by scripts/issue-licence.sh must verify here.
     /// Run with LANE_TEST_KEY="$(scripts/issue-licence.sh a@b.com lifetime)".
     #[test]

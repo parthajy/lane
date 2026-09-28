@@ -100,8 +100,17 @@ export function LicenceCard({ lic, onChanged }: { lic: Licence; onChanged: (l: L
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[15.5px] font-semibold">{plan?.name ?? 'Licensed'}</span>
               {plan && (
-                <span className="rounded-full bg-emerald-600/10 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 text-[11px] font-medium">
-                  {plan.id === 'lifetime' ? 'Yours for good' : `Renews ${plan.per}`}
+                <span className={cn(
+                  'rounded-full px-2 py-0.5 text-[11px] font-medium',
+                  lic.daysLeft > 0 && lic.daysLeft <= 7
+                    ? 'bg-amber-500/12 text-amber-700 dark:text-amber-400'
+                    : 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
+                )}>
+                  {plan.id === 'lifetime'
+                    ? 'Yours for good'
+                    : lic.daysLeft > 0
+                      ? `${lic.daysLeft} ${lic.daysLeft === 1 ? 'day' : 'days'} left`
+                      : `Renews ${plan.per}`}
                 </span>
               )}
             </div>
@@ -113,6 +122,21 @@ export function LicenceCard({ lic, onChanged }: { lic: Licence; onChanged: (l: L
             Remove from this Mac
           </Button>
         </div>
+        {plan && plan.id !== 'lifetime' && lic.daysLeft > 0 && lic.daysLeft <= 7 && (
+          <a
+            href={`${BUY}/${plan.id}`}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-xl border p-3.5 flex items-center gap-3 hover:bg-accent/60 transition"
+          >
+            <span className="min-w-0 flex-1">
+              <b className="text-[13.5px] font-medium block">Renew your {plan.name.toLowerCase()}</b>
+              <span className="text-[12.5px] text-muted-foreground">
+                Paying again sends a fresh key. Paste it here and Lane carries straight on.
+              </span>
+            </span>
+          </a>
+        )}
         <p className="text-[12.5px] text-muted-foreground">
           Checked on this Mac. No account, and nothing about your licence is ever sent anywhere.
         </p>
@@ -121,6 +145,9 @@ export function LicenceCard({ lic, onChanged }: { lic: Licence; onChanged: (l: L
   }
 
   const ended = lic.state === 'expired'
+  // A trial running out and a subscription running out look the same to the
+  // app and mean quite different things to the person reading it.
+  const lapsed = ended && lic.plan !== '' && lic.plan !== 'lifetime'
   return (
     <div className="space-y-5">
       <div className={cn('rounded-2xl p-4 flex items-center gap-3.5', ended ? 'bg-rose-50 dark:bg-rose-500/10' : 'tone-violet')}>
@@ -129,12 +156,18 @@ export function LicenceCard({ lic, onChanged }: { lic: Licence; onChanged: (l: L
         </span>
         <div className="min-w-0">
           <div className="text-[15.5px] font-semibold">
-            {ended ? 'Your two months are up' : `${lic.daysLeft} ${lic.daysLeft === 1 ? 'day' : 'days'} left of your trial`}
+            {lapsed
+              ? `Your ${lic.plan} has run out`
+              : ended
+                ? 'Your two months are up'
+                : `${lic.daysLeft} ${lic.daysLeft === 1 ? 'day' : 'days'} left of your trial`}
           </div>
           <div className="text-[12.5px] text-muted-foreground mt-0.5">
-            {ended
-              ? 'Nothing has been deleted. Everything comes back the moment you unlock it.'
-              : 'Two months, everything switched on, no card to start.'}
+            {lapsed
+              ? 'Nothing has been deleted. Pay again and paste the new key, and everything is where you left it.'
+              : ended
+                ? 'Nothing has been deleted. Everything comes back the moment you unlock it.'
+                : 'Two months, everything switched on, no card to start.'}
           </div>
         </div>
       </div>
