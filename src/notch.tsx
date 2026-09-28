@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { listen } from '@tauri-apps/api/event'
-import { ArrowUpRight, AudioLines, CalendarClock, ChevronRight, ExternalLink, FileText, History, Leaf, ListChecks, Mic, Send, Settings as SettingsIcon, Square, Sparkles, Target, User, Zap } from 'lucide-react'
+import { ArrowUpRight, AudioLines, BellRing, CalendarClock, Check, ChevronRight, ExternalLink, FileText, History, Leaf, ListChecks, Mic, Send, Settings as SettingsIcon, Square, Sparkles, Sunrise, Target, User, Zap } from 'lucide-react'
 import { format, isToday } from 'date-fns'
 import { api, formatDuration, type CalendarEvent, type DayStats, type MemoryCard, type NotchContext, type RecordingReport, type Signal, type Status, type Task } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -15,9 +15,25 @@ export interface NotchState {
 
 type Position = 'top-center' | 'top-left' | 'top-right' | 'bottom-center' | 'left' | 'right'
 
-// The tab: a sliver at the screen edge. The card: what opens on hover.
+// Three shapes. The tab is a sliver at the screen edge, the pill is what
+// something worth a sentence looks like, and the card is the whole panel.
+// The window is exactly the shape it is showing, so nothing invisible sits
+// over the screen catching clicks.
 const CARD = { w: 760, h: 470 }
 const tabSize = (p: Position) => (p === 'left' || p === 'right' ? { w: 14, h: 180 } : { w: 180, h: 14 })
+/** Room around the pill for its shadow, which is part of the window too. */
+const PILL_PAD = 26
+const PILL_FALLBACK = { w: 420, h: 74 }
+
+/** The chip at the head of the pill, by what Lane is telling you. */
+const PILL_LOOK: Record<string, { icon: typeof BellRing; tone: string; word: string }> = {
+  reminder: { icon: BellRing, tone: 'is-amber', word: 'Due' },
+  brief: { icon: Sunrise, tone: 'is-violet', word: 'Brief' },
+  help: { icon: Check, tone: 'is-green', word: 'Done' },
+  dictation: { icon: AudioLines, tone: 'is-sky', word: 'Listening' },
+  recording: { icon: Mic, tone: 'is-rose', word: 'Recording' },
+  idle: { icon: Sparkles, tone: 'is-violet', word: 'Lane' },
+}
 
 const IDLE: NotchState = { kind: 'idle', title: '', lines: [], at: 0 }
 
@@ -69,7 +85,9 @@ export default function Notch() {
   const [hover, setHover] = useState(false)
   const [pinned, setPinned] = useState(false) // opened by an event, closes on its own
   const [held, setHeld] = useState(false) // clicked open: stays until clicked or closed
-  const [grown, setGrown] = useState(false) // the window has the card's size
+  const [grown, setGrown] = useState(false) // the window has the shape's size
+  const [pillSize, setPillSize] = useState<{ w: number; h: number } | null>(null)
+  const pillRef = useRef<HTMLDivElement | null>(null)
   const [said, setSaid] = useState('') // dictation, as the words arrive
   const [listening, setListening] = useState(false) // told by the app, not polled
   const [question, setQuestion] = useState('')
@@ -80,9 +98,18 @@ export default function Notch() {
   const leave = useRef<ReturnType<typeof setTimeout> | null>(null)
   const openedAt = useRef(0)
 
-  const open = hover || pinned || held
+  // The card is what you asked for; the pill is what Lane offers. An event
+  // brings the pill up, and only reaching for it opens the card.
+  // Dictation keeps the whole card: the point of it is watching the words
+  // arrive, and a capsule one line high would cut them off.
+  const dictating2 = listening || state.kind === 'dictation'
+  const wantsCard = hover || held || (pinned && dictating2)
+  const hasNews = pinned && !dictating2 && state.kind !== 'idle'
+  const mode: 'tab' | 'pill' | 'card' = wantsCard ? 'card' : hasNews ? 'pill' : 'tab'
+  const open = mode === 'card'
   // Open is "the window should be big"; shown is "the card may be seen".
   const shown = open && grown
+  const pillOut = mode === 'pill' && grown
   const topApps: [string, number][] = (day?.timeByApp ?? []).slice(0, 4)
   const capturedMin = (day?.timeByApp ?? []).reduce((a, d) => a + d[1], 0)
   const ask2 = (q: string) => { setQuestion(q); askNow(q) }
@@ -176,18 +203,35 @@ export default function Notch() {
   // The window has to be the card's size before the card is drawn, or the
   // unfurl would be clipped by a 14pt-tall window. So: resize, wait for the
   // frame that carries the new size, then let it open.
+  // The pill is as wide as its words. It is laid out at its natural width
+  // even while the window is still a sliver, so it can be measured before
+  // anyone sees it, and the window is then made to fit.
+  useLayoutEffect(() => {
+    if (mode !== 'pill') return
+    const el = pillRef.current
+    if (!el) return
+    // The capsule is `max-content` up to a limit, so its laid-out box is
+    // the truth. scrollWidth is what the sentence wanted before the limit
+    // applied, and sizing the window to that left a wide strip of nothing
+    // over the screen with the words spilling out of the capsule.
+    const box = el.getBoundingClientRect()
+    const w = Math.ceil(box.width) + PILL_PAD * 2
+    const h = Math.ceil(box.height) + PILL_PAD * 2
+    setPillSize((cur) => (cur && Math.abs(cur.w - w) < 2 && Math.abs(cur.h - h) < 2 ? cur : { w, h }))
+  }, [mode, state, said, listening])
+
   useEffect(() => {
     let alive = true
-    const s = open ? CARD : tabSize(position)
-    if (!open) setGrown(false)
+    const s = mode === 'card' ? CARD : mode === 'pill' ? (pillSize ?? PILL_FALLBACK) : tabSize(position)
+    if (mode === 'tab') setGrown(false)
     api.notchResize(s.w, s.h)
       .then(() => {
-        if (!alive || !open) return
+        if (!alive || mode === 'tab') return
         requestAnimationFrame(() => requestAnimationFrame(() => { if (alive) setGrown(true) }))
       })
-      .catch(() => { if (alive && open) setGrown(true) })
+      .catch(() => { if (alive && mode !== 'tab') setGrown(true) })
     return () => { alive = false }
-  }, [open, position])
+  }, [mode, position, pillSize])
 
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current)
@@ -284,13 +328,37 @@ export default function Notch() {
   })()
   const FromIcon = fromLane.icon ?? Sparkles
 
+  const look = PILL_LOOK[state.kind] ?? PILL_LOOK.idle
+  const PillIcon = listening ? AudioLines : look.icon
+  const pillWord = listening ? 'Listening' : look.word
+  const pillTitle = listening ? 'Dictation' : state.title || 'Lane'
+  const pillDetail = listening ? (said || 'Speak, and the words go in when you stop.') : state.lines[0] || ''
+
   return (
     <div
-      className={cn('notch-root select-none', `pos-${position}`, shown && 'is-open')}
+      className={cn('notch-root select-none', `pos-${position}`, shown && 'is-open', mode === 'pill' && 'is-pill')}
       onMouseEnter={enter}
       onMouseLeave={exit}
     >
-     <div className={cn('notch-surface', shown && 'is-open')}>
+     {/* The pill: what Lane has to say, no wider than saying it takes. It
+         is laid out even when the window is a sliver, so it can be
+         measured; it is only shown once the window has grown to fit. */}
+     {mode === 'pill' && (
+       <div className={cn('notch-pill', pillOut && 'is-out')} onClick={() => setHeld(true)}>
+         <div ref={pillRef} className="notch-pill-inner">
+           <span className={cn('np-chip', look.tone)}><PillIcon className="h-[17px] w-[17px]" /></span>
+           <span className="np-word">{pillWord}</span>
+           <span className="np-rule" />
+           <span className="np-say">
+             <b>{pillTitle}</b>
+             {pillDetail && <><span className="np-dash">—</span><i>{pillDetail}</i></>}
+           </span>
+           <ChevronRight className="np-go h-4 w-4" />
+         </div>
+       </div>
+     )}
+
+     <div className={cn('notch-surface', shown && 'is-open', mode === 'pill' && 'is-hidden')}>
       {/* The tab: a dot says what Lane is doing. Click holds the card open; × closes. */}
       <div className={cn('notch-tab', vertical && !shown && 'is-vertical')} onClick={() => (open ? closeCard() : setHeld(true))} title={open ? 'Click to close' : 'Click to keep open'}>
         <span className={cn('notch-dot', tone)} />

@@ -175,7 +175,11 @@ pub fn toggle_overlay(app: &AppHandle, want: Option<bool>) {
 /// still hide; the notch sits at the status level (over the menu bar) and
 /// both it and the overlay join every Space, full-screen ones included.
 const NS_FLOATING_WINDOW_LEVEL: isize = 3;
-const NS_STATUS_WINDOW_LEVEL: isize = 25;
+/// The status level sits above the menu bar, but another app's full-screen
+/// Space is drawn above it, so the notch simply was not there while anyone
+/// watched a video or wrote in full screen. The screen-saver level is the
+/// one every menu-bar utility uses to stay visible through that.
+const NS_NOTCH_WINDOW_LEVEL: isize = 1000;
 
 /// Where the notch tab is pinned on its screen.
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -511,7 +515,7 @@ pub fn place_notch_size(app: &AppHandle, size: Option<(f64, f64)>) {
             let _ = w.set_position(tauri::LogicalPosition::new(x, m.position().y as f64 / scale));
         }
     }
-    raise_window(&w, NS_STATUS_WINDOW_LEVEL, Some(pin), size);
+    raise_window(&w, NS_NOTCH_WINDOW_LEVEL, Some(pin), size);
     log::info!("notch: {}", window_report(&w));
 }
 

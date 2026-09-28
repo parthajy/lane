@@ -373,11 +373,20 @@ html.notch, html.notch body, html.notch #root { background: transparent !importa
 .notch-surface {
   position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   width: 180px; height: 14px;
-  border-radius: 0;
+  /* The window is genuinely transparent now, so the sliver can have a
+     shaped foot instead of the flat rectangle it needed when anything
+     outside its corners came out white. */
+  border-radius: 0 0 8px 8px;
   background: #0b0b0d; color: #f2f4ff;
   display: flex; flex-direction: column;
   overflow: hidden;
+  transition:
+    width .44s cubic-bezier(.2, .9, .24, 1),
+    height .44s cubic-bezier(.2, .9, .24, 1),
+    border-radius .44s cubic-bezier(.2, .9, .24, 1),
+    opacity .18s ease;
 }
+.notch-surface.is-hidden { opacity: 0; pointer-events: none; }
 /* Open, it is glass: a dark blue-violet wash, blurred desktop behind it, a
    hairline of light along the top edge. */
 .notch-surface.is-open {
@@ -394,27 +403,11 @@ html.notch, html.notch body, html.notch #root { background: transparent !importa
     inset 0 1px 0 rgba(255, 255, 255, .16),
     inset 0 0 0 1px rgba(255, 255, 255, .07),
     0 26px 70px rgba(0, 0, 0, .55);
-  animation: notch-unfurl .38s cubic-bezier(.22, 1, .3, 1) both;
 }
 
-/* It grows out of the tab rather than appearing: the card is clipped to the
-   tab's footprint for the first frame and opens from there. */
-@keyframes notch-unfurl {
-  from { clip-path: inset(0 43% 97% 43% round 0 0 7px 7px); }
-  to   { clip-path: inset(0 0 0 0 round 0 0 26px 26px); }
-}
-@keyframes notch-unfurl-up {
-  from { clip-path: inset(97% 43% 0 43% round 7px 7px 0 0); }
-  to   { clip-path: inset(0 0 0 0 round 22px 22px 0 0); }
-}
-@keyframes notch-unfurl-right {
-  from { clip-path: inset(43% 97% 43% 0 round 0 7px 7px 0); }
-  to   { clip-path: inset(0 0 0 0 round 0 22px 22px 0); }
-}
-@keyframes notch-unfurl-left {
-  from { clip-path: inset(43% 0 43% 97% round 7px 0 0 7px); }
-  to   { clip-path: inset(0 0 0 0 round 22px 0 0 22px); }
-}
+/* The card is not a new thing appearing: it is the sliver growing. The
+   window jumps to the full size first and, being transparent, shows
+   nothing until the surface has travelled — which is the whole trick. */
 /* Everything on the card follows the edge in, a beat apart. */
 @keyframes notch-rise {
   from { opacity: 0; transform: translateY(-9px); }
@@ -429,6 +422,60 @@ html.notch, html.notch body, html.notch #root { background: transparent !importa
 .notch-surface.is-open .nc-foot { animation-delay: .21s; }
 @media (prefers-reduced-motion: reduce) {
   .notch-surface.is-open, .notch-surface.is-open .notch-body > * { animation: none; }
+}
+
+/* ── The pill ──────────────────────────────────────────────────────
+   One sentence from Lane, in a capsule no wider than the sentence. It
+   drops from the edge of the screen, waits to be read, and goes back. */
+.notch-pill {
+  position: absolute; top: 0; left: 50%;
+  transform: translate(-50%, -14px) scale(.92);
+  opacity: 0;
+  transition:
+    transform .5s cubic-bezier(.2, 1.06, .28, 1),
+    opacity .26s ease;
+  cursor: pointer;
+  padding: 13px;
+}
+.notch-pill.is-out { transform: translate(-50%, 0) scale(1); opacity: 1; }
+.notch-pill-inner {
+  display: flex; align-items: center; gap: 12px;
+  width: max-content; max-width: 620px;
+  padding: 9px 16px 9px 9px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #17171b 0%, #0c0c0f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .07),
+    0 2px 6px rgba(0, 0, 0, .34),
+    0 16px 40px rgba(0, 0, 0, .46);
+  color: #f4f5f8;
+}
+.np-chip {
+  width: 34px; height: 34px; border-radius: 999px; flex: none;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, .07);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07);
+}
+.np-chip.is-green { color: #4ade80; background: rgba(34, 197, 94, .16); box-shadow: inset 0 0 0 1px rgba(74, 222, 128, .22); }
+.np-chip.is-amber { color: #fbbf24; background: rgba(245, 158, 11, .16); box-shadow: inset 0 0 0 1px rgba(251, 191, 36, .22); }
+.np-chip.is-violet { color: #a78bfa; background: rgba(139, 92, 246, .18); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .24); }
+.np-chip.is-sky { color: #7dd3fc; background: rgba(56, 189, 248, .16); box-shadow: inset 0 0 0 1px rgba(125, 211, 252, .22); }
+.np-chip.is-rose { color: #fb7185; background: rgba(244, 63, 94, .16); box-shadow: inset 0 0 0 1px rgba(251, 113, 133, .24); }
+.np-word { font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; flex: none; }
+.np-rule { width: 1px; height: 17px; background: rgba(255, 255, 255, .18); flex: none; }
+.np-say {
+  font-size: 14.5px; letter-spacing: -.01em;
+  min-width: 0; flex: 0 1 auto;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.np-say b { font-weight: 600; }
+.np-dash { margin: 0 .38em; color: rgba(255, 255, 255, .38); }
+.np-say i { font-style: normal; color: rgba(255, 255, 255, .58); }
+.np-go { color: rgba(255, 255, 255, .42); flex: none; transition: transform .2s ease, color .2s ease; }
+.notch-pill:hover .np-go { color: rgba(255, 255, 255, .8); transform: translateX(2px); }
+.notch-pill:hover .notch-pill-inner { box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 2px 8px rgba(0,0,0,.4), 0 20px 46px rgba(0,0,0,.52); }
+@media (prefers-reduced-motion: reduce) {
+  .notch-pill, .notch-surface { transition: none; }
 }
 
 /* The tab: a 14pt sliver with one coloured dot. */
