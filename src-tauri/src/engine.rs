@@ -1807,6 +1807,12 @@ pub fn spawn(app: AppHandle, state: Arc<AppState>) {
                     st.model = model.clone();
                     st.detail = "idle".into();
                 });
+                // The language model is here and there is nothing to do, so
+                // this is the moment to fetch the speech model: before
+                // anybody asks for it rather than while they wait.
+                if !speech_model_path(&state).is_file() {
+                    fetch_speech_model(&app, Arc::clone(&state), false);
+                }
                 // Still keep the search index and files current.
                 if let Ok(n) = embed_pending(&state, 16) { if n > 0 { continue; } }
                 meeting_notify_step(&app, &state);
@@ -3680,6 +3686,65 @@ pub fn resume_unfinished_meetings(app: &AppHandle, state: &Arc<AppState>) {
         log::info!("resume: meeting {} was left unfinished, transcribing it now", m.id);
         finish_meeting(app.clone(), Arc::clone(state), dir, m.id, started_at);
     }
+}
+
+/// Where the speech model lives on this Mac, whether or not it is here yet.
+pub fn speech_model_path(state: &AppState) -> std::path::PathBuf {
+    state.db_path.with_file_name("models").join(crate::meetings::whisper_model().file)
+}
+
+/// Only one of these at a time, however many times the shortcut is pressed.
+static FETCHING_SPEECH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// When the last attempt ended, so a machine with no internet does not sit
+/// in a loop trying to fetch half a gigabyte.
+static SPEECH_TRIED_AT: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(0);
+const SPEECH_RETRY_MS: i64 = 15 * 60 * 1000;
+
+/// Fetch the speech model in the background and say when it has landed.
+///
+/// A meeting can be recorded now and written up later, so it asks for the
+/// model at the end. Dictation has no later: the words have to appear while
+/// the person is still talking, so it asks before it starts listening, and
+/// until then there is nothing to do but fetch it and say so.
+pub fn fetch_speech_model(app: &AppHandle, state: Arc<AppState>, announce: bool) {
+    use std::sync::atomic::Ordering;
+    let now = crate::capture::now_ms();
+    if now - SPEECH_TRIED_AT.load(Ordering::SeqCst) < SPEECH_RETRY_MS {
+        return;
+    }
+    if FETCHING_SPEECH.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    SPEECH_TRIED_AT.store(now, Ordering::SeqCst);
+    let app = app.clone();
+    std::thread::Builder::new()
+        .name("speech-model".into())
+        .spawn(move || {
+            let spec = crate::meetings::whisper_model();
+            let dest = speech_model_path(&state);
+            log::info!("speech model: fetching {} ({} MB)", spec.file, spec.bytes / 1_000_000);
+            let progress = runtime::DownloadProgress::new();
+            let out = runtime::download(spec, &dest, &progress);
+            FETCHING_SPEECH.store(false, Ordering::SeqCst);
+            match out {
+                Ok(()) => {
+                    log::info!("speech model: ready");
+                    SPEECH_TRIED_AT.store(0, Ordering::SeqCst);
+                    // Only say so if somebody was waiting to be told. Fetched
+                    // quietly in the background, it is not news.
+                    if announce {
+                        notch(&app, "help", "Dictation is ready", vec!["The speech model is here. Press ⌥⇧Space and talk.".into()]);
+                    }
+                }
+                Err(err) => {
+                    log::warn!("speech model: {err}");
+                    if announce {
+                        notch(&app, "help", "The speech model did not arrive", vec![err]);
+                    }
+                }
+            }
+        })
+        .expect("spawn speech model fetch");
 }
 
 fn transcribe_meeting(state: &AppState, dir: &std::path::Path, meeting_id: i64, started_at: i64) -> Result<usize, String> {

@@ -158,7 +158,11 @@ pub fn live_text() -> String {
 fn spawn_live(app: AppHandle, state: Arc<AppState>, dir: PathBuf, started_at: i64) {
     *crate::lock(&LIVE) = (String::new(), 0);
     let Some(whisper) = crate::meetings::whisper_path(state.resource_dir.as_deref()) else { return };
-    let model = state.db_path.with_file_name("models").join(crate::meetings::whisper_model().file);
+    let model = crate::engine::speech_model_path(&state);
+    if !model.is_file() {
+        log::warn!("dictation: no speech model at {}, so nothing can be read back", model.display());
+        return;
+    }
     let lang = {
         let l = crate::lock(&state.settings).meeting_language.clone();
         if l.is_empty() { "auto".to_string() } else { l }
@@ -352,6 +356,17 @@ pub fn toggle(app: &AppHandle, state: &AppState) -> Result<String, String> {
     if !ready {
         return Err(why);
     }
+    // Without the speech model there is nothing to turn the sound into
+    // words. Recording anyway would hold the microphone open and produce
+    // silence, which is what it did: dictation started, wrote a file nobody
+    // could read, and said nothing at all.
+    if !crate::engine::speech_model_path(state).is_file() {
+        if let Some(shared) = app.try_state::<Arc<AppState>>() {
+            crate::engine::fetch_speech_model(app, shared.inner().clone(), true);
+        }
+        let mb = crate::meetings::whisper_model().bytes / 1_000_000;
+        return Err(format!("Lane is fetching the speech model ({mb} MB). Dictation works the moment it lands."));
+    }
     let helper = crate::meetings::helper_path(state.resource_dir.as_deref()).ok_or("recorder missing")?;
     let started_at = crate::capture::now_ms();
     let dir = std::env::temp_dir().join(format!("lane-dictation-{started_at}"));
@@ -391,6 +406,8 @@ fn finish(app: &AppHandle, state: &AppState) -> Result<String, String> {
     // reason to use what is already on screen, not a reason to lose it.
     let text = if fresh {
         live
+    } else if !crate::engine::speech_model_path(state).is_file() {
+        String::new()
     } else {
         match read_all(state, &wav) {
             Ok(t) if !t.trim().is_empty() => t,
