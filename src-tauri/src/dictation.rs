@@ -12,13 +12,34 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
 static SESSION: Mutex<Option<PathBuf>> = Mutex::new(None);
+/// Set while the last pass is running. The session folder is taken at the
+/// top of `finish`, but the words are not in yet and the microphone is only
+/// just closing; without this the shortcut pressed a moment later would read
+/// "not dictating" and start a second recording on top of the first.
+static FINISHING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Holds `FINISHING` up for as long as it is alive, however `finish` returns.
+struct Finishing;
+
+impl Finishing {
+    fn start() -> Self {
+        FINISHING.store(true, std::sync::atomic::Ordering::SeqCst);
+        Finishing
+    }
+}
+
+impl Drop for Finishing {
+    fn drop(&mut self) {
+        FINISHING.store(false, std::sync::atomic::Ordering::SeqCst);
+    }
+}
 
 fn announce(app: &AppHandle, active: bool) {
     let _ = app.emit("dictation-state", serde_json::json!({"active": active}));
 }
 
 pub fn is_active() -> bool {
-    crate::lock(&SESSION).is_some()
+    crate::lock(&SESSION).is_some() || FINISHING.load(std::sync::atomic::Ordering::SeqCst)
 }
 
 /// Read by the notch and the meetings page: a dictation is not a meeting.
@@ -55,11 +76,11 @@ const WINDOW: u64 = PER_MS * 1_000 * 20;
 /// How much of the window to leave live when the rest is put aside: enough
 /// that the last words can still change as the sentence finishes.
 const KEEP_MS: i64 = 4_000;
-/// The level meter is one way to tell that someone has stopped talking, and
-/// on a quiet microphone it never trips at all. This is the other way: this
-/// much fresh audio read with no new words in it means the speaking is over,
-/// whatever the meter says. It is longer than the meter's pause because it
-/// has to survive an ordinary mid-sentence breath.
+/// The level meter in the recorder is one way to tell that someone has
+/// stopped talking, and on a quiet microphone it never trips at all. This is
+/// the other way, measured from the samples here: this much audio with no
+/// sound in it ends the dictation whatever the meter says. It is longer than
+/// the meter's pause because it has to survive a mid-sentence breath.
 const STILL: u64 = PER_MS * 3_500;
 /// Nobody dictates for five minutes. Past that, put in what there is rather
 /// than hold the microphone open for a machine that was left listening.
@@ -99,7 +120,15 @@ fn level(pcm: &[u8]) -> f32 {
 /// speech below any fixed line, and what matters then is that the pauses are
 /// far quieter than the talking.
 fn is_quiet(lvl: f32, loudest: f32) -> bool {
-    lvl < FLOOR && (loudest <= 0.0 || lvl < loudest * 0.35)
+    if lvl < FLOOR && (loudest <= 0.0 || lvl < loudest * 0.35) {
+        return true;
+    }
+    // A room can be noisy enough that nothing in it is ever quiet by any
+    // fixed measure. What still holds is that a pause is far below the
+    // talking: once speech has clearly been heard, a stretch this far under
+    // the loudest of it is a pause, not a word. Without this a dictation in
+    // a café would hold the microphone open until the five minutes ran out.
+    loudest > FLOOR && lvl < loudest * 0.2
 }
 
 /// Dictation audio lives in a temporary folder that is deleted the moment
@@ -151,7 +180,7 @@ fn spawn_live(app: AppHandle, state: Arc<AppState>, dir: PathBuf, started_at: i6
             let mut loudest: f32 = 0.0;
             loop {
                 std::thread::sleep(PACE);
-                if !is_active() {
+                if crate::lock(&SESSION).is_none() {
                     break;
                 }
                 let Ok(meta) = std::fs::metadata(&wav) else { continue };
@@ -195,6 +224,9 @@ fn spawn_live(app: AppHandle, state: Arc<AppState>, dir: PathBuf, started_at: i6
                     continue;
                 }
 
+                // There is sound in it, so the speaking has not stopped.
+                still = 0;
+
                 // A copy with a header of its own: the live file is still
                 // being written and its own header is not finished yet.
                 let Ok(pcm) = crate::meetings::read_range(&wav, crate::meetings::WAV_HEADER + base, avail - base) else { continue };
@@ -211,16 +243,11 @@ fn spawn_live(app: AppHandle, state: Arc<AppState>, dir: PathBuf, started_at: i6
                             .join(" ");
                         if !heard.is_empty() {
                             let text = join(&settled, &heard);
-                            let mut live = crate::lock(&LIVE);
-                            still = if live.0 == text { still + (avail - live.1) } else { 0 };
-                            *live = (text.clone(), avail);
-                            drop(live);
+                            *crate::lock(&LIVE) = (text.clone(), avail);
                             crate::lock(&state.recording).live_text = text.clone();
                             let _ = app.emit("dictation-live", serde_json::json!({ "text": text }));
                         } else {
-                            let mut live = crate::lock(&LIVE);
-                            still += avail - live.1;
-                            live.1 = avail;
+                            crate::lock(&LIVE).1 = avail;
                         }
 
                         // Past the window, put aside the sentences that have
@@ -287,7 +314,9 @@ fn should_finish(state: &AppState, started_at: i64, still: u64) -> bool {
     let said = !crate::lock(&LIVE).0.trim().is_empty();
     let last = crate::lock(&state.recording).last_sound_at;
     let now = crate::capture::now_ms();
-    if said && now - started_at >= LONGEST {
+    // The cap does not care whether anything was said: a microphone left
+    // open having heard nothing is exactly the case it is there for.
+    if now - started_at >= LONGEST {
         log::info!("dictation: five minutes, putting in what there is");
         return true;
     }
@@ -308,8 +337,13 @@ fn quiet_enough(now: i64, started_at: i64, last_sound: Option<i64>, said: bool) 
 }
 
 pub fn toggle(app: &AppHandle, state: &AppState) -> Result<String, String> {
-    if is_active() {
+    if crate::lock(&SESSION).is_some() {
         return finish(app, state);
+    }
+    if FINISHING.load(std::sync::atomic::Ordering::SeqCst) {
+        // The words are on their way in. Pressing again here means "finish",
+        // which is already happening, not "start another one".
+        return Ok("finishing".into());
     }
     if crate::lock(&crate::meetings::RECORDER).is_some() {
         return Err("A meeting is being recorded; stop it first".into());
@@ -336,6 +370,7 @@ pub fn toggle(app: &AppHandle, state: &AppState) -> Result<String, String> {
 
 fn finish(app: &AppHandle, state: &AppState) -> Result<String, String> {
     let dir = crate::lock(&SESSION).take().ok_or("not dictating")?;
+    let _finishing = Finishing::start();
     let _ = crate::meetings::stop();
     {
         let mut r = crate::lock(&state.recording);
@@ -380,7 +415,15 @@ fn finish(app: &AppHandle, state: &AppState) -> Result<String, String> {
     } else {
         state.engine_wake.store(true, std::sync::atomic::Ordering::Relaxed);
     }
-    crate::engine::notch(app, "help", "Inserted and remembered", vec![text.chars().take(160).collect()]);
+    // Say both things. If the cursor was somewhere that does not take text,
+    // the words are still in Lane, and someone who only sees "Inserted"
+    // reasonably concludes they are gone.
+    crate::engine::notch(
+        app,
+        "help",
+        "Put in, and kept in Lane",
+        vec![text.chars().take(160).collect(), "Saved as a voice note, whether or not your cursor took it.".into()],
+    );
     let _ = app.emit("dictation-done", serde_json::json!({"text": text}));
     log::info!("dictation: inserted {} chars", text.chars().count());
     Ok(text)
@@ -402,18 +445,39 @@ pub fn insert_text(text: &str) -> Result<(), String> {
     let mut board = arboard::Clipboard::new().map_err(|e| e.to_string())?;
     let previous = board.get_text().ok();
     board.set_text(text.to_string()).map_err(|e| e.to_string())?;
-    std::thread::sleep(std::time::Duration::from_millis(60));
+    std::thread::sleep(std::time::Duration::from_millis(80));
     crate::capture::platform::press_paste();
-    std::thread::sleep(std::time::Duration::from_millis(250));
+    // An app reads the clipboard when it gets round to handling the
+    // keystroke, which under load is not immediately. Put the old clipboard
+    // back too soon and that is what lands instead of the words, or nothing
+    // does. So: wait long enough for a busy app, and only put it back if
+    // nothing else has taken the clipboard in the meantime.
+    std::thread::sleep(RESTORE_AFTER);
     if let Some(p) = previous {
-        let _ = board.set_text(p);
+        if board.get_text().map(|now| now == text).unwrap_or(false) {
+            let _ = board.set_text(p);
+        }
     }
     Ok(())
 }
 
+/// How long to leave the words on the clipboard before putting back what was
+/// there before.
+const RESTORE_AFTER: std::time::Duration = std::time::Duration::from_millis(900);
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_dictation_is_still_going_while_the_words_go_in() {
+        assert!(!is_active());
+        {
+            let _busy = Finishing::start();
+            assert!(is_active(), "the shortcut must not start a second one here");
+        }
+        assert!(!is_active());
+    }
 
     #[test]
     fn join_keeps_one_space_and_tolerates_gaps() {
@@ -468,6 +532,17 @@ mod tests {
         assert!(!is_quiet(0.006, 0.006));
         // Nothing heard yet, so the fixed floor is all there is to go on.
         assert!(is_quiet(0.001, 0.0));
+    }
+
+    #[test]
+    fn a_noisy_room_still_has_pauses_in_it() {
+        // A café: the background is well above any fixed floor, but it is
+        // still far below the person talking.
+        assert!(is_quiet(0.02, 0.2));
+        assert!(!is_quiet(0.09, 0.2));
+        // Quiet does not mean quiet just because the room is loud: with
+        // nothing above the floor heard yet, the relative rule stays off.
+        assert!(!is_quiet(0.005, 0.006));
     }
 
     #[test]
