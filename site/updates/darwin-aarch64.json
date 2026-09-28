@@ -1,11 +1,11 @@
 {
-  "version": "1.0.1",
-  "notes": "The freeze after a meeting is gone, dictation writes as you speak, and the notch stays with you in full screen.",
-  "pub_date": "2026-09-28T07:41:39.258705+00:00",
+  "version": "1.0.2",
+  "notes": "Dictation now has its speech model before you ask for it, instead of silently having nothing to listen with.",
+  "pub_date": "2026-09-28T10:40:34.153425+00:00",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZGlGbE1Jb1dSOXRvVytVUUl1TWVUeDd6VDhMTHN0c1UzanpHMTZhbVRXRktYSjVnRElwTXFhRW10MHlaSVB5RmhOQStNVFVwRHNCNUFrenk4Z2QyRmc4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTgxMjk5CWZpbGU6TGFuZS5hcHAudGFyLmd6ClYwRkt0WGQ2Rll5eEhmdzh4YWpkaHQzeHhtK0czWUZCcVlUdHZKbUZJWk9BWk5ZMlZDTVhKSTVXME9pTWluTjdCUWpTWkdRb0t1YmpiVzhIMTJNbkF3PT0K",
-      "url": "https://github.com/parthajy/lane/releases/download/v1.0.1/Lane.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZGx6RTgreTgrY1ZUNzFZbjd2ODIyOEo0Wm9pRHFiRXBDT2xtbmZ3SXFodi8rY2RSTVVRSDVFSmhyNG9yRS9IT0VNUWpUVU03UEJMWERYSTVtZkdtTndNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTkyMDM0CWZpbGU6TGFuZS5hcHAudGFyLmd6CjFlZSs5R29ZQkpFVlJjVlZ3ai95QmRtVHFhckpuenJmZUJkRHFIYy82VXdNWFNxOFAxQURTb2ZDRjVibjNTWTN2MSs4aUE2WnMzVGh5Sm13Qm5DRENRPT0K",
+      "url": "https://github.com/parthajy/lane/releases/download/v1.0.2/Lane.app.tar.gz"
     }
   }
 }
