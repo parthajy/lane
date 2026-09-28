@@ -16,6 +16,18 @@ VERSION=$(python3 -c "import json;print(json.load(open('src-tauri/tauri.conf.jso
 ARCH=$(uname -m | sed 's/arm64/aarch64/')
 echo "▸ Lane $VERSION ($ARCH)"
 
+# Three files carry the version and only one of them is the bundle's. The
+# crate's goes into the log, the diagnostics people send us and what the
+# MCP server calls itself, so a build that disagrees with itself is a
+# support problem months later rather than a failure now.
+CRATE=$(sed -n 's/^version = "\(.*\)"/\1/p' src-tauri/Cargo.toml | head -1)
+PKG=$(python3 -c "import json;print(json.load(open('package.json'))['version'])")
+if [ "$CRATE" != "$VERSION" ] || [ "$PKG" != "$VERSION" ]; then
+  echo "  versions disagree: tauri.conf.json $VERSION, Cargo.toml $CRATE, package.json $PKG" >&2
+  echo "  set all three to the same thing and run again." >&2
+  exit 1
+fi
+
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   echo "  there are uncommitted changes. Commit them first, so the build matches the code." >&2
   exit 1
