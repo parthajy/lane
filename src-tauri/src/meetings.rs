@@ -79,7 +79,7 @@ static LIVE_DONE: Mutex<[u64; 2]> = Mutex::new([0, 0]);
 static LIVE_SEGMENTS: Mutex<Vec<Segment>> = Mutex::new(Vec::new());
 const LIVE_EVERY: std::time::Duration = std::time::Duration::from_secs(30);
 const LIVE_MIN_BYTES: u64 = 16_000 * 2 * 15; // 15 s of 16 kHz mono int16
-const WAV_HEADER: u64 = 44;
+pub(crate) const WAV_HEADER: u64 = 44;
 
 /// Transcribe whatever new audio each stream has written since the last
 /// tick and refresh `status.live_text`. Runs on its own thread until the
@@ -129,7 +129,7 @@ pub fn spawn_live(whisper: PathBuf, model: PathBuf, dir: PathBuf, language: Stri
         .expect("spawn live notes");
 }
 
-fn read_range(path: &Path, from: u64, len: u64) -> std::io::Result<Vec<u8>> {
+pub(crate) fn read_range(path: &Path, from: u64, len: u64) -> std::io::Result<Vec<u8>> {
     use std::io::{Read, Seek, SeekFrom};
     let mut f = std::fs::File::open(path)?;
     f.seek(SeekFrom::Start(from))?;
@@ -138,7 +138,7 @@ fn read_range(path: &Path, from: u64, len: u64) -> std::io::Result<Vec<u8>> {
     Ok(buf)
 }
 
-fn write_wav(path: &Path, pcm: &[u8]) -> std::io::Result<()> {
+pub(crate) fn write_wav(path: &Path, pcm: &[u8]) -> std::io::Result<()> {
     use std::io::Write;
     let mut f = std::fs::File::create(path)?;
     let data_len = pcm.len() as u32;
@@ -218,6 +218,11 @@ pub fn start(helper: &Path, dir: &Path, meeting_id: i64, started_at: i64, status
     let stdout = child.stdout.take().ok_or("recorder has no output")?;
     MIC_FRAMES.store(0, Ordering::Relaxed);
     SYSTEM_FRAMES.store(0, Ordering::Relaxed);
+    // Nothing has been heard in THIS recording yet. Left over from the last
+    // one, the timestamp reads as a long silence the moment we start: a
+    // meeting would stop itself for silence, and a dictation would decide
+    // you had finished speaking before you began.
+    crate::lock(&status).last_sound_at = None;
     std::thread::spawn(move || {
         for line in BufReader::new(stdout).lines().map_while(Result::ok) {
             let Ok(v) = serde_json::from_str::<serde_json::Value>(&line) else { continue };
@@ -346,7 +351,11 @@ pub fn transcribe(whisper: &Path, model: &Path, wav: &Path, language: &str) -> R
         // says nothing about what actually went wrong.
         return Err(format!("the speech model could not read {}", wav.file_name().unwrap_or_default().to_string_lossy()));
     }
-    let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&json_path).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    // Read as bytes, not as a string: on noise the model sometimes writes a
+    // broken character, and a whole dictation should not be lost over one
+    // stray byte.
+    let raw = std::fs::read(&json_path).map_err(|e| e.to_string())?;
+    let v: serde_json::Value = serde_json::from_str(&String::from_utf8_lossy(&raw)).map_err(|e| e.to_string())?;
     let mut segs = Vec::new();
     for s in v["transcription"].as_array().unwrap_or(&vec![]) {
         let text = s["text"].as_str().unwrap_or("").trim().to_string();
@@ -360,14 +369,50 @@ pub fn transcribe(whisper: &Path, model: &Path, wav: &Path, language: &str) -> R
             text,
         });
     }
-    Ok(segs)
+    Ok(drop_loops(segs))
 }
 
 /// Whisper invents these on silence.
 fn is_hallucination(text: &str) -> bool {
-    let t = text.trim().trim_matches(|c: char| c == '.' || c == '!' || c == '[' || c == ']' || c == '(' || c == ')').to_lowercase();
+    let raw = text.trim();
+    // Whisper wraps what it thinks is not speech: [BLANK_AUDIO], (music),
+    // and, when it mistakes the language of a quiet passage, a whole
+    // sentence in asterisks. None of it was said.
+    if is_wrapped(raw) {
+        return true;
+    }
+    let t = raw.trim_matches(|c: char| c == '.' || c == '!' || c == '[' || c == ']' || c == '(' || c == ')').to_lowercase();
     matches!(t.as_str(), "you" | "thank you" | "thanks for watching" | "blank_audio" | "silence" | "music" | "" )
         || t.starts_with("subtitles by") || t.starts_with("subs by")
+}
+
+/// Wholly inside *asterisks*, [brackets] or (parentheses), with nothing
+/// outside them.
+fn is_wrapped(t: &str) -> bool {
+    let pairs = [('*', '*'), ('[', ']'), ('(', ')')];
+    for (open, close) in pairs {
+        if t.len() > 2 && t.starts_with(open) && t.ends_with(close) && !t[1..t.len() - 1].contains(close) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Quiet or unclear audio can send the speech model into a loop, saying the
+/// same sentence over and over. Nobody repeats themselves more than twice
+/// word for word, so a longer run is the model stuck rather than the
+/// speaker, and only the first two are kept.
+fn drop_loops(segs: Vec<Segment>) -> Vec<Segment> {
+    let mut out: Vec<Segment> = Vec::with_capacity(segs.len());
+    let mut run = 0usize;
+    for seg in segs {
+        let same = out.last().map(|p: &Segment| p.text == seg.text).unwrap_or(false);
+        run = if same { run + 1 } else { 0 };
+        if run < 2 {
+            out.push(seg);
+        }
+    }
+    out
 }
 
 /// Merge the two labelled streams by time and render the transcript as
@@ -458,6 +503,39 @@ mod tests {
 
     fn seg(start: i64, end: i64, text: &str) -> Segment {
         Segment { speaker: String::new(), start_ms: start, end_ms: end, text: text.into() }
+    }
+
+    #[test]
+    fn wrapped_lines_are_not_speech() {
+        assert!(is_hallucination("[BLANK_AUDIO]"));
+        assert!(is_hallucination("(soft music)"));
+        assert!(is_hallucination("*Saya tak tahu apa yang berlaku*"));
+        // A sentence that merely emphasises a word was still said.
+        assert!(!is_hallucination("the *tender* is due Friday"));
+        assert!(!is_hallucination("Right, so the plan is this."));
+    }
+
+    #[test]
+    fn a_stuck_model_repeating_itself_is_cut_back() {
+        let stuck = vec![
+            seg(0, 1000, "Hello there."),
+            seg(1000, 2000, "Same line."),
+            seg(2000, 3000, "Same line."),
+            seg(3000, 4000, "Same line."),
+            seg(4000, 5000, "Same line."),
+            seg(5000, 6000, "And on we go."),
+        ];
+        let kept = drop_loops(stuck);
+        assert_eq!(kept.len(), 4);
+        assert_eq!(kept[1].text, "Same line.");
+        assert_eq!(kept[2].text, "Same line.");
+        assert_eq!(kept[3].text, "And on we go.");
+    }
+
+    #[test]
+    fn saying_something_twice_is_left_alone() {
+        let real = vec![seg(0, 500, "No."), seg(500, 1000, "No."), seg(1000, 2000, "I meant Thursday.")];
+        assert_eq!(drop_loops(real).len(), 3);
     }
 
     #[test]

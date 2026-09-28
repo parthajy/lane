@@ -1,11 +1,15 @@
-//! Dictation: press the shortcut, speak, press again; the words land in
-//! whatever field has focus. Mic only, transcribed on this Mac by the same
-//! speech engine meetings use, inserted through the clipboard and ⌘V.
+//! Dictation: press the shortcut and speak. The words appear as you say
+//! them, and when you stop talking they are put where the cursor is. Press
+//! the shortcut again to finish early.
+//!
+//! Mic only, transcribed on this Mac by the same speech engine meetings use,
+//! inserted through the clipboard and ⌘V.
 
 use crate::AppState;
 use std::path::PathBuf;
-use std::sync::Mutex;
-use tauri::{AppHandle, Emitter};
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
+use tauri::{AppHandle, Emitter, Manager};
 
 static SESSION: Mutex<Option<PathBuf>> = Mutex::new(None);
 
@@ -23,6 +27,286 @@ pub fn active() -> bool {
 }
 
 /// Start or stop. Returns what happened, for the notch and the log.
+// ── Watching the words arrive ────────────────────────────────────────────
+//
+// Every pass transcribes the whole utterance rather than only the newest
+// slice. Whisper costs about 0.8s to start and a tenth of a second per
+// second of audio, so a ten second dictation re-reads in under two, and
+// doing it whole means no seam where one chunk met the next: the text simply
+// improves as more of the sentence arrives.
+//
+// When the microphone goes quiet the dictation finishes itself, so the
+// normal way to use it is to press the key once, speak, and stop.
+
+/// The best transcript so far, and how many bytes of audio it covers.
+static LIVE: Mutex<(String, u64)> = Mutex::new((String::new(), 0));
+/// How long to wait between passes.
+const PACE: Duration = Duration::from_millis(900);
+/// Quiet for this long, with something said, and it puts the words in.
+const HUSH: i64 = 1_800;
+/// Below this there is not enough sound to be worth reading.
+const MIN_AUDIO: u64 = 16_000 * 2 / 2; // half a second at 16 kHz, int16
+/// Bytes of 16 kHz mono int16 audio in a millisecond.
+const PER_MS: u64 = 32;
+/// Re-reading the whole utterance costs about a tenth of a second per second
+/// of audio, so a long dictation would slow to a crawl. Past this much
+/// audio the settled part is put aside and only the end is re-read.
+const WINDOW: u64 = PER_MS * 1_000 * 20;
+/// How much of the window to leave live when the rest is put aside: enough
+/// that the last words can still change as the sentence finishes.
+const KEEP_MS: i64 = 4_000;
+/// The level meter is one way to tell that someone has stopped talking, and
+/// on a quiet microphone it never trips at all. This is the other way: this
+/// much fresh audio read with no new words in it means the speaking is over,
+/// whatever the meter says. It is longer than the meter's pause because it
+/// has to survive an ordinary mid-sentence breath.
+const STILL: u64 = PER_MS * 3_500;
+/// Nobody dictates for five minutes. Past that, put in what there is rather
+/// than hold the microphone open for a machine that was left listening.
+const LONGEST: i64 = 5 * 60 * 1_000;
+/// About -42 dBFS. Speech sits above this; a quiet room sits below.
+const FLOOR: f32 = 0.008;
+
+/// A twentieth of a second of 16-bit mono audio.
+const FRAME: usize = 16_000 / 50 * 2;
+
+/// How loud the loudest moment in a stretch of audio is, 0 to 1. Averaged
+/// over the whole stretch instead, the pauses between words would drag a
+/// sentence down towards the level of a silent room and the two would stop
+/// being tellable apart; the loudest moment keeps them far apart.
+fn level(pcm: &[u8]) -> f32 {
+    let mut loudest = 0f32;
+    for frame in pcm.chunks(FRAME) {
+        let n = frame.len() / 2;
+        if n == 0 {
+            continue;
+        }
+        let mut sum = 0f64;
+        for c in frame.chunks_exact(2) {
+            let s = i16::from_le_bytes([c[0], c[1]]) as f64 / 32_768.0;
+            sum += s * s;
+        }
+        loudest = loudest.max((sum / n as f64).sqrt() as f32);
+    }
+    loudest
+}
+
+/// Given nothing but room tone, the speech model does not return nothing: it
+/// invents a sentence, and a different one each time, which fills the card
+/// with words nobody said and hides the fact that the speaking has stopped.
+/// So silence is recognised here and never reaches it. The floor is absolute
+/// and also relative, because a quiet microphone puts all of someone's
+/// speech below any fixed line, and what matters then is that the pauses are
+/// far quieter than the talking.
+fn is_quiet(lvl: f32, loudest: f32) -> bool {
+    lvl < FLOOR && (loudest <= 0.0 || lvl < loudest * 0.35)
+}
+
+/// Dictation audio lives in a temporary folder that is deleted the moment
+/// the words go in. A session cut short by a crash or a quit leaves the
+/// recording behind, so anything from an earlier run goes at startup: a
+/// recording of someone's voice should not outlive the sentence it was.
+pub fn sweep_leftovers() {
+    let Ok(entries) = std::fs::read_dir(std::env::temp_dir()) else { return };
+    let keep = crate::lock(&SESSION).clone();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let is_ours = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .map(|n| n.starts_with("lane-dictation-"))
+            .unwrap_or(false);
+        if is_ours && Some(&path) != keep.as_ref() && std::fs::remove_dir_all(&path).is_ok() {
+            log::info!("dictation: cleared a recording left behind by an earlier run");
+        }
+    }
+}
+
+pub fn live_text() -> String {
+    crate::lock(&LIVE).0.clone()
+}
+
+fn spawn_live(app: AppHandle, state: Arc<AppState>, dir: PathBuf, started_at: i64) {
+    *crate::lock(&LIVE) = (String::new(), 0);
+    let Some(whisper) = crate::meetings::whisper_path(state.resource_dir.as_deref()) else { return };
+    let model = state.db_path.with_file_name("models").join(crate::meetings::whisper_model().file);
+    let lang = {
+        let l = crate::lock(&state.settings).meeting_language.clone();
+        if l.is_empty() { "auto".to_string() } else { l }
+    };
+
+    std::thread::Builder::new()
+        .name("dictation-live".into())
+        .spawn(move || {
+            let wav = dir.join("mic.wav");
+            let scratch = dir.join("live.wav");
+            // What is settled, and how much audio it covers. Everything after
+            // `base` is what gets re-read each pass.
+            let mut settled = String::new();
+            let mut base: u64 = 0;
+            // Audio read since the words last changed.
+            let mut still: u64 = 0;
+            // The loudest stretch heard so far, which sets what counts as a
+            // pause on this microphone.
+            let mut loudest: f32 = 0.0;
+            loop {
+                std::thread::sleep(PACE);
+                if !is_active() {
+                    break;
+                }
+                let Ok(meta) = std::fs::metadata(&wav) else { continue };
+                let avail = meta.len().saturating_sub(crate::meetings::WAV_HEADER) & !1;
+                let covered = crate::lock(&LIVE).1;
+
+                // Nothing new worth reading, so look at whether the room has
+                // gone quiet instead.
+                if avail < MIN_AUDIO || avail <= covered {
+                    if should_finish(&state, started_at, still) {
+                        let app = app.clone();
+                        let state = Arc::clone(&state);
+                        std::thread::spawn(move || {
+                            if let Err(e) = finish(&app, &state) {
+                                log::warn!("dictation: finishing by itself: {e}");
+                            }
+                        });
+                        break;
+                    }
+                    continue;
+                }
+
+                // Is there anything in the new audio, or has the speaking
+                // stopped? Only the part not yet read is judged.
+                let Ok(fresh) = crate::meetings::read_range(&wav, crate::meetings::WAV_HEADER + covered, avail - covered) else { continue };
+                let lvl = level(&fresh);
+                loudest = loudest.max(lvl);
+                if is_quiet(lvl, loudest) {
+                    still += avail - covered;
+                    crate::lock(&LIVE).1 = avail;
+                    if should_finish(&state, started_at, still) {
+                        let app = app.clone();
+                        let state = Arc::clone(&state);
+                        std::thread::spawn(move || {
+                            if let Err(e) = finish(&app, &state) {
+                                log::warn!("dictation: finishing by itself: {e}");
+                            }
+                        });
+                        break;
+                    }
+                    continue;
+                }
+
+                // A copy with a header of its own: the live file is still
+                // being written and its own header is not finished yet.
+                let Ok(pcm) = crate::meetings::read_range(&wav, crate::meetings::WAV_HEADER + base, avail - base) else { continue };
+                if crate::meetings::write_wav(&scratch, &pcm).is_err() {
+                    continue;
+                }
+                match crate::meetings::transcribe(&whisper, &model, &scratch, &lang) {
+                    Ok(segs) => {
+                        let heard: String = segs
+                            .iter()
+                            .map(|s| s.text.trim())
+                            .filter(|t| !t.is_empty())
+                            .collect::<Vec<_>>()
+                            .join(" ");
+                        if !heard.is_empty() {
+                            let text = join(&settled, &heard);
+                            let mut live = crate::lock(&LIVE);
+                            still = if live.0 == text { still + (avail - live.1) } else { 0 };
+                            *live = (text.clone(), avail);
+                            drop(live);
+                            crate::lock(&state.recording).live_text = text.clone();
+                            let _ = app.emit("dictation-live", serde_json::json!({ "text": text }));
+                        } else {
+                            let mut live = crate::lock(&LIVE);
+                            still += avail - live.1;
+                            live.1 = avail;
+                        }
+
+                        // Past the window, put aside the sentences that have
+                        // stopped changing. The cut falls between segments,
+                        // which is where the speaker paused, so no word is
+                        // split across the seam.
+                        if avail - base > WINDOW {
+                            let cut = ((avail - base) / PER_MS) as i64 - KEEP_MS;
+                            let mut done: Vec<&str> = Vec::new();
+                            let mut upto = 0i64;
+                            for seg in &segs {
+                                if seg.end_ms > cut {
+                                    break;
+                                }
+                                done.push(seg.text.trim());
+                                upto = seg.end_ms;
+                            }
+                            if !done.is_empty() {
+                                settled = join(&settled, &done.join(" "));
+                                base += upto as u64 * PER_MS;
+                            } else if avail - base > WINDOW * 2 {
+                                // One unbroken stretch of speech with nowhere
+                                // to cut. Keep the last few seconds and carry
+                                // on rather than getting slower every pass.
+                                settled = join(&settled, &heard);
+                                base = avail.saturating_sub(KEEP_MS as u64 * PER_MS);
+                                log::debug!("dictation: no pause to cut at, seam forced");
+                            }
+                        }
+                    }
+                    Err(e) => log::debug!("dictation: live pass: {e}"),
+                }
+                let _ = std::fs::remove_file(&scratch);
+
+                if should_finish(&state, started_at, still) {
+                    let app = app.clone();
+                    let state = Arc::clone(&state);
+                    std::thread::spawn(move || {
+                        if let Err(e) = finish(&app, &state) {
+                            log::warn!("dictation: finishing by itself: {e}");
+                        }
+                    });
+                    break;
+                }
+            }
+        })
+        .expect("spawn dictation live");
+}
+
+/// Put two pieces of speech together with one space between them.
+fn join(before: &str, after: &str) -> String {
+    if before.is_empty() {
+        return after.trim().to_string();
+    }
+    if after.trim().is_empty() {
+        return before.to_string();
+    }
+    format!("{} {}", before.trim_end(), after.trim())
+}
+
+/// Something has been said, and either the room has gone quiet or the words
+/// have stopped arriving.
+fn should_finish(state: &AppState, started_at: i64, still: u64) -> bool {
+    let said = !crate::lock(&LIVE).0.trim().is_empty();
+    let last = crate::lock(&state.recording).last_sound_at;
+    let now = crate::capture::now_ms();
+    if said && now - started_at >= LONGEST {
+        log::info!("dictation: five minutes, putting in what there is");
+        return true;
+    }
+    quiet_enough(now, started_at, last, said) || (said && still >= STILL)
+}
+
+/// Only sound heard since this dictation began counts. A timestamp from an
+/// earlier recording would otherwise look like a long silence and put the
+/// first words in before the sentence was finished.
+fn quiet_enough(now: i64, started_at: i64, last_sound: Option<i64>, said: bool) -> bool {
+    if !said {
+        return false;
+    }
+    match last_sound {
+        Some(t) if t >= started_at => now - t >= HUSH,
+        _ => false,
+    }
+}
+
 pub fn toggle(app: &AppHandle, state: &AppState) -> Result<String, String> {
     if is_active() {
         return finish(app, state);
@@ -35,11 +319,17 @@ pub fn toggle(app: &AppHandle, state: &AppState) -> Result<String, String> {
         return Err(why);
     }
     let helper = crate::meetings::helper_path(state.resource_dir.as_deref()).ok_or("recorder missing")?;
-    let dir = std::env::temp_dir().join(format!("lane-dictation-{}", crate::capture::now_ms()));
-    crate::meetings::start(&helper, &dir, 0, crate::capture::now_ms(), state.recording.clone(), true)?;
-    *crate::lock(&SESSION) = Some(dir);
+    let started_at = crate::capture::now_ms();
+    let dir = std::env::temp_dir().join(format!("lane-dictation-{started_at}"));
+    crate::meetings::start(&helper, &dir, 0, started_at, state.recording.clone(), true)?;
+    *crate::lock(&SESSION) = Some(dir.clone());
     announce(app, true);
-    crate::engine::notch(app, "dictation", "Listening", vec!["Speak. Press ⌥⇧Space again (or Insert) to put the words where your cursor is.".into()]);
+    // The live pass needs to outlive this call, so it takes the shared
+    // state rather than the borrow.
+    if let Some(shared) = app.try_state::<Arc<AppState>>() {
+        spawn_live(app.clone(), shared.inner().clone(), dir, started_at);
+    }
+    crate::engine::notch(app, "dictation", "Listening", vec!["Speak. The words appear as you say them, and go in when you stop.".into()]);
     log::info!("dictation: started");
     Ok("listening".into())
 }
@@ -52,13 +342,33 @@ fn finish(app: &AppHandle, state: &AppState) -> Result<String, String> {
         r.recording = false;
         r.live_text.clear();
     }
-    let whisper = crate::meetings::whisper_path(state.resource_dir.as_deref()).ok_or("speech engine missing")?;
-    let model = state.db_path.with_file_name("models").join(crate::meetings::whisper_model().file);
-    let lang = crate::lock(&state.settings).meeting_language.clone();
-    let segs = crate::meetings::transcribe(&whisper, &model, &dir.join("mic.wav"), if lang.is_empty() { "auto" } else { &lang })?;
+    // The live pass has usually already read everything that was said. When
+    // it has, the words go in the moment you stop talking instead of after
+    // another trip through the speech engine, which is most of what makes
+    // this feel immediate. Only the last stretch of audio is re-read.
+    let wav = dir.join("mic.wav");
+    let recorded = std::fs::metadata(&wav).map(|m| m.len().saturating_sub(crate::meetings::WAV_HEADER)).unwrap_or(0);
+    let (live, covered) = crate::lock(&LIVE).clone();
+    let fresh = !live.trim().is_empty() && recorded.saturating_sub(covered) < MIN_AUDIO;
+
+    // Whatever happens from here on, the words that were heard go in and the
+    // card stops saying it is listening. A last pass that will not run is a
+    // reason to use what is already on screen, not a reason to lose it.
+    let text = if fresh {
+        live
+    } else {
+        match read_all(state, &wav) {
+            Ok(t) if !t.trim().is_empty() => t,
+            Ok(_) => live,
+            Err(e) => {
+                log::warn!("dictation: last pass: {e}; keeping what was heard");
+                live
+            }
+        }
+    };
     let _ = std::fs::remove_dir_all(&dir);
+    *crate::lock(&LIVE) = (String::new(), 0);
     announce(app, false);
-    let text: String = segs.iter().map(|s| s.text.trim()).filter(|t| !t.is_empty()).collect::<Vec<_>>().join(" ");
     if text.is_empty() {
         crate::engine::notch(app, "help", "Dictation", vec!["Nothing was heard.".into()]);
         return Ok("empty".into());
@@ -76,6 +386,16 @@ fn finish(app: &AppHandle, state: &AppState) -> Result<String, String> {
     Ok(text)
 }
 
+/// One pass over everything that was recorded, for when the live text has
+/// fallen behind the end of the sentence.
+fn read_all(state: &AppState, wav: &std::path::Path) -> Result<String, String> {
+    let whisper = crate::meetings::whisper_path(state.resource_dir.as_deref()).ok_or("speech engine missing")?;
+    let model = state.db_path.with_file_name("models").join(crate::meetings::whisper_model().file);
+    let lang = crate::lock(&state.settings).meeting_language.clone();
+    let segs = crate::meetings::transcribe(&whisper, &model, wav, if lang.is_empty() { "auto" } else { &lang })?;
+    Ok(segs.iter().map(|s| s.text.trim()).filter(|t| !t.is_empty()).collect::<Vec<_>>().join(" "))
+}
+
 /// Put the text where the cursor is: clipboard, then ⌘V, then the old
 /// clipboard back. Needs Accessibility, which capture already has.
 pub fn insert_text(text: &str) -> Result<(), String> {
@@ -89,4 +409,94 @@ pub fn insert_text(text: &str) -> Result<(), String> {
         let _ = board.set_text(p);
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn join_keeps_one_space_and_tolerates_gaps() {
+        assert_eq!(join("", "  hello "), "hello");
+        assert_eq!(join("hello", "   "), "hello");
+        assert_eq!(join("hello ", " there"), "hello there");
+    }
+
+    fn tone(samples: usize, amplitude: f32) -> Vec<u8> {
+        let mut v = Vec::with_capacity(samples * 2);
+        for i in 0..samples {
+            let s = ((i as f32 * 0.3).sin() * amplitude * 32_767.0) as i16;
+            v.extend_from_slice(&s.to_le_bytes());
+        }
+        v
+    }
+
+    #[test]
+    fn loudness_is_measured_from_the_samples() {
+        assert_eq!(level(&[]), 0.0);
+        assert!(level(&tone(1_000, 0.0)) < 0.0001);
+        let quiet = level(&tone(1_000, 0.01));
+        let loud = level(&tone(1_000, 0.4));
+        assert!(quiet < FLOOR && loud > FLOOR, "quiet {quiet}, loud {loud}");
+    }
+
+    #[test]
+    fn a_sentence_is_judged_by_its_words_not_by_its_pauses() {
+        // Two seconds of speech with long gaps in it, then two seconds of a
+        // silent room. Averaged, the two nearly meet; by the loudest moment
+        // they are far apart, which is what tells them apart.
+        let mut speech = Vec::new();
+        for i in 0..20 {
+            speech.extend(tone(1_600, if i % 4 == 0 { 0.25 } else { 0.0005 }));
+        }
+        let room = tone(32_000, 0.0009);
+        let talking = level(&speech);
+        let empty = level(&room);
+        assert!(talking > FLOOR, "talking {talking}");
+        assert!(!is_quiet(talking, talking));
+        assert!(is_quiet(empty, talking), "empty {empty} against {talking}");
+    }
+
+    #[test]
+    fn a_pause_is_quiet_next_to_the_talking_around_it() {
+        // Plain silence against ordinary speech.
+        assert!(is_quiet(0.001, 0.2));
+        assert!(!is_quiet(0.2, 0.2));
+        // A microphone so quiet that all of the speech is under the fixed
+        // floor: the pauses are still far below the talking.
+        assert!(is_quiet(0.0008, 0.006));
+        assert!(!is_quiet(0.006, 0.006));
+        // Nothing heard yet, so the fixed floor is all there is to go on.
+        assert!(is_quiet(0.001, 0.0));
+    }
+
+    #[test]
+    fn a_stalled_transcript_is_three_and_a_half_seconds_of_audio() {
+        assert_eq!(STILL / PER_MS, 3_500);
+    }
+
+    #[test]
+    fn silence_from_an_earlier_recording_does_not_count() {
+        let start = 1_000_000;
+        // Heard two seconds ago, in this dictation: finished.
+        assert!(quiet_enough(start + 5_000, start, Some(start + 3_000), true));
+        // Heard just now: still talking.
+        assert!(!quiet_enough(start + 5_000, start, Some(start + 4_900), true));
+        // The only sound on record is from before this dictation began.
+        assert!(!quiet_enough(start + 5_000, start, Some(start - 60_000), true));
+        // Nothing heard at all.
+        assert!(!quiet_enough(start + 5_000, start, None, true));
+        // Nothing said yet, however long the quiet.
+        assert!(!quiet_enough(start + 90_000, start, Some(start + 100), false));
+    }
+
+    #[test]
+    fn the_window_holds_about_twenty_seconds() {
+        assert_eq!(WINDOW / PER_MS / 1_000, 20);
+        // A cut is only looked for once there is more than the window, and
+        // it always leaves the last few seconds live.
+        let avail = WINDOW + PER_MS * 1_000;
+        let cut = (avail / PER_MS) as i64 - KEEP_MS;
+        assert_eq!(cut, 17_000);
+    }
 }

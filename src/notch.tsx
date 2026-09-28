@@ -70,6 +70,8 @@ export default function Notch() {
   const [pinned, setPinned] = useState(false) // opened by an event, closes on its own
   const [held, setHeld] = useState(false) // clicked open: stays until clicked or closed
   const [grown, setGrown] = useState(false) // the window has the card's size
+  const [said, setSaid] = useState('') // dictation, as the words arrive
+  const [listening, setListening] = useState(false) // told by the app, not polled
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState<string | null>(null)
   const [asking, setAsking] = useState(false)
@@ -113,6 +115,17 @@ export default function Notch() {
       if (e.payload.inside) enter()
       else { if (leave.current) clearTimeout(leave.current); setHover(false) }
     })
+    // Dictation sends its text as it hears it, rather than the card
+    // waiting for the next poll.
+    const live = listen<{ text: string }>('dictation-live', (e) => setSaid(e.payload.text))
+    // The app says when it starts and stops listening. The recording poll is
+    // three seconds behind, which used to shut the card the instant it
+    // opened: the notch event said dictation, the stale poll said no.
+    const onState = listen<{ active: boolean }>('dictation-state', (e) => {
+      setListening(e.payload.active)
+      if (e.payload.active) setPinned(true)
+      else setSaid('')
+    })
     const c = api.onNotchPosition((p) => setPosition(p as Position))
     const d = api.onAskToken(({ id, token }) => { if (id === askId.current) setAnswer((prev) => (prev ?? '') + token) })
     const e = api.onAskDone((r) => {
@@ -125,6 +138,7 @@ export default function Notch() {
     const t = setInterval(tick, 3000)
     return () => {
       a.then((f) => f()); b.then((f) => f()); c.then((f) => f()); d.then((f) => f()); e.then((f) => f())
+      live.then((f) => f()); onState.then((f) => f())
       clearInterval(t)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -189,8 +203,8 @@ export default function Notch() {
   }, [state])
 
   useEffect(() => {
-    if (!rec?.dictating && state.kind === 'dictation') setPinned(false)
-  }, [rec?.dictating, state.kind])
+    if (!listening && state.kind === 'dictation') setPinned(false)
+  }, [listening, state.kind])
 
   async function askNow(text: string) {
     const q = text.trim()
@@ -213,7 +227,7 @@ export default function Notch() {
   }
 
   const recording = !!rec?.recording
-  const dictating = !!rec?.dictating
+  const dictating = listening || !!rec?.dictating
   const cap = status?.capture
   const capturing = !!cap && cap.trusted && !cap.idle && !cap.excluded && !status?.paused
   const tone = dictating ? 'bg-sky-400' : recording ? 'bg-red-500 animate-pulse-soft' : capturing ? 'bg-emerald-400' : 'bg-white/40'
@@ -297,7 +311,22 @@ export default function Notch() {
             <button className="nc-open" onClick={() => api.openMain('today')}>Open app <ArrowUpRight className="h-3.5 w-3.5" /></button>
           </div>
 
+          {dictating && (
+            <div className="nc-dictate">
+              <div className="nc-wave" aria-hidden><i /><i /><i /><i /><i /></div>
+              <p className={cn('nc-live', !said && 'is-waiting')}>
+                {said || 'Speak. Your words appear here.'}
+                <b className="nc-caret" />
+              </p>
+              <footer className="nc-dictate-foot">
+                <span>Stop talking and it goes in where your cursor is.</span>
+                <button onClick={() => api.dictationToggle().catch(() => {})}>Insert now <span className="nc-kbd">⌥⇧Space</span></button>
+              </footer>
+            </div>
+          )}
+
           {/* Ask */}
+          {!dictating && (
           <form onSubmit={ask} className="nc-ask">
             <Sparkles className="h-4 w-4 shrink-0 nc-spark" />
             <input
@@ -310,12 +339,13 @@ export default function Notch() {
             <span className="nc-kbd">↩</span>
             <button type="submit" className="nc-mic" disabled={asking || !question.trim()} title="Ask"><Send className="h-3.5 w-3.5" /></button>
           </form>
+          )}
 
-          {answer && (
+          {answer && !dictating && (
             <div className="nc-answer">{answer}</div>
           )}
 
-          {!answer && (
+          {!answer && !dictating && (
             <>
               {/* Three things you might do right now */}
               <div className="nc-acts">

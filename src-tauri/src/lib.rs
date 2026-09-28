@@ -907,6 +907,7 @@ pub fn run() {
             engine::spawn(app.handle().clone(), state.clone());
             // Anything still in the recordings folder is a meeting that was
             // interrupted rather than finished, so pick it up again.
+            dictation::sweep_leftovers();
             engine::resume_unfinished_meetings(app.handle(), &state);
             engine::start_file_watcher(&state);
             Ok(())
