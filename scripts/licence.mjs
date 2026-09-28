@@ -4,6 +4,7 @@
 //   node scripts/licence.mjs keygen                 make the signing key (once)
 //   node scripts/licence.mjs sign <email> <plan>    one key, printed
 //   node scripts/licence.mjs mint <plan> <count>    a batch, as CSV for Supabase
+//   node scripts/licence.mjs comp <count>          lifetime keys for testers
 //
 // A key is `lane1|<email>|<plan>|<issued ms>::<signature>`, where the
 // signature is a minisign signature file in base64 so the whole thing is one
@@ -107,6 +108,28 @@ function main() {
     console.log(makeKey(a, b))
     return
   }
+  // Keys for the people who tried it first. The key itself says lifetime,
+  // because that is what they get; the row says comp, so they draw from
+  // their own bag and do not eat the two hundred seats that are for sale.
+  if (cmd === 'comp') {
+    const n = Number(a || 0)
+    if (!Number.isInteger(n) || n < 1 || n > 1000) {
+      console.error('usage: node scripts/licence.mjs comp <1..1000>')
+      process.exit(2)
+    }
+    const key = loadKey()
+    const seen = new Set()
+    const rows = []
+    while (rows.length < n) {
+      const k = makeKey('an early tester', 'lifetime', key)
+      if (seen.has(k)) continue
+      seen.add(k)
+      rows.push(k)
+    }
+    console.log('plan,licence_key')
+    for (const k of rows) console.log(`comp,"${k}"`)
+    return
+  }
   if (cmd === 'mint') {
     const plan = a
     const n = Number(b || 0)
@@ -127,7 +150,7 @@ function main() {
     for (const k of rows) console.log(`${plan},"${k}"`)
     return
   }
-  console.error('usage: node scripts/licence.mjs <keygen|sign|mint> …')
+  console.error('usage: node scripts/licence.mjs <keygen|sign|mint|comp> …')
   process.exit(2)
 }
 

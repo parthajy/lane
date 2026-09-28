@@ -23,11 +23,49 @@ button{font:inherit;font-weight:500;padding:11px;border:0;border-radius:10px;bac
   <button type="submit">Open the dashboard</button>
 </form>`
 
+/** How many people can be given Lane outright. */
+const COMPS = 200
+
+/** A plain look at an email address. */
+const isEmail = (e) => /^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(e)
+
+/**
+ * Hand one of the early-tester keys to somebody. It comes out of the comp
+ * pool, which is separate from the two hundred lifetime seats that are for
+ * sale, so giving Lane away never eats one of those. Asking twice for the
+ * same address returns the same key rather than spending another.
+ */
+async function giveLifetime(email) {
+  const to = String(email || '').trim().toLowerCase()
+  if (!isEmail(to)) return { ok: false, error: 'That does not look like an email address.' }
+  const used = await count('licence_keys', 'plan=eq.comp&claimed_at=not.is.null')
+  const already = await db(`licence_keys?select=licence_key&plan=eq.comp&payment_id=eq.comp:${encodeURIComponent(to)}&limit=1`)
+  if (!already?.length && used >= COMPS) {
+    return { ok: false, error: `All ${COMPS} early-tester keys are given out.` }
+  }
+  const out = await db('rpc/claim_licence', {
+    method: 'POST',
+    body: JSON.stringify({ p_payment_id: `comp:${to}`, p_plan: 'comp', p_email: to, p_amount: 0, p_currency: 'USD' }),
+  })
+  if (!out?.ok) return { ok: false, error: out?.error || 'No key came back.' }
+  return { ok: true, key: out.key, email: to, again: Boolean(out.again) }
+}
+
 /** Everything the outside world tells us. The app itself reports nothing. */
 export default async (request) => {
   // Signing in: keep the token in a cookie for ninety days.
   if (request.method === 'POST') {
     const form = await request.formData()
+
+    // Already signed in, and this is the give-a-key form.
+    if (adminOk(request) && form.get('give')) {
+      const got = await giveLifetime(form.get('give'))
+      const q = got.ok
+        ? `?gave=${encodeURIComponent(got.email)}&key=${encodeURIComponent(got.key)}${got.again ? '&again=1' : ''}`
+        : `?trouble=${encodeURIComponent(got.error)}`
+      return new Response(null, { status: 303, headers: { location: `/admin${q}` } })
+    }
+
     const given = String(form.get('token') || '')
     if (!tokenIsGood(given)) return html(SIGNIN(true), 401)
     return new Response(null, {
@@ -53,7 +91,7 @@ export default async (request) => {
   }
 
   const since = new Date(Date.now() - 21 * 86400_000).toISOString()
-  const [downloads, waitTotal, lifetimeTaken, keysLeft, sales, recentWait, recentFeedback, recentDownloads] =
+  const [downloads, waitTotal, lifetimeTaken, keysLeft, sales, recentWait, recentFeedback, recentDownloads, compsGiven, compRows] =
     await Promise.all([
       count('downloads'),
       count('waitlist'),
@@ -63,6 +101,8 @@ export default async (request) => {
       db('waitlist?select=email,name,lifetime,created_at&order=id.desc&limit=25'),
       db('feedback?select=kind,body,email,created_at&order=id.desc&limit=25'),
       db(`downloads?select=created_at&created_at=gte.${since}&order=id.desc&limit=5000`),
+      count('licence_keys', 'plan=eq.comp&claimed_at=not.is.null'),
+      db('licence_keys?select=claimed_by,claimed_at&plan=eq.comp&claimed_at=not.is.null&order=claimed_at.desc&limit=25'),
     ])
 
   const seats = Math.max(0, 200 - lifetimeTaken)
@@ -99,6 +139,21 @@ export default async (request) => {
     .map((r) => `<tr><td>${escape(r.email)}</td><td>${escape(r.plan)}</td><td>${((r.amount_cents || 0) / 100).toFixed(2)} ${escape(r.currency || '')}</td><td class="n">${when(r.created_at)}</td></tr>`)
     .join('')
 
+  const ask = new URL(request.url).searchParams
+  const gave = ask.get('gave')
+  const gaveKey = ask.get('key')
+  const trouble = ask.get('trouble')
+  const compRowsHtml = (compRows || [])
+    .map((r) => `<tr><td>${escape(r.claimed_by || '')}</td><td class="n">${when(r.claimed_at)}</td></tr>`)
+    .join('')
+  const note = trouble
+    ? `<p class="bad">${escape(trouble)}</p>`
+    : gave
+      ? `<div class="gave"><p>${ask.get('again') ? 'Already had one' : 'Given'} — <b>${escape(gave)}</b>. Send them this key:</p>
+         <textarea readonly rows="3" onclick="this.select()">${escape(gaveKey || '')}</textarea>
+         <p class="n">Click the key to select it. It is a lifetime key; they paste it into Settings → Your licence.</p></div>`
+      : ''
+
   return html(`<!doctype html><meta charset=utf-8><title>Lane · admin</title>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <style>
@@ -125,6 +180,14 @@ td{padding:7px 8px;border-top:1px solid var(--line);vertical-align:top;overflow-
 td:last-child{width:104px;white-space:nowrap;text-align:right}
 td:first-child{width:34%}
 section.fb td:first-child{width:74px;color:var(--muted)}
+form.give{display:flex;gap:8px;margin-bottom:12px}
+form.give input{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);flex:1;min-width:0}
+form.give input:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 4px rgba(90,81,229,.14)}
+form.give button{font:inherit;font-weight:500;padding:9px 16px;border:0;border-radius:10px;background:var(--ink);color:#fff;cursor:pointer;white-space:nowrap}
+.gave{background:#f2fbf5;border:1px solid rgba(22,140,80,.22);border-radius:12px;padding:12px;margin-bottom:12px}
+.gave p{margin:0 0 8px;font-size:13.5px}
+.gave textarea{width:100%;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:9px;border-radius:9px;border:1px solid var(--line);resize:vertical;word-break:break-all}
+.bad{color:#b03f28;font-size:13.5px;margin:0 0 12px}
 </style>
 <h1>Lane</h1><p class="sub">Everything the outside world tells us. The app itself reports nothing. <a href="/admin?out=1" style="color:var(--muted)">Sign out</a></p>
 <div class="cards">
@@ -133,7 +196,17 @@ section.fb td:first-child{width:74px;color:var(--muted)}
   <div class="card"><b>${seats}</b><span>lifetime seats left</span></div>
   <div class="card"><b>${(sales || []).length}</b><span>sales</span></div>
   <div class="card"><b>$${money.toFixed(0)}</b><span>collected</span></div>
+  <div class="card"><b>${COMPS - compsGiven}</b><span>free seats left</span></div>
 </div>
+<section>
+  <h2>Give Lane away · ${compsGiven} of ${COMPS} used</h2>
+  <form method="post" action="/admin" class="give">
+    <input name="give" type="email" placeholder="early tester's email" required>
+    <button type="submit">Give lifetime</button>
+  </form>
+  ${note}
+  <table>${compRowsHtml || '<tr><td>nobody yet</td></tr>'}</table>
+</section>
 <section><h2>Downloads by day</h2><ul>${bars || '<li>nothing yet</li>'}</ul></section>
 <section><h2>Sales by plan</h2><ul>${plans || '<li>none yet</li>'}</ul></section>
 <section><h2>Keys in the pool</h2><ul>${pool}</ul></section>
