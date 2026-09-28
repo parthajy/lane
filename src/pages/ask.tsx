@@ -7,7 +7,7 @@ import { Card } from '@/pages/memories'
 import { format, isToday, isYesterday } from 'date-fns'
 import { FileRow } from '@/components/file-row'
 import { api, type AskResult, type AskSource, type Conversation } from '@/lib/api'
-import { cn } from '@/lib/utils'
+import { cn, dotted} from '@/lib/utils'
 
 interface Turn {
   id: number
@@ -229,7 +229,7 @@ export function AskPage({ initialQuestion, onConsumed }: { initialQuestion?: str
                             <div className="rounded-2xl border bg-card px-4 py-3 text-sm">
                               <span className="text-xs uppercase tracking-wide text-muted-foreground mr-2">Open task</span>
                               {s.task.text}
-                              <div className="text-xs text-muted-foreground mt-1">from {s.task.title} · {format(s.task.startedAt, 'd MMM')}</div>
+                              <div className="text-xs text-muted-foreground mt-1">from {dotted(s.task.title, format(s.task.startedAt, 'd MMM'))}</div>
                             </div>
                           )}
                           {s.entity && (

@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { cn } from '@/lib/utils'
 
 /** Small dependency-free SVG charts for the three-pane layouts. */
@@ -5,15 +6,48 @@ import { cn } from '@/lib/utils'
 /* The app's chart hues, matching lane.so: indigo first, then the rest of the set. */
 const PALETTE = ['#5a51e5', '#8b5cf6', '#2b9cf3', '#f5a524', '#f2555a', '#4f7bf5', '#a78bfa', '#8b8ba7']
 
+/* A flat shape reads as a diagram; a lit one reads as an object. Each hue
+   gets a lighter top-left and a deeper bottom-right, which is all it takes
+   for the eye to see a surface rather than a fill. */
+function lift(hex: string, amount: number) {
+  const n = parseInt(hex.slice(1), 16)
+  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) =>
+    Math.max(0, Math.min(255, Math.round(amount > 0 ? v + (255 - v) * amount : v * (1 + amount)))),
+  )
+  return `#${ch.map((v) => v.toString(16).padStart(2, '0')).join('')}`
+}
+
 export function Donut({ data, size = 120, thickness = 14, label, sub, className }: { data: [string, number][]; size?: number; thickness?: number; label?: string; sub?: string; className?: string }) {
   const total = data.reduce((a, d) => a + d[1], 0)
   const r = (size - thickness) / 2
   const c = 2 * Math.PI * r
+  const uid = useId().replace(/:/g, '')
   let offset = 0
   return (
     <div className={cn('flex items-center gap-3', className)}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 overflow-visible">
+        <defs>
+          {data.map(([name], i) => {
+            const base = PALETTE[i % PALETTE.length]
+            return (
+              <linearGradient key={name} id={`${uid}-g${i}`} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor={lift(base, 0.26)} />
+                <stop offset="55%" stopColor={base} />
+                <stop offset="100%" stopColor={lift(base, -0.22)} />
+              </linearGradient>
+            )
+          })}
+          <filter id={`${uid}-lift`} x="-25%" y="-25%" width="150%" height="150%">
+            <feDropShadow dx="0" dy="2.5" stdDeviation="3" floodColor="#2b2356" floodOpacity="0.28" />
+          </filter>
+          <linearGradient id={`${uid}-gloss`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+            <stop offset="45%" stopColor="#ffffff" stopOpacity="0.06" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+        </defs>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeOpacity={0.08} strokeWidth={thickness} />
+        <g filter={`url(#${uid}-lift)`}>
         {total > 0 && data.map(([name, n], i) => {
           const len = (n / total) * c
           const el = (
@@ -23,7 +57,7 @@ export function Donut({ data, size = 120, thickness = 14, label, sub, className 
               cy={size / 2}
               r={r}
               fill="none"
-              stroke={PALETTE[i % PALETTE.length]}
+              stroke={`url(#${uid}-g${i})`}
               strokeWidth={thickness}
               strokeDasharray={`${len} ${c - len}`}
               strokeDashoffset={-offset}
@@ -35,6 +69,19 @@ export function Donut({ data, size = 120, thickness = 14, label, sub, className 
           offset += len
           return el
         })}
+        </g>
+        {/* The light that falls across the top of the ring. */}
+        {total > 0 && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r + thickness / 2 - thickness * 0.22}
+            fill="none"
+            stroke={`url(#${uid}-gloss)`}
+            strokeWidth={thickness * 0.42}
+            pointerEvents="none"
+          />
+        )}
         {label && (
           <text x="50%" y={sub ? '46%' : '50%'} dominantBaseline="middle" textAnchor="middle" className="fill-current text-base font-semibold">
             {label}
@@ -65,7 +112,12 @@ export function Bars({ data, height = 64, format, className }: { data: [string, 
     <div className={cn('flex items-end gap-[3px]', className)} style={{ height }}>
       {data.map(([label, n]) => (
         <div key={label} className="flex-1 flex flex-col justify-end h-full" title={`${label}: ${format(n)}`}>
-          <div className="rounded-sm bg-primary/70" style={{ height: Math.max(3, Math.round((n / max) * height)) }} />
+          {/* Lit from the top with a shadow at the foot, so the column
+              stands on the baseline instead of being painted on it. */}
+          <div
+            className="chart-bar"
+            style={{ height: Math.max(3, Math.round((n / max) * height)) }}
+          />
         </div>
       ))}
     </div>
@@ -88,7 +140,13 @@ export function HBars({ data, format, onClick, className }: { data: [string, num
             <span className="tabular-nums text-muted-foreground shrink-0">{format(n)}</span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-            <div className="h-full rounded-full" style={{ width: `${(n / max) * 100}%`, background: PALETTE[i % PALETTE.length] }} />
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${(n / max) * 100}%`,
+                background: `linear-gradient(180deg, ${lift(PALETTE[i % PALETTE.length], 0.3)} 0%, ${PALETTE[i % PALETTE.length]} 55%, ${lift(PALETTE[i % PALETTE.length], -0.18)} 100%)`,
+              }}
+            />
           </div>
         </li>
       ))}
@@ -114,7 +172,15 @@ export function Spark({ data, color, className }: { data: number[]; color: strin
   return (
     <div className={cn('flex items-end gap-[2px] h-8', className)} aria-hidden="true">
       {data.map((n, i) => (
-        <span key={i} className="w-[3px] rounded-[2px]" style={{ height: `${Math.max(12, (n / max) * 100)}%`, background: color, opacity: 0.35 + (i / Math.max(1, data.length - 1)) * 0.65 }} />
+        <span
+          key={i}
+          className="w-[3px] rounded-[2px]"
+          style={{
+            height: `${Math.max(12, (n / max) * 100)}%`,
+            background: `linear-gradient(180deg, ${lift(color, 0.32)} 0%, ${color} 70%)`,
+            opacity: 0.35 + (i / Math.max(1, data.length - 1)) * 0.65,
+          }}
+        />
       ))}
     </div>
   )
@@ -144,14 +210,21 @@ export function StatCard({
       <span className={cn('h-11 w-11 shrink-0 rounded-xl bg-background grid place-items-center', t.chip)}>
         <Icon className="h-[19px] w-[19px]" />
       </span>
+      {/* The change line is always there, empty or not. Without it the
+          card with a figure to report grows taller than the others and
+          its number rides up out of line with them. */}
       <div className="min-w-0 flex-1">
         <div className="text-[27px] font-semibold tabular-nums leading-none tracking-tight">{n}</div>
         <div className="text-[12.5px] text-muted-foreground mt-1 truncate">{label}</div>
-        {delta != null && (
-          <div className={cn('text-[11.5px] mt-1 font-medium tabular-nums', delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')}>
-            {delta >= 0 ? '↑' : '↓'} {Math.abs(delta)}%
-          </div>
-        )}
+        <div
+          className={cn(
+            'text-[11.5px] mt-1 font-medium tabular-nums h-[17px]',
+            delta == null ? 'invisible' : delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400',
+          )}
+          aria-hidden={delta == null}
+        >
+          {delta == null ? '\u00a0' : `${delta >= 0 ? '↑' : '↓'} ${Math.abs(delta)}%`}
+        </div>
       </div>
       {series && series.length > 3 && <Spark data={series.slice(-14)} color={t.bar} className="shrink-0 w-[68px] justify-end" />}
     </div>

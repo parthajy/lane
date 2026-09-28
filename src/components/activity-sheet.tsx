@@ -6,6 +6,7 @@ import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTit
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { api, type ActivityDetail, formatDuration } from '@/lib/api'
+import { dotted } from '@/lib/utils'
 
 /** The picture kept with a snapshot, loaded on demand. */
 function Shot({ path }: { path: string }) {
@@ -42,7 +43,7 @@ export function ActivityDetailView({ id, onDeleted, header = true }: { id: numbe
       {header && a && (
         <div>
           <h3 className="font-medium leading-snug">{a.windowTitle || a.appName}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{a.appName} · {format(a.startedAt, 'EEE d MMM, HH:mm')} · {formatDuration(a.endedAt - a.startedAt)}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{dotted(a.appName, format(a.startedAt, 'EEE d MMM, HH:mm'), formatDuration(a.endedAt - a.startedAt))}</p>
           {a.url && <p className="text-xs text-muted-foreground mt-1 break-all select-text">{a.url}</p>}
         </div>
       )}

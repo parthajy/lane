@@ -7,7 +7,7 @@ import { ActivitySheet } from '@/components/activity-sheet'
 import { AppRows, Bars, Donut, StatCard } from '@/components/charts'
 import { ThreeThings, WhyLine } from '@/components/three-things'
 import { api, formatDuration, type AskResult, type CalendarEvent, type Entity, type MemoryCard, type Settings, type DayStats, type EngineReport, type Explore, type Gap, type Upcoming } from '@/lib/api'
-import { cn } from '@/lib/utils'
+import { cn, dotted} from '@/lib/utils'
 
 function label(d: Date) {
   if (isToday(d)) return 'Today'
@@ -36,7 +36,7 @@ function SourceRow({ n, m, onOpen }: { n: number; m: MemoryCard; onOpen: (id: nu
         <span className="block text-sm truncate">{m.title}</span>
         <span className="block text-xs text-muted-foreground truncate">{m.summary}</span>
       </span>
-      <span className="text-[11px] text-muted-foreground shrink-0 tabular-nums">{m.appName} · {format(m.startedAt, 'HH:mm')}</span>
+      <span className="text-[11px] text-muted-foreground shrink-0 tabular-nums">{dotted(m.appName, format(m.startedAt, 'HH:mm'))}</span>
     </button>
   )
 }
@@ -225,7 +225,7 @@ export function TodayPage({ onAsk, onOpenTasks }: { onAsk: (q: string) => void; 
                   <button key={m.id} onClick={() => setOpenId(m.activityId)} className="text-left rounded-lg border bg-background p-3 hover:bg-accent/60 min-w-0">
                     <div className="text-sm font-medium leading-snug line-clamp-2">{m.title}</div>
                     <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.summary}</div>
-                    <div className="text-[11px] text-muted-foreground mt-1.5 truncate tabular-nums">{m.appName} · {isToday(m.startedAt) ? format(m.startedAt, 'HH:mm') : format(m.startedAt, 'EEE d MMM')}</div>
+                    <div className="text-[11px] text-muted-foreground mt-1.5 truncate tabular-nums">{dotted(m.appName, isToday(m.startedAt) ? format(m.startedAt, 'HH:mm') : format(m.startedAt, 'EEE d MMM'))}</div>
                   </button>
                 ))}
               </div>

@@ -58,3 +58,15 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   if (normA === 0 || normB === 0) return 0
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB))
 }
+
+
+/**
+ * Join the parts of a subtitle with middle dots, leaving out the ones that
+ * are not there. Written out by hand, a task with no title reads
+ * "· · Thu 1 Jan" — two separators standing in for nothing.
+ */
+export function dotted(...parts: (string | number | null | undefined | false)[]): string {
+  return parts
+    .filter((p) => p !== null && p !== undefined && p !== false && String(p).trim() !== '')
+    .join(' · ')
+}

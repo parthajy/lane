@@ -525,13 +525,29 @@ html.notch, html.notch body, html.notch #root { background: transparent !importa
   .pill-dot { width: .4rem; height: .4rem; border-radius: 9999px; display: inline-block; }
 }
 
-/* Tinted stat cards, light and dark. */
-.tone-blue { background: #eef1ff; }
-.tone-violet { background: #f3effe; }
-.tone-amber { background: #fff6e8; }
-.dark .tone-blue { background: hsl(240 40% 16%); }
-.dark .tone-violet { background: hsl(258 38% 17%); }
-.dark .tone-amber { background: hsl(34 34% 15%); }
+/* Tinted stat cards. A wash rather than a flat fill: lit at the top left,
+   falling off towards white, which is enough to give the three headline
+   figures a surface without turning them into decoration. */
+.tone-blue { background: linear-gradient(145deg, #e9edff 0%, #f2f4ff 52%, #fbfcff 100%); }
+.tone-violet { background: linear-gradient(145deg, #f0eafe 0%, #f6f2fe 52%, #fdfbff 100%); }
+.tone-amber { background: linear-gradient(145deg, #fff1dc 0%, #fff7ea 52%, #fffdf8 100%); }
+.dark .tone-blue { background: linear-gradient(145deg, hsl(238 42% 20%) 0%, hsl(240 40% 15%) 100%); }
+.dark .tone-violet { background: linear-gradient(145deg, hsl(260 40% 21%) 0%, hsl(258 38% 16%) 100%); }
+.dark .tone-amber { background: linear-gradient(145deg, hsl(33 38% 20%) 0%, hsl(34 34% 14%) 100%); }
+
+/* A bar in the small charts: a column with light on its top face and a
+   shadow where it meets the baseline. */
+.chart-bar {
+  border-radius: 3px 3px 1px 1px;
+  background: linear-gradient(180deg, hsl(244 84% 72%) 0%, hsl(244 74% 61%) 46%, hsl(246 66% 52%) 100%);
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / .45),
+    0 1px 1.5px hsl(246 50% 35% / .3);
+}
+.dark .chart-bar {
+  background: linear-gradient(180deg, hsl(246 88% 78%) 0%, hsl(246 84% 68%) 50%, hsl(248 70% 56%) 100%);
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / .3), 0 1px 1.5px hsl(0 0% 0% / .5);
+}
 
 
 /* ── The notch card, laid out like the panel it is ─────────────────── */

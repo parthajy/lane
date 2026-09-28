@@ -32,7 +32,9 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'rounded-2xl border bg-gradient-to-br flex flex-col items-center justify-center text-center px-6 py-10',
+        // Fills the space it is given rather than sitting as a short box
+        // with a field of white underneath it.
+        'rounded-2xl border bg-gradient-to-br flex flex-col items-center justify-center text-center px-6 py-10 h-full min-h-[280px]',
         toneStyles,
         className,
       )}

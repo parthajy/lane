@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ActivitySheet } from '@/components/activity-sheet'
 import { api, type Task } from '@/lib/api'
-import { cn } from '@/lib/utils'
+import { cn, dotted} from '@/lib/utils'
 
 type Tab = 'open' | 'done' | 'dismissed'
 
@@ -75,7 +75,7 @@ export function TasksPage() {
             <div className="min-w-0 flex-1">
               <div className={cn('text-sm', tab !== 'open' && 'line-through text-muted-foreground')}>{t.text}</div>
               <button onClick={() => setOpenId(t.activityId)} className="text-xs text-muted-foreground hover:underline truncate block max-w-full text-left">
-                {t.title} · {t.appName} · {format(t.startedAt, 'EEE d MMM, HH:mm')}
+                {dotted(t.title, t.appName, format(t.startedAt, 'EEE d MMM, HH:mm'))}
               </button>
             </div>
             {tab === 'open' && (
