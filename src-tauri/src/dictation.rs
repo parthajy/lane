@@ -187,6 +187,19 @@ fn spawn_live(app: AppHandle, state: Arc<AppState>, dir: PathBuf, started_at: i6
                 if crate::lock(&SESSION).is_none() {
                     break;
                 }
+                // Refused the microphone, macOS hands over silence rather
+                // than an error, so there is nothing to hear and no reason
+                // to keep the recorder open pretending otherwise.
+                if crate::meetings::MIC_DENIED.load(std::sync::atomic::Ordering::Relaxed) {
+                    log::warn!("dictation: the microphone is refused, stopping");
+                    let app = app.clone();
+                    let state = Arc::clone(&state);
+                    std::thread::spawn(move || {
+                        let _ = finish(&app, &state);
+                        crate::engine::microphone_refused(&app);
+                    });
+                    break;
+                }
                 let Ok(meta) = std::fs::metadata(&wav) else { continue };
                 let start = crate::meetings::pcm_offset(&wav);
                 let avail = meta.len().saturating_sub(start) & !1;

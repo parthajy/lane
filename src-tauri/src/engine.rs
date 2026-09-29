@@ -3688,6 +3688,31 @@ pub fn resume_unfinished_meetings(app: &AppHandle, state: &Arc<AppState>) {
     }
 }
 
+/// Say that the microphone is refused, and open the place to change it.
+///
+/// This one is worth interrupting for. Everything else Lane wants can wait,
+/// but a dictation that cannot hear is not a degraded dictation — it is a
+/// person talking to a machine that is not listening, with no way to tell.
+pub fn microphone_refused(app: &AppHandle) {
+    notch(
+        app,
+        "help",
+        "Lane cannot hear you",
+        vec!["The microphone is off for Lane. Turn it on in System Settings and try again.".into()],
+    );
+    let script = r#"display dialog "Lane needs the microphone to write down what you say.
+
+Open System Settings, find Lane under Privacy & Security → Microphone, and switch it on." with title "Lane cannot hear you" buttons {"Not now", "Open System Settings"} default button "Open System Settings" with icon caution"#;
+    let out = std::process::Command::new("/usr/bin/osascript").arg("-e").arg(script).output();
+    if let Ok(o) = out {
+        if String::from_utf8_lossy(&o.stdout).contains("Open System Settings") {
+            let _ = std::process::Command::new("/usr/bin/open")
+                .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")
+                .spawn();
+        }
+    }
+}
+
 /// Where the speech model lives on this Mac, whether or not it is here yet.
 pub fn speech_model_path(state: &AppState) -> std::path::PathBuf {
     state.db_path.with_file_name("models").join(crate::meetings::whisper_model().file)

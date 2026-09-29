@@ -15,6 +15,7 @@ use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicI64, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
 /// Speech models by RAM tier. The large-v3-turbo quant is about as fast as
@@ -77,6 +78,9 @@ pub static RECORDER: Mutex<Option<Recorder>> = Mutex::new(None);
 /// Live transcription progress per stream: bytes of PCM already transcribed.
 static LIVE_DONE: Mutex<[u64; 2]> = Mutex::new([0, 0]);
 static LIVE_SEGMENTS: Mutex<Vec<Segment>> = Mutex::new(Vec::new());
+/// Set when macOS refused the microphone, so the app can say so rather than
+/// record an empty room.
+pub static MIC_DENIED: AtomicBool = AtomicBool::new(false);
 const LIVE_EVERY: std::time::Duration = std::time::Duration::from_secs(30);
 const LIVE_MIN_BYTES: u64 = 16_000 * 2 * 15; // 15 s of 16 kHz mono int16
 /// A canonical WAV header, and what the sound used to be assumed to start
@@ -269,6 +273,13 @@ pub fn start(helper: &Path, dir: &Path, meeting_id: i64, started_at: i64, status
                     st.mic_ok = v["state"] == "recording";
                     if let Some(m) = v["message"].as_str() {
                         st.detail = format!("microphone: {m}");
+                    }
+                    if v["state"] == "denied" {
+                        MIC_DENIED.store(true, Ordering::Relaxed);
+                        log::warn!("microphone: refused — {}", v["message"].as_str().unwrap_or("no reason given"));
+                    } else if v["state"] == "recording" {
+                        MIC_DENIED.store(false, Ordering::Relaxed);
+                        log::info!("microphone: recording at {} Hz", v["sampleRate"].as_f64().unwrap_or(0.0));
                     }
                 }
                 Some("system") => {

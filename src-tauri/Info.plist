@@ -6,6 +6,30 @@
          join other apps' full-screen Spaces (a Regular app's cannot). -->
     <key>LSUIElement</key>
     <true/>
+    <!-- What Lane asks macOS for, and why.
+         These have to be on the app itself, not only on the helper that does
+         the recording: macOS holds the responsible process to account, and
+         that is Lane. Without them the microphone is refused in silence —
+         no prompt, no entry in System Settings, and buffers of digital zero
+         handed to the recorder as though the room were empty. Which is
+         exactly what happened. -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Lane writes down what you say when you dictate, and records a meeting only while you press Record. The audio stays on this Mac.</string>
+    <key>NSAudioCaptureUsageDescription</key>
+    <string>Lane records the other side of a call only while you press Record. The audio stays on this Mac.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Lane turns speech into text on this Mac, with a model it downloaded. Nothing is sent anywhere.</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Lane reads your upcoming events so it can prepare you for meetings from your own memories. Nothing is sent anywhere.</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Lane reads your upcoming events so it can prepare you for meetings from your own memories. Nothing is sent anywhere.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>Lane reads names and nicknames from your Contacts so it can recognise the people in your memories. Nothing is sent anywhere.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Lane asks the app in front what you are looking at, so it can remember it for you. Nothing is sent anywhere.</string>
+    <key>NSSystemAdministrationUsageDescription</key>
+    <string>Lane needs this only to read the window titles it is remembering for you.</string>
+
     <!-- lane://licence/<key> so a receipt can unlock the app in one click. -->
     <key>CFBundleURLTypes</key>
     <array>

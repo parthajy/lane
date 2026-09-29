@@ -104,7 +104,33 @@ final class WavSink {
 var engine: AVAudioEngine?
 var micSink: WavSink?
 
+/// Ask for the microphone, and say so when the answer is no.
+///
+/// AVAudioEngine does not fail when the microphone is refused. It starts,
+/// it taps, and it hands over buffers of digital zero for as long as you
+/// like — a recording of an empty room that was never made. Nothing in the
+/// app could tell that from silence, so dictation listened for five minutes
+/// and wrote nothing down. Ask first, and refuse to pretend otherwise.
 func startMic() {
+    switch AVCaptureDevice.authorizationStatus(for: .audio) {
+    case .authorized:
+        reallyStartMic()
+    case .notDetermined:
+        AVCaptureDevice.requestAccess(for: .audio) { granted in
+            DispatchQueue.main.async {
+                if granted {
+                    reallyStartMic()
+                } else {
+                    emit(["event": "mic", "state": "denied", "message": "you said no to the microphone"])
+                }
+            }
+        }
+    default:
+        emit(["event": "mic", "state": "denied", "message": "the microphone is off for Lane in System Settings"])
+    }
+}
+
+func reallyStartMic() {
     do {
         let sink = try WavSink(url: outDir.appendingPathComponent("mic.wav"))
         micSink = sink
