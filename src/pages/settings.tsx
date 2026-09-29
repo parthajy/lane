@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Cpu, Database, KeyRound, EyeOff, FileText, GraduationCap, Info, Laptop, Lock, Mic, Radio, Shield, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+import { getVersion } from '@tauri-apps/api/app'
+import { CHANGELOG } from '@/lib/changelog'
 import { cn } from '@/lib/utils'
 import { LicenceCard, useLicence } from '@/components/licence'
 import { NotchPositionPicker } from '@/components/notch-position'
@@ -75,6 +77,13 @@ export function SettingsPage({
   onRunSetup: () => void
   section?: SettingsSection | null
 }) {
+  // Read from the bundle, so it cannot drift from what is installed the way
+  // a written-down "0.1.0" did for nine releases.
+  const [appVersion, setAppVersion] = useState('')
+  useEffect(() => {
+    getVersion().then(setAppVersion).catch(() => {})
+  }, [])
+
   useEffect(() => {
     if (!section) return
     const t = setTimeout(() => document.getElementById(`settings-${section}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
@@ -641,7 +650,22 @@ export function SettingsPage({
             </Button>
             <span className="text-xs text-muted-foreground">Writes a diagnostics file to your Desktop. Nothing is sent.</span>
           </div>
-          <p>Version 0.1.0 · lane.so</p>
+          <p>Version {appVersion || '…'} · lane.so</p>
+          <details>
+            <summary className="cursor-pointer">What changed</summary>
+            <div className="mt-2 space-y-3">
+              {CHANGELOG.map((r) => (
+                <div key={r.version}>
+                  <div className="font-medium text-foreground">
+                    {r.version} <span className="font-normal text-muted-foreground">· {r.date}</span>
+                  </div>
+                  <ul className="mt-1 space-y-1 list-disc pl-4 leading-relaxed">
+                    {r.lines.map((l, i) => <li key={i}>{l}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </details>
           <details>
             <summary className="cursor-pointer">Open-source licences</summary>
             <p className="mt-2 leading-relaxed">

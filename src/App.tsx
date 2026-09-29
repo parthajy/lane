@@ -18,6 +18,7 @@ import { Onboarding } from '@/components/onboarding'
 import { FeedbackDialog } from '@/components/feedback'
 import { LicenceWall, useLicence } from '@/components/licence'
 import { UpdateCard } from '@/components/update-card'
+import { getVersion } from '@tauri-apps/api/app'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
@@ -78,6 +79,7 @@ function StatusDot({ status, engine }: { status: Status | null; engine: EngineRe
 
 export default function App() {
   const [page, setPage] = useState<Page>('today')
+  const [appVersion, setAppVersion] = useState('')
   /* The rail can be folded down to icons; the board takes the whole window. */
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try { return localStorage.getItem('lane.sidebar') === 'collapsed' } catch { return false }
@@ -111,6 +113,10 @@ export default function App() {
     const t = setInterval(refreshStatus, 3000)
     return () => clearInterval(t)
   }, [refreshStatus])
+
+  useEffect(() => {
+    getVersion().then(setAppVersion).catch(() => {})
+  }, [])
 
   const go = useCallback((target: string) => {
     const legacy = LEGACY[target]
@@ -262,6 +268,7 @@ export default function App() {
           <p className="mt-2 text-[14.5px] font-semibold leading-tight flex items-center gap-2">Rabbit is running <span className={cn('h-2 w-2 rounded-full', status?.paused ? 'bg-muted-foreground' : 'bg-emerald-500 animate-pulse-soft')} /></p>
           <p className="mt-1 text-[11.5px] leading-snug opacity-80">
             {status ? `${status.stats.activities.toLocaleString()} things captured, all on this Mac.` : 'Reading, writing and answering on this Mac.'} Nothing leaves it.
+            {appVersion && <span className="opacity-60"> · v{appVersion}</span>}
           </p>
           <button onClick={() => setFeedback(true)} className="mt-2.5 w-full h-8.5 py-2 rounded-xl bg-foreground text-background text-[12.5px] font-medium flex items-center justify-between px-3 hover:opacity-90">
             Help &amp; support <ArrowRight className="h-3.5 w-3.5" />

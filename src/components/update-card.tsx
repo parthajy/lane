@@ -55,9 +55,13 @@ export function UpdateCard({ auto = false }: { auto?: boolean }) {
       })
       await relaunch()
     } catch (e) {
+      // A toast is gone in four seconds and was the only record: an update
+      // that would not install left nothing to look at afterwards.
+      const why = String(e)
       setState('error')
-      setDetail(String(e))
-      toast.error(String(e))
+      setDetail(why)
+      toast.error(why)
+      console.error('update failed', why)
     }
   }
 
