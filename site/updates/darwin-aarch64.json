@@ -1,11 +1,11 @@
 {
-  "version": "1.0.2",
-  "notes": "Dictation now has its speech model before you ask for it, instead of silently having nothing to listen with.",
-  "pub_date": "2026-09-28T10:40:34.153425+00:00",
+  "version": "1.0.3",
+  "notes": "Lane moves itself to Applications when opened from the disk image, instead of running from a disc that disappears.",
+  "pub_date": "2026-09-29T05:30:23.758968+00:00",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZGx6RTgreTgrY1ZUNzFZbjd2ODIyOEo0Wm9pRHFiRXBDT2xtbmZ3SXFodi8rY2RSTVVRSDVFSmhyNG9yRS9IT0VNUWpUVU03UEJMWERYSTVtZkdtTndNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTkyMDM0CWZpbGU6TGFuZS5hcHAudGFyLmd6CjFlZSs5R29ZQkpFVlJjVlZ3ai95QmRtVHFhckpuenJmZUJkRHFIYy82VXdNWFNxOFAxQURTb2ZDRjVibjNTWTN2MSs4aUE2WnMzVGh5Sm13Qm5DRENRPT0K",
-      "url": "https://github.com/parthajy/lane/releases/download/v1.0.2/Lane.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZGdxNkdWOUV1Vys3T29rdm15aGxHaU9KcGdzNmFsUjU1MXp4YjltVDd5VEdrZGVVQUUrbnJzMC9RWVloQU9BZWFPVHdUWWxmVTlhNjVVQUhjYW94SGdFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNjU5ODIzCWZpbGU6TGFuZS5hcHAudGFyLmd6Ci9PTno2TTZTZytMLzJsb0p6YnRnK3J2enAwako1SFZTQlJHUFo5a2tQUjVmZ3liejNXUlJKTTJ0aEVESlc5dnhDZEtXN3lST1lxbFo3WmlnUGtHUUN3PT0K",
+      "url": "https://github.com/parthajy/lane/releases/download/v1.0.3/Lane.app.tar.gz"
     }
   }
 }
