@@ -408,7 +408,7 @@ export default function Notch() {
                 <b className="nc-caret" />
               </p>
               <footer className="nc-dictate-foot">
-                <span>Stop talking and it goes in where your cursor is. <b className="nc-esc">Esc</b> to stop.</span>
+                <span>Take your time. Pause to think and it waits; press <b className="nc-esc">⌥⇧Space</b> to put it in now, or <b className="nc-esc">Esc</b> to stop.</span>
                 <button onClick={() => api.dictationToggle().catch(() => {})}>Insert now <span className="nc-kbd">⌥⇧Space</span></button>
               </footer>
             </div>

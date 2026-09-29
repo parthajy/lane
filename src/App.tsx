@@ -218,7 +218,10 @@ export default function App() {
                 <Icon className={cn('h-[17px] w-[17px] shrink-0', id === 'ask' ? 'text-white' : page === id ? 'text-primary' : 'text-muted-foreground')} />
                 {!collapsed && <span className="truncate">{label}</span>}
                 {id === 'today' && status && !collapsed && (
-                  <span className={cn('ml-auto rounded-full px-2 py-0.5 text-[11px] tabular-nums', page === 'today' ? 'bg-primary/12 text-primary font-medium' : 'text-muted-foreground')}>
+                  <span title={`${status.stats.activitiesToday} captured today`} className={cn('ml-auto rounded-full px-2 py-0.5 text-[11px] tabular-nums', page === 'today' ? 'bg-primary/12 text-primary font-medium' : 'text-muted-foreground')}>
+                    {/* Captures today, which is not the same number as the
+                        memories Rabbit has written from them — they were both
+                        called memories and disagreed on screen. */}
                     {status.stats.activitiesToday}
                   </span>
                 )}
@@ -238,7 +241,7 @@ export default function App() {
         </div>
 
         {collapsed ? (
-          <button onClick={() => openSettings('labels')} title={status ? `Rabbit is running · ${status.stats.activities.toLocaleString()} memories on this Mac` : 'Rabbit is running'} className="shrink-0 mt-auto h-11 w-11 rounded-2xl bg-accent grid place-items-center text-accent-foreground hover:brightness-95">
+          <button onClick={() => openSettings('labels')} title={status ? `Rabbit is running · ${status.stats.activities.toLocaleString()} things captured on this Mac` : 'Rabbit is running'} className="shrink-0 mt-auto h-11 w-11 rounded-2xl bg-accent grid place-items-center text-accent-foreground hover:brightness-95">
             <svg viewBox="0 0 40 40" className="h-6 w-6 fill-current" aria-hidden="true">
               <ellipse cx="15.2" cy="11.5" rx="3.1" ry="8.4" transform="rotate(-16 15.2 11.5)" />
               <ellipse cx="24.8" cy="11.5" rx="3.1" ry="8.4" transform="rotate(16 24.8 11.5)" />
@@ -258,7 +261,7 @@ export default function App() {
           </svg>
           <p className="mt-2 text-[14.5px] font-semibold leading-tight flex items-center gap-2">Rabbit is running <span className={cn('h-2 w-2 rounded-full', status?.paused ? 'bg-muted-foreground' : 'bg-emerald-500 animate-pulse-soft')} /></p>
           <p className="mt-1 text-[11.5px] leading-snug opacity-80">
-            {status ? `${status.stats.activities.toLocaleString()} memories, all on this Mac.` : 'Reading, writing and answering on this Mac.'} Nothing leaves it.
+            {status ? `${status.stats.activities.toLocaleString()} things captured, all on this Mac.` : 'Reading, writing and answering on this Mac.'} Nothing leaves it.
           </p>
           <button onClick={() => setFeedback(true)} className="mt-2.5 w-full h-8.5 py-2 rounded-xl bg-foreground text-background text-[12.5px] font-medium flex items-center justify-between px-3 hover:opacity-90">
             Help &amp; support <ArrowRight className="h-3.5 w-3.5" />

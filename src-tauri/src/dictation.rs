@@ -64,7 +64,12 @@ static LIVE: Mutex<(String, u64)> = Mutex::new((String::new(), 0));
 /// How long to wait between passes.
 const PACE: Duration = Duration::from_millis(900);
 /// Quiet for this long, with something said, and it puts the words in.
-const HUSH: i64 = 1_800;
+///
+/// Was under two seconds, which is shorter than thinking about the next
+/// sentence. People stopped to consider a word and Lane decided they had
+/// finished. Long enough now to gather a thought; anyone who wants it in
+/// sooner presses the shortcut, which is instant.
+const HUSH: i64 = 4_500;
 /// Below this there is not enough sound to be worth reading.
 const MIN_AUDIO: u64 = 16_000 * 2 / 2; // half a second at 16 kHz, int16
 /// Bytes of 16 kHz mono int16 audio in a millisecond.
@@ -81,7 +86,7 @@ const KEEP_MS: i64 = 4_000;
 /// the other way, measured from the samples here: this much audio with no
 /// sound in it ends the dictation whatever the meter says. It is longer than
 /// the meter's pause because it has to survive a mid-sentence breath.
-const STILL: u64 = PER_MS * 3_500;
+const STILL: u64 = PER_MS * 6_000;
 /// Nobody dictates for five minutes. Past that, put in what there is rather
 /// than hold the microphone open for a machine that was left listening.
 const LONGEST: i64 = 5 * 60 * 1_000;
@@ -601,21 +606,24 @@ mod tests {
     }
 
     #[test]
-    fn a_stalled_transcript_is_three_and_a_half_seconds_of_audio() {
-        assert_eq!(STILL / PER_MS, 3_500);
+    fn a_pause_is_long_enough_to_think_in() {
+        // Six seconds of silence, not three and a half, and the level
+        // meter's pause is four and a half rather than under two.
+        assert_eq!(STILL / PER_MS, 6_000);
+        assert_eq!(HUSH, 4_500);
     }
 
     #[test]
     fn silence_from_an_earlier_recording_does_not_count() {
         let start = 1_000_000;
-        // Heard two seconds ago, in this dictation: finished.
-        assert!(quiet_enough(start + 5_000, start, Some(start + 3_000), true));
-        // Heard just now: still talking.
-        assert!(!quiet_enough(start + 5_000, start, Some(start + 4_900), true));
+        // Nothing for seven seconds, in this dictation: finished.
+        assert!(quiet_enough(start + 10_000, start, Some(start + 3_000), true));
+        // A two second pause is thinking, not stopping.
+        assert!(!quiet_enough(start + 10_000, start, Some(start + 8_000), true));
         // The only sound on record is from before this dictation began.
-        assert!(!quiet_enough(start + 5_000, start, Some(start - 60_000), true));
+        assert!(!quiet_enough(start + 10_000, start, Some(start - 60_000), true));
         // Nothing heard at all.
-        assert!(!quiet_enough(start + 5_000, start, None, true));
+        assert!(!quiet_enough(start + 10_000, start, None, true));
         // Nothing said yet, however long the quiet.
         assert!(!quiet_enough(start + 90_000, start, Some(start + 100), false));
     }

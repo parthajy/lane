@@ -3310,7 +3310,7 @@ dependencies = [
 
 [[package]]
 name = "rat-mac"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "arboard",
  "argon2",

@@ -204,7 +204,13 @@ pub fn start(runtime: &Path, model: &Path, log_path: &Path) -> Result<Server, St
         // context at ~0.6 GB on an 8 GB Mac.
         // --cache-reuse keeps the shared system prompt's KV between requests,
         // so a question only pays to process what is new.
-        &["-c", "8192", "--parallel", "2", "-ctk", "q8_0", "-ctv", "q8_0", "-ngl", "99", "--jinja", "--reasoning-budget", "0", "-fa", "on", "--cache-reuse", "256"],
+        // One slot, not two. Two meant a question and the memory being
+        // written could run at once, each at half speed, on a machine that
+        // has no half to spare. Measured on an 8 GB M1: 135 tokens a second
+        // of prompt with two slots, 187 with one, and the same again in
+        // generation. The engine already stands aside for a question; with
+        // one slot standing aside actually hands the machine over.
+        &["-c", "4096", "--parallel", "1", "-ctk", "q8_0", "-ctv", "q8_0", "-ngl", "99", "--jinja", "--reasoning-budget", "0", "-fa", "on", "--cache-reuse", "256"],
     )
 }
 
