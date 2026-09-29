@@ -1,11 +1,11 @@
 {
-  "version": "1.0.5",
-  "notes": "Dictation was reading the sound from the wrong place in the file. Fixed, and a dictation that hears nothing now says why.",
-  "pub_date": "2026-09-29T10:19:03.120899+00:00",
+  "version": "1.0.6",
+  "notes": "Lane now asks for the microphone, and says so plainly when it is refused instead of recording silence.",
+  "pub_date": "2026-09-29T10:43:27.827214+00:00",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZHUxQjBSeWM2UWRBNkY5YW0wZVdpOWo1Vmt3Ums4M24rWTY1Z3hQbDRCM29iQms0eC90MllJZVdnQld0aVF4NzloMDZJaEllbm5nTnJsdFBjT2hBc3dRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNjc3MTQzCWZpbGU6TGFuZS5hcHAudGFyLmd6CkJOWGF1VlMrSFR2eDBjVmsxdlFTWnMzclhEcW9wSllKc1VFRlJOVmw0Q3ZPejRPOEtHZ2xBRDlnRHEySUFoWnoyd0lPLzhmSVdESzUrVVF3NHVrV0NBPT0K",
-      "url": "https://github.com/parthajy/lane/releases/download/v1.0.5/Lane.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZHBSVXZLeXRRZ3R3d0FWYWFTak1mc0U1TDBZWVM0WnJSaXNSVE5ZeVlRa0xFV3JYY3ZPNzZJZ1ZvYmUzMGdCMUpjbGk0ejRuVnBhS24wMXphYUppdXdvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNjc4NjA3CWZpbGU6TGFuZS5hcHAudGFyLmd6CldrYmZHQW9nOWxDaXB0YWpjQXZtVyt6MndXT2xEU01Cbm1TZWJtamZ2cEdpQk5QblpidmlPNlhvTU9WM1hpSnVId0xGeFlmMERuemJ2Y0FoM2JPSUFnPT0K",
+      "url": "https://github.com/parthajy/lane/releases/download/v1.0.6/Lane.app.tar.gz"
     }
   }
 }
