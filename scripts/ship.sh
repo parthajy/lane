@@ -34,11 +34,11 @@ if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
 fi
 
 echo "▸ building"
-npm run build:dmg
+npm run build:app
 
 if xcrun notarytool history --keychain-profile lane >/dev/null 2>&1; then
-  echo "▸ notarising"
-  scripts/notarize.sh
+  echo "▸ notarising the app, then building and notarising the disc"
+  scripts/notarize.sh all
 else
   cat >&2 <<'MSG'
   This Mac has no notarisation credentials, so the build would be stopped by
