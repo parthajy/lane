@@ -358,8 +358,34 @@ pub fn chat_stream(port: u16, system: &str, user: &str, max_tokens: u32, mut on_
 }
 
 /// One streamed completion; returns (text, finish reason).
+/// How long the last answer took to start and to finish, so "it is slow"
+/// can be answered with where the time went rather than a guess.
+pub struct Timing {
+    pub prompt_chars: usize,
+    pub first_token_ms: u128,
+    pub total_ms: u128,
+    pub out_chars: usize,
+}
+
+impl std::fmt::Display for Timing {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let gen_ms = self.total_ms.saturating_sub(self.first_token_ms).max(1);
+        write!(
+            f,
+            "{} chars of prompt, first word after {:.1}s, {} chars in {:.1}s ({:.0} chars/s after the wait)",
+            self.prompt_chars,
+            self.first_token_ms as f64 / 1000.0,
+            self.out_chars,
+            self.total_ms as f64 / 1000.0,
+            self.out_chars as f64 / (gen_ms as f64 / 1000.0),
+        )
+    }
+}
+
 fn chat_stream_once(port: u16, system: &str, user: &str, max_tokens: u32, max_chars: usize, on_token: &mut impl FnMut(&str)) -> Result<(String, String), String> {
     use std::io::BufRead;
+    let started = std::time::Instant::now();
+    let mut first_at: Option<std::time::Duration> = None;
     let user = fit_prompt(user, max_chars);
     let user = user.as_ref();
     let body = json!({
@@ -367,6 +393,10 @@ fn chat_stream_once(port: u16, system: &str, user: &str, max_tokens: u32, max_ch
         "temperature": 0.2,
         "max_tokens": max_tokens,
         "stream": true,
+        // Keep the processed prompt between calls. The system prompt and
+        // most of the sources are the same from one question to the next,
+        // and without this every question pays to read them again.
+        "cache_prompt": true,
         "chat_template_kwargs": {"enable_thinking": false}
     });
     let resp = match ureq::post(&format!("http://127.0.0.1:{port}/v1/chat/completions")).timeout(Duration::from_secs(600)).send_json(body.clone()) {
@@ -393,6 +423,9 @@ fn chat_stream_once(port: u16, system: &str, user: &str, max_tokens: u32, max_ch
         let v: Value = serde_json::from_str(data).map_err(|e| e.to_string())?;
         let delta = &v["choices"][0]["delta"];
         if let Some(t) = delta["content"].as_str() {
+            if first_at.is_none() {
+                first_at = Some(started.elapsed());
+            }
             full.push_str(t);
             on_token(t);
         }
@@ -411,6 +444,19 @@ fn chat_stream_once(port: u16, system: &str, user: &str, max_tokens: u32, max_ch
             "model produced no answer (finish: {finish:?}, reasoning chars: {reasoning}, prompt tokens: {prompt_tokens})"
         ));
     }
+    // Where the time went, every time. "It is slow" is not a thing anybody
+    // can act on; "nine seconds before the first word, on 2,100 tokens of
+    // prompt" says exactly what to shorten.
+    let total = started.elapsed();
+    let wait = first_at.unwrap_or(total);
+    let after = total.saturating_sub(wait).max(std::time::Duration::from_millis(1));
+    log::info!(
+        "answer: {prompt_tokens} tokens in, first word after {:.1}s, {} chars in {:.1}s ({:.0} chars/s once it started)",
+        wait.as_secs_f64(),
+        full.chars().count(),
+        total.as_secs_f64(),
+        full.chars().count() as f64 / after.as_secs_f64(),
+    );
     Ok((full, finish))
 }
 
