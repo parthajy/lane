@@ -378,8 +378,7 @@ pub fn toggle(app: &AppHandle, state: &AppState) -> Result<String, String> {
         if let Some(shared) = app.try_state::<Arc<AppState>>() {
             crate::engine::fetch_speech_model(app, shared.inner().clone(), true);
         }
-        let mb = crate::meetings::whisper_model().bytes / 1_000_000;
-        return Err(format!("Lane is fetching the speech model ({mb} MB). Dictation works the moment it lands."));
+        return Err("Dictation is not ready yet. The model it needs is coming down — the progress is next to Capture, and dictation works the moment it lands.".into());
     }
     let helper = crate::meetings::helper_path(state.resource_dir.as_deref()).ok_or("recorder missing")?;
     let started_at = crate::capture::now_ms();

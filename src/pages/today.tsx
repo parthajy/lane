@@ -184,7 +184,9 @@ export function TodayPage({ onAsk, onOpenTasks }: { onAsk: (q: string) => void; 
               <span className="text-muted-foreground flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {!engine?.available && engine?.downloadPercent != null
-                  ? `Downloading the memory model… ${engine.downloadPercent}%`
+                  ? `Downloading our memory model, Rabbit… ${engine.downloadPercent}%${engine.speechPercent != null ? ` · and the dictation model… ${engine.speechPercent}%` : ''}`
+                  : engine?.speechPercent != null
+                  ? `Downloading the dictation model… ${engine.speechPercent}%`
                   : engine?.busy && engine.counts.pending > 0
                     ? `Writing your briefing… (Rabbit is also catching up on ${engine.counts.pending} memories in the background)`
                     : 'Writing your briefing…'}

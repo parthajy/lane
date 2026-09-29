@@ -42,6 +42,10 @@ pub struct EngineStatus {
     pub dropped: i64,
     /// "bundled" or "ollama".
     pub backend: String,
+    /// 0-100 while the speech model is downloading, so the dictation
+    /// download can be watched in the same place as Rabbit's rather than
+    /// interrupting anybody in the notch.
+    pub speech_percent: Option<u64>,
     /// 0-100 while a model file is downloading.
     pub download_percent: Option<u64>,
     pub tokens_per_second: f64,
@@ -3731,7 +3735,7 @@ const SPEECH_RETRY_MS: i64 = 15 * 60 * 1000;
 /// model at the end. Dictation has no later: the words have to appear while
 /// the person is still talking, so it asks before it starts listening, and
 /// until then there is nothing to do but fetch it and say so.
-pub fn fetch_speech_model(app: &AppHandle, state: Arc<AppState>, announce: bool) {
+pub fn fetch_speech_model(app: &AppHandle, state: Arc<AppState>, _announce: bool) {
     use std::sync::atomic::Ordering;
     let now = crate::capture::now_ms();
     if now - SPEECH_TRIED_AT.load(Ordering::SeqCst) < SPEECH_RETRY_MS {
@@ -3748,25 +3752,31 @@ pub fn fetch_speech_model(app: &AppHandle, state: Arc<AppState>, announce: bool)
             let spec = crate::meetings::whisper_model();
             let dest = speech_model_path(&state);
             log::info!("speech model: fetching {} ({} MB)", spec.file, spec.bytes / 1_000_000);
-            let progress = runtime::DownloadProgress::new();
+            let progress = Arc::new(runtime::DownloadProgress::new());
+            // Report it where the other download is reported. Watched from
+            // a thread of its own, because `download` does not return until
+            // the file is here.
+            {
+                let progress = Arc::clone(&progress);
+                let state = Arc::clone(&state);
+                std::thread::spawn(move || {
+                    while FETCHING_SPEECH.load(Ordering::SeqCst) {
+                        let pct = progress.percent();
+                        set_status(&state, |st| st.speech_percent = Some(pct));
+                        std::thread::sleep(std::time::Duration::from_millis(700));
+                    }
+                    set_status(&state, |st| st.speech_percent = None);
+                });
+            }
             let out = runtime::download(spec, &dest, &progress);
             FETCHING_SPEECH.store(false, Ordering::SeqCst);
+            set_status(&state, |st| st.speech_percent = None);
             match out {
                 Ok(()) => {
                     log::info!("speech model: ready");
                     SPEECH_TRIED_AT.store(0, Ordering::SeqCst);
-                    // Only say so if somebody was waiting to be told. Fetched
-                    // quietly in the background, it is not news.
-                    if announce {
-                        notch(&app, "help", "Dictation is ready", vec!["The speech model is here. Press ⌥⇧Space and talk.".into()]);
-                    }
                 }
-                Err(err) => {
-                    log::warn!("speech model: {err}");
-                    if announce {
-                        notch(&app, "help", "The speech model did not arrive", vec![err]);
-                    }
-                }
+                Err(err) => log::warn!("speech model: {err}"),
             }
         })
         .expect("spawn speech model fetch");

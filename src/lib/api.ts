@@ -504,6 +504,8 @@ export interface EngineReport {
   dropped: number
   backend: 'bundled' | 'ollama' | ''
   downloadPercent: number | null
+  /** 0-100 while the speech model for dictation is coming down. */
+  speechPercent: number | null
   tokensPerSecond: number
   filesIndexed: number
   filesPending: number

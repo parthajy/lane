@@ -57,7 +57,12 @@ function StatusDot({ status, engine }: { status: Status | null; engine: EngineRe
     dot = 'bg-muted-foreground'; head = 'Idle'; sub = 'Waiting for something to happen'
   }
   if (engine) {
-    if (!engine.available && engine.downloadPercent != null) sub = `Downloading the model… ${engine.downloadPercent}%`
+    // Both downloads are reported here, together, because that is where
+    // somebody waiting for either of them is already looking.
+    const coming: string[] = []
+    if (!engine.available && engine.downloadPercent != null) coming.push(`Rabbit ${engine.downloadPercent}%`)
+    if (engine.speechPercent != null) coming.push(`dictation ${engine.speechPercent}%`)
+    if (coming.length > 0) sub = `Downloading ${coming.join(' · ')}`
     else if (engine.busy && engine.counts.pending > 0) sub = `Catching up on ${engine.counts.pending} memories`
   }
   return (
