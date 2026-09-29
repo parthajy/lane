@@ -1,11 +1,11 @@
 {
-  "version": "1.0.4",
-  "notes": "Lane moves itself to Applications when opened from the disk image, and installs without needing to ask Apple anything.",
-  "pub_date": "2026-09-29T05:40:12.803540+00:00",
+  "version": "1.0.5",
+  "notes": "Dictation was reading the sound from the wrong place in the file. Fixed, and a dictation that hears nothing now says why.",
+  "pub_date": "2026-09-29T10:19:03.120899+00:00",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZG85SnJDOTFCalJvbnBIaW96Qlo1ZzVFTEJTN0diMnNjTTZKTENBblBNbzV0ZitGblBMeDZvbkhob1V0OU0rRGNGNDFlbk5KVmhxanlJVlJZVVhNcmdBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNjYwNDEyCWZpbGU6TGFuZS5hcHAudGFyLmd6CmhHeDlzbzVmUWRWb3JVZ3M3NXVGZTVxa2YrUDBDejcwSnJMUXlzNVg2QlZmampJbi9kd2J2dTM5bUFvb0dNdUtMS0xBL0E1bUZETDNPaHNUN3RsSkN3PT0K",
-      "url": "https://github.com/parthajy/lane/releases/download/v1.0.4/Lane.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZHUxQjBSeWM2UWRBNkY5YW0wZVdpOWo1Vmt3Ums4M24rWTY1Z3hQbDRCM29iQms0eC90MllJZVdnQld0aVF4NzloMDZJaEllbm5nTnJsdFBjT2hBc3dRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNjc3MTQzCWZpbGU6TGFuZS5hcHAudGFyLmd6CkJOWGF1VlMrSFR2eDBjVmsxdlFTWnMzclhEcW9wSllKc1VFRlJOVmw0Q3ZPejRPOEtHZ2xBRDlnRHEySUFoWnoyd0lPLzhmSVdESzUrVVF3NHVrV0NBPT0K",
+      "url": "https://github.com/parthajy/lane/releases/download/v1.0.5/Lane.app.tar.gz"
     }
   }
 }
