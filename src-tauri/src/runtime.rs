@@ -99,7 +99,13 @@ impl DownloadProgress {
 
 /// Download to `dest`, resuming a partial `.part` file if present.
 pub fn download(spec: &ModelSpec, dest: &Path, progress: &DownloadProgress) -> Result<(), String> {
-    let part = dest.with_extension("gguf.part");
+    // Append rather than replace: with_extension turned ggml-small.bin into
+    // ggml-small.gguf.part, which is not a name anybody could make sense of
+    // when looking at the models folder, and left a stray file behind when
+    // it did not get renamed.
+    let part = dest.with_file_name(format!("{}.part", dest.file_name().unwrap_or_default().to_string_lossy()));
+    // Anything from an older build, under the old name.
+    let _ = std::fs::remove_file(dest.with_extension("gguf.part"));
     let have = std::fs::metadata(&part).map(|m| m.len()).unwrap_or(0);
     progress.total.store(spec.bytes, Ordering::Relaxed);
     progress.done.store(have, Ordering::Relaxed);

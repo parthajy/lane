@@ -5,6 +5,7 @@ pub mod clipboard;
 pub mod diag;
 pub mod diarize;
 pub mod dictation;
+pub mod install;
 pub mod shots;
 pub mod signals;
 mod commands;
@@ -635,6 +636,74 @@ pub fn show_main(app: &AppHandle) {
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+/// Ask to move to Applications when Lane is somewhere it should not be.
+/// Returns false when this copy should stop, because another is starting.
+#[cfg(target_os = "macos")]
+fn settle_where_it_lives() -> bool {
+    let Some(here) = install::bundle_path() else { return true };
+    let Some(why) = install::wrong_place(&here) else { return true };
+    log::warn!("install: running from {} — {why}", here.display());
+
+    let moved = ask_to_move(why);
+    if !moved {
+        // They said not now. Say it plainly in the log and carry on, because
+        // refusing to start would be worse than working from the wrong place.
+        log::warn!("install: staying where it is, at the person's request");
+        return true;
+    }
+    match install::move_to_applications(&here) {
+        Ok(to) => {
+            log::info!("install: moved to {}", to.display());
+            install::hand_over(&here, &to);
+            false
+        }
+        Err(e) => {
+            log::warn!("install: could not move: {e}");
+            tell(&format!("Lane could not move itself.\n\n{e}\n\nDrag Lane into your Applications folder and open it from there."));
+            true
+        }
+    }
+}
+
+/// A plain macOS question, asked before Lane has a window of its own.
+///
+/// Not an NSAlert: this runs inside setup, before the application's run loop
+/// has started, and a modal there waits for a loop that is not turning yet —
+/// measured, it hung with nothing on screen, which is a worse failure than
+/// the one it was added to prevent. A separate process has its own loop and
+/// draws the dialog whatever state this one is in.
+#[cfg(target_os = "macos")]
+fn ask_to_move(why: &str) -> bool {
+    let body = format!("{why}\n\nLane will move itself and open again from there. It takes a moment.");
+    let script = format!(
+        r#"display dialog "{}" with title "Move Lane to Applications" buttons {{"Not now", "Move to Applications"}} default button "Move to Applications" with icon caution"#,
+        applescript_text(&body),
+    );
+    match std::process::Command::new("/usr/bin/osascript").arg("-e").arg(&script).output() {
+        Ok(out) => String::from_utf8_lossy(&out.stdout).contains("Move to Applications"),
+        // No answer means no move. Lane still starts; it simply stays put.
+        Err(e) => {
+            log::warn!("install: could not ask: {e}");
+            false
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn tell(text: &str) {
+    let script = format!(
+        r#"display dialog "{}" with title "Lane" buttons {{"OK"}} default button "OK" with icon caution"#,
+        applescript_text(text),
+    );
+    let _ = std::process::Command::new("/usr/bin/osascript").arg("-e").arg(&script).output();
+}
+
+/// Text safe to drop inside an AppleScript string literal.
+#[cfg(target_os = "macos")]
+fn applescript_text(s: &str) -> String {
+    s.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
 pub fn run() {
     tauri::Builder::default()
         // A second launch (dev build + installed app, or double-click)
@@ -718,6 +787,13 @@ pub fn run() {
             }
             std::fs::create_dir_all(&data_dir)?;
             diag::init(&data_dir.join("lane.log"));
+            // Now that there is somewhere to write it down: Lane has to live
+            // in Applications, or what it is told today will not be true
+            // tomorrow. Asked before this line, the answer went nowhere.
+            #[cfg(target_os = "macos")]
+            if !settle_where_it_lives() {
+                std::process::exit(0);
+            }
             connectors::ensure_examples(&connectors::dir(&data_dir));
             files::set_ocr_helper(app.path().resource_dir().ok().as_deref());
             shots::init(app.path().resource_dir().ok().as_deref());
