@@ -285,7 +285,7 @@ fn ensure_backend(state: &AppState, model: &str) -> Result<Backend, String> {
         set_status(state, |st| {
             st.available = false;
             st.busy = true;
-            st.detail = format!("downloading {} ({:.1} GB)", spec.label, spec.bytes as f64 / 1e9);
+            st.detail = format!("Downloading our memory model, Rabbit ({:.1} GB)", spec.bytes as f64 / 1e9);
             st.download_percent = Some(0);
         });
         let stop = std::sync::atomic::AtomicBool::new(false);
@@ -450,7 +450,7 @@ fn ensure_embed_backend(state: &AppState) -> Result<u16, String> {
     std::fs::create_dir_all(&models_dir).map_err(|e| e.to_string())?;
     let model_path = models_dir.join(spec.file);
     if !model_path.is_file() {
-        set_status(state, |st| st.detail = format!("downloading {} ({} MB)", spec.label, spec.bytes / 1_000_000));
+        set_status(state, |st| st.detail = format!("Downloading the search index ({} MB)", spec.bytes / 1_000_000));
         runtime::download(spec, &model_path, &EMBED_DOWNLOAD)?;
         log::info!("engine: downloaded {}", spec.file);
     }
@@ -3753,7 +3753,7 @@ fn transcribe_meeting(state: &AppState, dir: &std::path::Path, meeting_id: i64, 
     let models_dir = state.db_path.with_file_name("models");
     let model = models_dir.join(crate::meetings::whisper_model().file);
     if !model.is_file() {
-        let _ = crate::lock(&state.store).set_meeting_status(meeting_id, "transcribing", "downloading speech model", None);
+        let _ = crate::lock(&state.store).set_meeting_status(meeting_id, "transcribing", "Downloading the speech model", None);
         let progress = runtime::DownloadProgress::new();
         runtime::download(crate::meetings::whisper_model(), &model, &progress)?;
     }

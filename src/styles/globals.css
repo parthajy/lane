@@ -680,6 +680,11 @@ html.notch, html.notch body, html.notch #root { background: transparent !importa
   transition: background .15s ease;
 }
 .nc-dictate-foot button:hover { background: hsl(244 74% 61% / .48); }
+.nc-esc {
+  font-weight: 600; font-size: 11px; letter-spacing: .02em;
+  padding: 1px 5px; margin: 0 1px; border-radius: 5px;
+  background: hsl(0 0% 100% / .1); color: hsl(0 0% 100% / .8);
+}
 
 /* Five bars that breathe while Lane is listening. */
 .nc-wave { display: flex; align-items: flex-end; gap: 4px; height: 18px; flex: none; }

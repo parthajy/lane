@@ -79,7 +79,43 @@ static LIVE_DONE: Mutex<[u64; 2]> = Mutex::new([0, 0]);
 static LIVE_SEGMENTS: Mutex<Vec<Segment>> = Mutex::new(Vec::new());
 const LIVE_EVERY: std::time::Duration = std::time::Duration::from_secs(30);
 const LIVE_MIN_BYTES: u64 = 16_000 * 2 * 15; // 15 s of 16 kHz mono int16
+/// A canonical WAV header, and what the sound used to be assumed to start
+/// after. The recorder does not write one of those while it is recording.
 pub(crate) const WAV_HEADER: u64 = 44;
+
+/// Where the sound actually begins in a file still being recorded.
+///
+/// While recording, macOS lays down a placeholder: a JUNK chunk, then the
+/// format, then four kilobytes of FLLR padding, and only then the data —
+/// whose length stays zero until the file is closed. Read from byte 44 and
+/// what comes back is four thousand bytes of filler followed by sound that
+/// is offset from where the caller believes it is. Every live pass — the
+/// notes during a meeting, every word of dictation — was reading from the
+/// wrong place.
+pub(crate) fn pcm_offset(path: &Path) -> u64 {
+    use std::io::Read;
+    let Ok(mut f) = std::fs::File::open(path) else { return WAV_HEADER };
+    let mut head = [0u8; 8192];
+    let Ok(n) = f.read(&mut head) else { return WAV_HEADER };
+    if n < 12 || &head[0..4] != b"RIFF" || &head[8..12] != b"WAVE" {
+        return WAV_HEADER;
+    }
+    let mut i = 12usize;
+    while i + 8 <= n {
+        let id = &head[i..i + 4];
+        let len = u32::from_le_bytes([head[i + 4], head[i + 5], head[i + 6], head[i + 7]]) as usize;
+        if id == b"data" {
+            return (i + 8) as u64;
+        }
+        // A chunk's length excludes its own header and is padded to even.
+        let step = 8 + len + (len & 1);
+        if step == 0 {
+            break;
+        }
+        i += step;
+    }
+    WAV_HEADER
+}
 
 /// Transcribe whatever new audio each stream has written since the last
 /// tick and refresh `status.live_text`. Runs on its own thread until the
@@ -98,13 +134,14 @@ pub fn spawn_live(whisper: PathBuf, model: PathBuf, dir: PathBuf, language: Stri
                 let path = dir.join(file);
                 let Ok(meta) = std::fs::metadata(&path) else { continue };
                 let done = crate::lock(&LIVE_DONE)[i];
-                let avail = meta.len().saturating_sub(WAV_HEADER);
+                let start = pcm_offset(&path);
+                let avail = meta.len().saturating_sub(start);
                 if avail.saturating_sub(done) < LIVE_MIN_BYTES {
                     continue;
                 }
                 // Cut at a whole sample and write a self-contained WAV.
                 let take = (avail - done) & !1;
-                let Ok(pcm) = read_range(&path, WAV_HEADER + done, take) else { continue };
+                let Ok(pcm) = read_range(&path, start + done, take) else { continue };
                 let tmp = dir.join(format!("live-{i}.wav"));
                 if write_wav(&tmp, &pcm).is_err() {
                     continue;
@@ -503,6 +540,49 @@ mod tests {
 
     fn seg(start: i64, end: i64, text: &str) -> Segment {
         Segment { speaker: String::new(), start_ms: start, end_ms: end, text: text.into() }
+    }
+
+    #[test]
+    fn the_sound_is_found_after_the_padding_a_live_recording_leaves() {
+        use std::io::Write;
+        // Exactly what the recorder writes while it is still recording: a
+        // placeholder, the format, four kilobytes of filler, and a data
+        // chunk whose length is still zero.
+        // Its own folder: tests share a process id, and this one deletes the
+        // folder at the end, which quietly pulled the ground from under the
+        // other test that writes WAVs.
+        let dir = std::env::temp_dir().join(format!("rat-wav-live-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let p = dir.join("mic.wav");
+        let mut f = std::fs::File::create(&p).unwrap();
+        f.write_all(b"RIFF").unwrap();
+        f.write_all(&4088u32.to_le_bytes()).unwrap();
+        f.write_all(b"WAVE").unwrap();
+        f.write_all(b"JUNK").unwrap();
+        f.write_all(&28u32.to_le_bytes()).unwrap();
+        f.write_all(&[0u8; 28]).unwrap();
+        f.write_all(b"fmt ").unwrap();
+        f.write_all(&16u32.to_le_bytes()).unwrap();
+        f.write_all(&[1, 0, 1, 0]).unwrap();
+        f.write_all(&16_000u32.to_le_bytes()).unwrap();
+        f.write_all(&32_000u32.to_le_bytes()).unwrap();
+        f.write_all(&[2, 0, 16, 0]).unwrap();
+        f.write_all(b"FLLR").unwrap();
+        f.write_all(&4008u32.to_le_bytes()).unwrap();
+        f.write_all(&vec![0u8; 4008]).unwrap();
+        f.write_all(b"data").unwrap();
+        f.write_all(&0u32.to_le_bytes()).unwrap();
+        f.write_all(&[7u8; 64]).unwrap();
+        drop(f);
+
+        // 12 + 8+28 + 8+16 + 8+4008 + 8 = 4096
+        assert_eq!(super::pcm_offset(&p), 4096, "the sound starts after the filler, not at byte 44");
+
+        // And an ordinary finished file is still read from 44.
+        let q = dir.join("plain.wav");
+        super::write_wav(&q, &[1u8; 32]).unwrap();
+        assert_eq!(super::pcm_offset(&q), 44);
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

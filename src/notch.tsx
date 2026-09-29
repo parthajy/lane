@@ -128,10 +128,31 @@ export default function Notch() {
   function closeCard() {
     if (leave.current) clearTimeout(leave.current)
     if (timer.current) clearTimeout(timer.current)
+    // While dictating, the card is the dictation. Hiding it and leaving the
+    // microphone open is not closing anything: it is the same thing running
+    // with nothing on screen to say so, and no way back to it.
+    if (listening) {
+      api.dictationToggle().catch(() => {})
+    }
     setHover(false)
     setPinned(false)
     setHeld(false)
   }
+
+  // Escape stops it, from anywhere, because that is what people press.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (listening) {
+        api.dictationToggle().catch(() => {})
+        e.preventDefault()
+      } else if (open) {
+        closeCard()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   useEffect(() => {
     api.getSettings().then((s) => setPosition(s.notchPosition)).catch(() => {})
@@ -387,7 +408,7 @@ export default function Notch() {
                 <b className="nc-caret" />
               </p>
               <footer className="nc-dictate-foot">
-                <span>Stop talking and it goes in where your cursor is.</span>
+                <span>Stop talking and it goes in where your cursor is. <b className="nc-esc">Esc</b> to stop.</span>
                 <button onClick={() => api.dictationToggle().catch(() => {})}>Insert now <span className="nc-kbd">⌥⇧Space</span></button>
               </footer>
             </div>

@@ -1518,7 +1518,14 @@ pub fn delete_conversation(state: State<'_, Arc<AppState>>, id: i64) -> Res<()> 
 
 #[tauri::command(async)]
 pub fn dictation_toggle(app: AppHandle, state: State<'_, Arc<AppState>>) -> Res<String> {
-    crate::dictation::toggle(&app, &state)
+    let out = crate::dictation::toggle(&app, &state);
+    // The button on the card threw this away, so pressing Dictate before the
+    // speech model had arrived did nothing and said nothing. The shortcut
+    // and the menu both show it; now so does the button.
+    if let Err(e) = &out {
+        crate::engine::notch(&app, "help", "Dictation", vec![e.clone()]);
+    }
+    out
 }
 
 // ── Report a problem ─────────────────────────────────────────────────────

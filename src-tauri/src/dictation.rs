@@ -188,7 +188,8 @@ fn spawn_live(app: AppHandle, state: Arc<AppState>, dir: PathBuf, started_at: i6
                     break;
                 }
                 let Ok(meta) = std::fs::metadata(&wav) else { continue };
-                let avail = meta.len().saturating_sub(crate::meetings::WAV_HEADER) & !1;
+                let start = crate::meetings::pcm_offset(&wav);
+                let avail = meta.len().saturating_sub(start) & !1;
                 let covered = crate::lock(&LIVE).1;
 
                 // Nothing new worth reading, so look at whether the room has
@@ -209,7 +210,7 @@ fn spawn_live(app: AppHandle, state: Arc<AppState>, dir: PathBuf, started_at: i6
 
                 // Is there anything in the new audio, or has the speaking
                 // stopped? Only the part not yet read is judged.
-                let Ok(fresh) = crate::meetings::read_range(&wav, crate::meetings::WAV_HEADER + covered, avail - covered) else { continue };
+                let Ok(fresh) = crate::meetings::read_range(&wav, start + covered, avail - covered) else { continue };
                 let lvl = level(&fresh);
                 loudest = loudest.max(lvl);
                 if is_quiet(lvl, loudest) {
@@ -233,7 +234,7 @@ fn spawn_live(app: AppHandle, state: Arc<AppState>, dir: PathBuf, started_at: i6
 
                 // A copy with a header of its own: the live file is still
                 // being written and its own header is not finished yet.
-                let Ok(pcm) = crate::meetings::read_range(&wav, crate::meetings::WAV_HEADER + base, avail - base) else { continue };
+                let Ok(pcm) = crate::meetings::read_range(&wav, start + base, avail - base) else { continue };
                 if crate::meetings::write_wav(&scratch, &pcm).is_err() {
                     continue;
                 }
@@ -397,7 +398,7 @@ fn finish(app: &AppHandle, state: &AppState) -> Result<String, String> {
     // another trip through the speech engine, which is most of what makes
     // this feel immediate. Only the last stretch of audio is re-read.
     let wav = dir.join("mic.wav");
-    let recorded = std::fs::metadata(&wav).map(|m| m.len().saturating_sub(crate::meetings::WAV_HEADER)).unwrap_or(0);
+    let recorded = std::fs::metadata(&wav).map(|m| m.len().saturating_sub(crate::meetings::pcm_offset(&wav))).unwrap_or(0);
     let (live, covered) = crate::lock(&LIVE).clone();
     let fresh = !live.trim().is_empty() && recorded.saturating_sub(covered) < MIN_AUDIO;
 
@@ -418,11 +419,25 @@ fn finish(app: &AppHandle, state: &AppState) -> Result<String, String> {
             }
         }
     };
+    // Said before the folder goes, because when nothing comes back this is
+    // the only account of why. A dictation that hears nothing used to leave
+    // no trace at all, and the answer took an hour of picking over files.
+    log::info!(
+        "dictation: {:.1}s of sound, loudest {:.4}, {} characters",
+        recorded as f64 / 32_000.0,
+        loudest_in(&wav),
+        text.chars().count(),
+    );
     let _ = std::fs::remove_dir_all(&dir);
     *crate::lock(&LIVE) = (String::new(), 0);
     announce(app, false);
     if text.is_empty() {
-        crate::engine::notch(app, "help", "Dictation", vec!["Nothing was heard.".into()]);
+        crate::engine::notch(
+            app,
+            "help",
+            "Nothing was heard",
+            vec!["The microphone was open but no speech came through. Check Lane is allowed the microphone in System Settings.".into()],
+        );
         return Ok("empty".into());
     }
     insert_text(&text)?;
@@ -444,6 +459,17 @@ fn finish(app: &AppHandle, state: &AppState) -> Result<String, String> {
     let _ = app.emit("dictation-done", serde_json::json!({"text": text}));
     log::info!("dictation: inserted {} chars", text.chars().count());
     Ok(text)
+}
+
+/// The loudest moment in what was recorded, for the log. Cheap: it reads
+/// the file once and keeps nothing.
+fn loudest_in(wav: &std::path::Path) -> f32 {
+    let start = crate::meetings::pcm_offset(wav);
+    let len = std::fs::metadata(wav).map(|m| m.len().saturating_sub(start)).unwrap_or(0);
+    match crate::meetings::read_range(wav, start, len.min(32_000 * 120)) {
+        Ok(pcm) => level(&pcm),
+        Err(_) => 0.0,
+    }
 }
 
 /// One pass over everything that was recorded, for when the live text has
