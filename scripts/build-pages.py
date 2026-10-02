@@ -110,37 +110,37 @@ def sec(label: str, head: str, body: str, cls: str = "sec") -> str:
 CTA = '''  <section class="access" id="access">
     <div class="wrap access-in">
       <div class="cta-txt rv">
-        <span class="label">The first two hundred</span>
-        <h2 class="display">Two hundred people keep it.</h2>
-        <p>The first two hundred to leave an address get Lane outright — every version, on every Mac they own, with nothing to pay ever. After that it is $499 once. There is no subscription.</p>
+        <span class="label">Round one · two hundred testers</span>
+        <h2 class="display">Test it with me, and keep it.</h2>
+        <p>Two hundred people are testing Lane this round. Each of them keeps a licence for life — every version, on every Mac they own, with nothing to pay ever — for using it on real work and saying what breaks. Afterwards Lane is $499 once.</p>
         <form class="wait" id="wait" novalidate>
           <div class="wait-row">
             <label class="sr-only" for="wait-email">Your email</label>
             <input id="wait-email" name="email" type="email" autocomplete="email" placeholder="you@work.com" required>
-            <button class="btn btn-primary btn-lg" type="submit">Claim my seat</button>
+            <button class="btn btn-primary btn-lg" type="submit">Become a tester</button>
           </div>
           <p class="wait-msg" id="wait-msg" role="status" aria-live="polite"></p>
         </form>
-        <p class="cta-note">No card. No trial that expires. macOS 13+ · Apple silicon · signed and notarised by Apple.</p>
+        <p class="cta-note">No card, ever. When this round fills, the next two hundred open later — leave your address and you are first in line. macOS 13+ · Apple silicon · signed and notarised by Apple.</p>
       </div>
       <div class="plans rv">
         <div class="seatbox" id="seats">
           <div class="seatbox-top">
-            <span class="seatbox-n"><b id="seats-taken">0</b><i>of 200 taken</i></span>
+            <span class="seatbox-n"><b id="seats-taken">0</b><i>of 200 testers</i></span>
             <span class="seatbox-tag" id="seats-tag">Open</span>
           </div>
           <span class="seats-bar"><i id="seats-fill" style="width:0%"></i></span>
-          <p class="seatbox-note"><b id="seats-left">200</b> free seats left. When they are gone, they are gone.</p>
+          <p class="seatbox-note"><b id="seats-left">200</b> seats left in round one.</p>
         </div>
         <div class="plan is-first is-now">
-          <span class="plan-top"><b>Now</b><span class="plan-tag">First 200 only</span></span>
+          <span class="plan-top"><b>Testers</b><span class="plan-tag">200 a round</span></span>
           <span class="plan-p">Free<i>for life</i></span>
           <span class="plan-d">Every update, every version, on every Mac you own. No renewal, no card, no expiry.</span>
         </div>
         <div class="plan is-later">
-          <span class="plan-top"><b>After that</b></span>
+          <span class="plan-top"><b>Everyone else</b></span>
           <span class="plan-p">$499<i>once</i></span>
-          <span class="plan-d">The same licence, bought outright. There is no monthly plan.</span>
+          <span class="plan-d">The same licence, bought outright, once Lane is out of testing. There is no monthly plan.</span>
         </div>
       </div>
     </div>
@@ -192,7 +192,7 @@ def page(slug: str, title: str, desc: str, kicker: str, h1: str, lede: str, body
       <h1 class="display">{h1}</h1>
       <p class="lede">{lede}</p>
       <div class="actions">
-        <a class="btn btn-primary btn-lg" href="#access">Claim a free seat</a>
+        <a class="btn btn-primary btn-lg" href="#access">Become a tester</a>
         <a class="btn btn-ghost btn-lg" href="/pricing">What it costs</a>
       </div>
     </div>
@@ -727,7 +727,7 @@ COMPARISONS = [
               ("Where it lives", "Your devices and iCloud", "Your Mac, encrypted, no sync"),
               ("Asking it something", "Search for the word you used", "Ask in your own words and get a cited answer"),
               ("Meetings", "You type during them", "Recorded, transcribed and written up on device"),
-              ("Price", "Free with your Mac", "Free for life for the first 200, then $499 once")],
+              ("Price", "Free with your Mac", "Free for life for testers, then $499 once")],
         instead="All you need is somewhere to jot a phone number and have it on your phone a second later. Nothing beats the app that is already there.",
     ),
 ]
@@ -809,17 +809,17 @@ def build_company() -> list[str]:
     # ---- pricing ----
     plans = '''<div class="pricetable rv is-two">
       <div class="pcol is-first">
-        <span class="plan-tag">First 200 only</span>
-        <b>Now</b><span class="plan-p">Free<i>for life</i></span>
-        <p>Every update, every version, on every Mac you own, for as long as Lane exists. No card, no renewal, no expiry.</p>
-        <a class="btn btn-primary" href="/#access">Claim a free seat</a>
+        <span class="plan-tag">200 a round</span>
+        <b>Testers</b><span class="plan-p">Free<i>for life</i></span>
+        <p>Every update, every version, on every Mac you own, for as long as Lane exists. No card, no renewal, no expiry — in exchange for using it on real work and saying what breaks.</p>
+        <a class="btn btn-primary" href="/#access">Become a tester</a>
       </div>
-      <div class="pcol"><b>After the first 200</b><span class="plan-p">$499<i>once</i></span>
-        <p>The same licence, bought outright. There is no monthly plan and there never will be.</p>
-        <a class="btn btn-ghost" href="/#access">Join the list</a></div>
+      <div class="pcol"><b>Everyone else</b><span class="plan-p">$499<i>once</i></span>
+        <p>The same licence, bought outright, once Lane is out of testing. There is no monthly plan and there never will be.</p>
+        <a class="btn btn-ghost" href="/#access">Join the next round</a></div>
     </div>'''
     body = (
-        sec("", "", plans + '<p class="aside rv">Lane is not on general download yet. A seat is claimed by leaving an address, and the licence arrives by email. <a class="tlink" href="/#access">Claim a free seat</a></p>', "sec")
+        sec("", "", plans + '<p class="aside rv">Lane is not on general download yet. It is being tested by two hundred people at a time, and a tester\'s licence arrives by email. <a class="tlink" href="/#access">Become a tester</a></p>', "sec")
         + sec("What you get", "The same app in every plan",
               facts([("check", "Everything, from the first day", "There is no tier that reads your day and gives you less. Every plan is the whole app."),
                      ("eye", "No free tier, on purpose", "A memory app funded by anything other than the person using it is a contradiction. If Lane is running, you are the customer."),
@@ -827,22 +827,22 @@ def build_company() -> list[str]:
                      ("key", "One key, your machines", "Use your licence on the Macs you work on. We do not count them or phone home to check.")]),
               "sec mist")
         + sec("Billing", "The dull but important part",
-              facts([("clock", "A free seat does not expire", "The first two hundred licences have no end date. They are checked on your own Mac, so there is nothing to renew and nothing to lapse."),
+              facts([("clock", "A tester's licence does not expire", "It has no end date, and it does not stop when the round does. It is checked on your own Mac, so there is nothing to renew and nothing to lapse."),
                      ("bar", "Payments are handled by Dodo Payments", "Dodo Payments is our merchant of record: they handle the card and the tax. We never see your card details."),
                      ("check", "Changed your mind", "Write within 14 days of buying and we refund you, no argument. The trial exists so it should not come to that."),
                      ("file", "If a licence ever lapses", "Lane stops reading and stops making memories. Nothing is deleted: everything you already have stays on your Mac and comes back the moment you unlock it.")]))
         + sec("Questions", "The ones people ask about money",
               '<div class="faq rv">'
-              '<details><summary>What does free for life actually mean?</summary><p>You pay nothing, ever, and use every version of Lane for Mac that we ship, for as long as we ship it. It is limited to two hundred people because they are taking a bet on something unfinished, and because giving it away is not a sustainable price for everybody.</p></details>'
-              '<details><summary>What happens if you disappear?</summary><p>Lane keeps working. It needs no server, so there is nothing to switch off. Your memories stay in a store on your disk, and you can export them to markdown whenever you like.</p></details>'
+              '<details><summary>What does free for life actually mean?</summary><p>You pay nothing, ever, and use every version of Lane for Mac that we ship, for as long as we ship it. It is limited to two hundred people a round because testers are taking a bet on something unfinished and telling us what is wrong with it, which is worth more to us than their money. It is not a sustainable price for everybody.</p></details>'
+              '<details><summary>What does a tester have to do?</summary><p>Use Lane on your real work rather than a demo file, and write a line when something breaks or annoys you. That is the whole agreement. Nobody is counting your reports, and nothing is taken away if you go quiet — but the round exists to find the things we cannot find ourselves.</p></details><details><summary>What happens when a round ends?</summary><p>Nothing changes for the people in it: their licences have no end date. Another two hundred seats open afterwards. If this round is full when you arrive, leave your address and you are first into the next one.</p></details><details><summary>What happens if you disappear?</summary><p>Lane keeps working. It needs no server, so there is nothing to switch off. Your memories stay in a store on your disk, and you can export them to markdown whenever you like.</p></details>'
               '<details><summary>Is there a team or company plan?</summary><p>Not yet. Lane is a private memory for one person. An organisation version is the reason Rabbit exists, but it is not what we are selling today.</p></details>'
               '<details><summary>Do you take purchasing power into account?</summary><p>If $499 is genuinely out of reach where you are, write to us and say so. We would rather you used it.</p></details>'
               '</div>', "sec mist")
     )
     made.append(str(page("pricing", "Pricing · Lane for Mac",
-                         "The first 200 people get Lane free for life, every update included, with no card. After that it is $499 once. No subscription, no account, no free tier that reads your day.",
-                         "Pricing", "The first two hundred<br>keep it for&nbsp;good.",
-                         "One app, one price, and no tier that quietly does less. Two hundred seats are being given away outright; after those, Lane is bought once and owned.",
+                         "Lane is in testing: two hundred testers a round keep a licence for life, every update included, with no card. Afterwards it is $499 once. No subscription, no account, no free tier that reads your day.",
+                         "Pricing", "Testers keep it.<br>Everyone else buys it&nbsp;once.",
+                         "One app, one price, and no tier that quietly does less. Lane is in testing: two hundred people a round keep a licence for life, and afterwards it is bought once and owned.",
                          body)))
 
     # ---- security ----
@@ -865,7 +865,7 @@ def build_company() -> list[str]:
             "Updates are signed with a key we hold offline. The app checks the signature before installing anything, so an update that did not come from us is refused.",
             "Licence keys are signed the same way and checked on your machine, which is why unlocking Lane needs no server.")),
         ("Our website", p(
-            "lane.so is a static site. It runs Google Analytics, which sets cookies and counts visits, and nothing else. If you join the waitlist, your email address is stored so we can write to you. If you buy, our payment processor handles the card and we never see it.",
+            "lane.so is a static site. It runs Google Analytics, which sets cookies and counts visits, and nothing else. If you sign up to test Lane, your email address is stored so we can send you a licence and write to you about it. If you buy, our payment processor handles the card and we never see it.",
             'The full detail is in the <a href="/privacy">privacy policy</a>.')),
         ("Reporting something", p(
             "If you find a security problem, please tell us before you tell anyone else, and give us a reasonable chance to fix it. " + CONTACT,
@@ -889,7 +889,7 @@ def build_company() -> list[str]:
             "Lane reads the text your apps publish for accessibility: the page you are reading, the document you are writing, the title of the window. It never reads keystrokes and it never stores what you type into a password field.",
             "You can pause it from the menu bar at any moment, and exclude any app or any website permanently. Anything you exclude is never read, not read and discarded.")),
         ("What we can see", p(
-            "Almost nothing about you, and nothing at all about your use of the app. The website runs Google Analytics, so we know how many people visited and which pages they read. We know how many people downloaded the app, because the download link counts clicks. We know who joined the waitlist, because they told us their email address. We know who bought a licence, because they paid us.",
+            "Almost nothing about you, and nothing at all about your use of the app. The website runs Google Analytics, so we know how many people visited and which pages they read. We know how many people downloaded the app, because the download link counts clicks. We know who signed up to test Lane, because they told us their email address. We know who bought a licence, because they paid us.",
             "We do not know how you use Lane, what is in your memories, what you ask it, or whether you have opened it since installing. There is no telemetry.")),
         ("Things you can choose to send", p(
             "Feedback, which opens your mail app with the note you wrote and nothing attached. Labels for improving Rabbit, which are off unless you turn them on and which you can review before they go.",
@@ -919,19 +919,19 @@ def build_legal() -> list[str]:
             "Everything the application records about your work is written to an encrypted store on your own device. We have no access to it, and no ability to obtain it.",
             "Two optional features send something, and only when you start them: the feedback form, which opens your own mail application with a message you can read and edit before sending; and the contribution of labels for improving our model, which is off by default and which you review before anything is sent.")),
         ("The website", p("When you use lane.so we process a small amount of data:"),
-         ul("<b>Waitlist.</b> If you submit the form, we store your email address, any name you give, and the page you came from, so that we can write to you about early access. Lawful basis: your consent.",
+         ul("<b>Testing programme.</b> If you submit the form, we store your email address, any name you give, and the page you came from, so that we can send you a licence and write to you about testing. Lawful basis: your consent.",
             "<b>Downloads.</b> When the download link is used we record that a download happened, and the source parameter in the link. No IP address and no identifier is stored with it.",
             "<b>Feedback.</b> If you send feedback through the website we store what you wrote and, if you give one, your email address.",
             "<b>Purchases.</b> If you buy a licence we store your email address, the plan and the amount, so that we can support the purchase and meet our tax obligations."),
-         p("<b>Analytics.</b> The website uses Google Analytics to count visits and see which pages people read. It sets cookies in your browser and sends Google your IP address, which Google uses to approximate your location and then discards. We use it to understand which pages are worth writing, nothing more. We run no advertising scripts and we do not use analytics to build a profile of you. Lawful basis: our legitimate interest in knowing whether the site works. Any blocker, or the Google Analytics opt-out add-on, stops it, and the site works exactly the same." + "<p>Your browser also stores one flag locally to remember that you have already joined the waitlist; that flag never leaves your browser.</p>")),
+         p("<b>Analytics.</b> The website uses Google Analytics to count visits and see which pages people read. It sets cookies in your browser and sends Google your IP address, which Google uses to approximate your location and then discards. We use it to understand which pages are worth writing, nothing more. We run no advertising scripts and we do not use analytics to build a profile of you. Lawful basis: our legitimate interest in knowing whether the site works. Any blocker, or the Google Analytics opt-out add-on, stops it, and the site works exactly the same." + "<p>Your browser also stores one flag locally to remember that you have already signed up to test; that flag never leaves your browser.</p>")),
         ("Who else is involved", p("We use these processors, and no others:"),
-         ul("<b>Supabase</b> hosts the database holding the waitlist, feedback and purchase records.",
+         ul("<b>Supabase</b> hosts the database holding the tester sign-ups, feedback and purchase records.",
             "<b>Dodo Payments</b> processes payments and acts as merchant of record. They handle your card details; we never receive them.",
             "<b>Netlify</b> serves the website and, like any web server, processes requests in order to answer them.",
             "<b>Google Analytics</b> counts visits to the website. It sees nothing that happens inside the application."),
          p("We do not sell your data, share it for advertising, or use it to train any model.")),
         ("How long we keep it", p(
-            "Waitlist entries are kept until you ask us to remove them, or until the waitlist is closed and everyone on it has been contacted. Purchase records are kept for as long as tax law requires us to keep them. Feedback is kept until it has been acted on.")),
+            "Sign-ups are kept until you ask us to remove them, or until the testing programme ends and everyone on the list has been contacted. Purchase records are kept for as long as tax law requires us to keep them. Feedback is kept until it has been acted on.")),
         ("Your rights", p(
             "You can ask us for a copy of what we hold about you, ask us to correct it, or ask us to delete it. Because the application holds nothing of yours, any such request concerns only the website data listed above.",
             "Write to <a href=\"mailto:pb@lane.so\">pb@lane.so</a> and we will answer within 30 days. If you are in the UK or the EU and are unhappy with our answer, you may complain to your data protection authority.")),
@@ -940,7 +940,7 @@ def build_legal() -> list[str]:
             "If this policy changes in a way that affects you, we will say so on this page and, where it is significant and we have your address, by email. The date at the top is the date of the current version.")),
     ])
     made.append(str(page("privacy", "Privacy policy · Lane",
-                         "What Lane collects, which is nothing in the app, and the small amount the website processes when you join the waitlist or buy a licence.",
+                         "What Lane collects, which is nothing in the app, and the small amount the website processes when you sign up to test it or buy a licence.",
                          "Privacy policy", "Privacy policy",
                          "The application collects nothing. The website collects an email address if you give us one. This is the formal version of both.",
                          body)))
@@ -955,7 +955,7 @@ def build_legal() -> list[str]:
             "You may not reverse engineer, decompile or attempt to extract the model shipped with the application, except where that restriction is void under the law that applies to you.",
             "You may use Lane for commercial work. It is a tool; what you do with it is yours.")),
         ("The trial", p(
-            "The first two hundred people to claim a seat get Lane outright, with no payment details required and no end date. The licence is a signed note checked on your own Mac, so there is nothing to renew.",
+            "Lane is in testing. Two hundred testers a round keep a licence outright, with no payment details required and no end date. The licence is a signed note checked on your own Mac, so there is nothing to renew.",
             "When the trial ends, Lane stops reading and stops writing new memories. It does not delete anything: everything already on your disk stays there, and becomes available again as soon as you enter a licence key.")),
         ("Paying", p(
             "Prices are shown on the pricing page and are in US dollars. Payments are taken by Dodo Payments, who act as merchant of record and who handle the tax.",
@@ -992,7 +992,7 @@ def build_updates() -> list[str]:
     entries = '''<ol class="log rv">
       <li><div class="log-when"><b>1.0</b><span>In testing</span></div><div class="log-what">
         <p>The first release. Passive capture of the working day, memories written on device by Rabbit, Ask with citations, three things ranked against your why, meetings recorded and transcribed on the machine, the recall overlay, dictation, the notch tab, commitments, the board, and an encrypted store with sealed backups.</p>
-        <p class="log-note">Being tested on real Macs before it goes out. <a class="tlink" href="/#access">Join the waitlist</a></p></div></li>
+        <p class="log-note">Being tested on real Macs before it goes out. <a class="tlink" href="/#access">Become a tester</a></p></div></li>
       <li><div class="log-when"><b>0.9</b><span>September 2026</span></div><div class="log-what">
         <p>The notch tab learned to unfurl rather than appear, and to sit below the camera housing on the MacBooks that have one. Capture on purpose, from the menu bar. Memories grouped by place and category, with a card you can share.</p></div></li>
       <li><div class="log-when"><b>0.8</b><span>September 2026</span></div><div class="log-what">
@@ -1012,7 +1012,7 @@ def build_updates() -> list[str]:
     # ---- roadmap ----
     body = (
         sec("Next", "What we are working on now",
-            facts([("check", "Getting 1.0 onto other people's Macs", "Notarised, tested on machines that are not ours, and out to the waitlist."),
+            facts([("check", "Getting 1.0 onto other people's Macs", "Notarised, tested on machines that are not ours, and out to the first two hundred testers."),
                    ("bar", "Measuring the cost", "CPU, battery and disk over a real working week, published rather than claimed."),
                    ("ask", "Faster answers", "Keeping the context warm between follow-up questions, so the second question is quicker than the first.")]),
             "sec mist")
@@ -1303,7 +1303,7 @@ def build_alternatives() -> list[str]:
             (f'What is the best {other} alternative?',
              f'It depends on what you are replacing. {a["answer"]}'),
             (f'Is there a free {other} alternative?',
-             'Apple Notes is free and already on your Mac, and Obsidian is free for personal use. Both are manual: they know what you type into them. Lane is free for life for the first two hundred people, and $499 once after that.'),
+             'Apple Notes is free and already on your Mac, and Obsidian is free for personal use. Both are manual: they know what you type into them. Lane is free for life for its testers, two hundred a round, and $499 once after that.'),
             (f'Is there a private, offline {other} alternative?',
              'Lane. It has no account and no server, the model that reads your day runs inside the app, and it works with the wifi off. Obsidian is also local, but has no capture and no model of its own.'),
             ('Does Lane work on Windows?',

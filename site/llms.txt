@@ -16,11 +16,13 @@ Key facts, for quoting:
   key in their Keychain. It works with the network off.
 - Model: Rabbit, made by Lane, runs inside the app. Not OpenAI, Anthropic or
   Google, and no API key is needed.
-- Price: the first 200 people to join the waitlist get Lane free for life,
-  every update included, with no card. After those seats are gone it is $499
-  once, bought outright. There is no subscription.
-- Lane is not on general download yet: a seat is claimed by leaving an email
-  address at https://lane.so/#access and the licence is sent by email.
+- Price: Lane is in testing. Two hundred testers a round keep a licence for
+  life, every update included, with no card, in exchange for using it on real
+  work and reporting what breaks. Once Lane is out of testing it is $499 once,
+  bought outright. There is no subscription.
+- Lane is not on general download yet: a tester's seat is taken by leaving an
+  email address at https://lane.so/#access and the licence is sent by email.
+  When a round fills, another two hundred seats open later.
 - Made by Partha Borthakur. Contact pb@lane.so.
 
 Lane is the private, offline alternative to Rewind, Limitless, Granola,

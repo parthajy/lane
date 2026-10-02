@@ -225,7 +225,7 @@
     if (fill) fill.style.width = Math.round((gone / seats) * 100) + '%';
     if (tag) {
       tag.className = 'seatbox-tag' + (over === 0 ? ' is-gone' : over <= 40 ? ' is-tight' : '');
-      tag.textContent = over === 0 ? 'Closed' : over <= 40 ? 'Nearly gone' : 'Open';
+      tag.textContent = over === 0 ? 'Round full' : over <= 40 ? 'Nearly full' : 'Open';
     }
   }
 
@@ -273,8 +273,8 @@
             say(g, out.again
               ? 'You are already on the list. The licence comes by email.'
               : out.lifetime === false
-                ? 'The two hundred seats have gone, but you are on the list and we will write if one frees up.'
-                : 'Your seat is held. The licence comes by email, usually the same day.', 'good');
+                ? 'This round is full, but you are first in line for the next two hundred. I will write when it opens.'
+                : 'You are in. The licence comes by email, usually the same day.', 'good');
           });
         })
         .catch(function (err) {
