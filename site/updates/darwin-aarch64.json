@@ -1,11 +1,11 @@
 {
-  "version": "1.0.12",
-  "notes": "A question that fails because your Mac ran out of memory is now asked again against a restarted model, instead of breaking every question after it.",
-  "pub_date": "2026-10-02T05:03:07.163030+00:00",
+  "version": "1.0.13",
+  "notes": "Updates install and Lane comes back. It was quitting to restart and never returning.",
+  "pub_date": "2026-10-02T05:49:30.475572+00:00",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZHJNL0hHRXhNK1FsK2FkbFQ3NkE2L05GUnUwR3pGNVBKb3JuWUF2TmxFWENJOERPMmRkYkFVS0liR2xrZzRXMUhSWGgzangvY3ZBb1I3VThVaE5wc3dVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwOTE3Mzg3CWZpbGU6TGFuZS5hcHAudGFyLmd6ClU2Vlk4NEFhNDdNTkE4R203UmlLVmVXQWxyTzR2QjczdW83ck1XQTk3MmNEVDZocHlQbksxVjJhRm13YjlBcWVvMU5NN2JVSG9OSHVaN1RpZ0k3NERnPT0K",
-      "url": "https://github.com/parthajy/lane/releases/download/v1.0.12/Lane.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZG1vUlZuTUhBNUk5UjA5MDlMTlI4NW5oNzdiWXVEM1lPNWE3dUFaOTdJZUZlSlV4VGZnU0xCNG5HUnQ5d2h0ajYvalFJcVQ2bUdoUUpSQ2lFZGRKalEwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwOTIwMTcwCWZpbGU6TGFuZS5hcHAudGFyLmd6CktiYTJQa0xKRFlCYUR6elU1VHl5dzdEZVRXUXRyRGUrN2xZQ1lUbVkrZzFMelhSZTZpYkFaQkFONi8yWjdpYVkvY0kyQlFEV0VsYk5vb2ZxNFJZckFBPT0K",
+      "url": "https://github.com/parthajy/lane/releases/download/v1.0.13/Lane.app.tar.gz"
     }
   }
 }
