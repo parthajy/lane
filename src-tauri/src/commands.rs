@@ -80,9 +80,27 @@ pub fn set_launch_at_login(enabled: bool) -> Res<bool> {
     permissions::set_launch_at_login(enabled)
 }
 
+/// Quit and come back.
+///
+/// The single-instance plugin has to be told first. It holds a Unix socket,
+/// and on startup every new copy of Lane tries to connect to it: a successful
+/// connection means another Lane is already running, so the new one hands
+/// over its arguments and exits. During a restart the old process is still
+/// listening when the new one starts, so the new one connects, decides it is
+/// the spare, and leaves — and then the old one exits too. Nothing is left
+/// running, and the window that asked for the restart is simply gone. That is
+/// what "Installing · 100%" stopping for ever was.
+///
+/// Removing the socket first means the new process cannot connect, so it
+/// knows it is the only one and starts properly.
+pub fn restart_cleanly(app: &AppHandle) -> ! {
+    tauri_plugin_single_instance::destroy(app);
+    app.restart()
+}
+
 #[tauri::command]
 pub fn restart_app(app: AppHandle) {
-    app.restart()
+    restart_cleanly(&app)
 }
 
 #[derive(Serialize)]
@@ -912,7 +930,7 @@ pub fn restore_backup(app: AppHandle, state: State<'_, Arc<AppState>>, path: Str
     }
     std::fs::rename(&restored, &state.db_path).map_err(err)?;
     log::info!("restore: swapped in {} (previous kept as {})", path, before.display());
-    app.restart();
+    restart_cleanly(&app);
 }
 
 // ── Windows ──────────────────────────────────────────────────────────────

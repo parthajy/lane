@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { check, type Update } from '@tauri-apps/plugin-updater'
-import { relaunch } from '@tauri-apps/plugin-process'
+
 import { Download, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { api } from '@/lib/api'
 
 type State = 'idle' | 'checking' | 'none' | 'available' | 'installing' | 'error'
 
@@ -53,7 +54,10 @@ export function UpdateCard({ auto = false }: { auto?: boolean }) {
           if (total) setProgress(Math.round((done / total) * 100))
         }
       })
-      await relaunch()
+      // Not the process plugin's relaunch: it leaves the single-instance
+      // socket in place, so the new Lane connects to the old one, decides it
+      // is a duplicate and quits. restart_app removes the socket first.
+      await api.restartApp()
     } catch (e) {
       // A toast is gone in four seconds and was the only record: an update
       // that would not install left nothing to look at afterwards.

@@ -1172,6 +1172,33 @@ mod hygiene_tests {
     }
 
     #[test]
+    fn nothing_restarts_without_releasing_the_single_instance_socket() {
+        // A bare app.restart() leaves the socket in place, the new Lane
+        // connects to the old one, decides it is a duplicate and quits, and
+        // then the old one exits too. The window that asked sits on
+        // "Installing · 100%" for ever. Only the body of restart_cleanly,
+        // which removes the socket first, may call it.
+        let mut offenders = Vec::new();
+        for (file, text) in sources() {
+            let lines: Vec<&str> = text.lines().collect();
+            let allowed: Option<usize> = lines.iter().position(|l| l.contains("pub fn restart_cleanly"));
+            for (n, line) in lines.iter().enumerate() {
+                let code = line.split("//").next().unwrap_or("");
+                if !code.contains(".restart()") {
+                    continue;
+                }
+                // Inside restart_cleanly means within its body, not merely
+                // somewhere below it in the same file.
+                let inside = allowed.is_some_and(|a| n > a && n <= a + 4);
+                if !inside {
+                    offenders.push(format!("{file}:{}: restart without destroying the socket", n + 1));
+                }
+            }
+        }
+        assert!(offenders.is_empty(), "use restart_cleanly:\n{}", offenders.join("\n"));
+    }
+
+    #[test]
     fn no_mutex_is_locked_twice_in_one_statement() {
         let mut offenders = Vec::new();
         for (file, text) in sources() {

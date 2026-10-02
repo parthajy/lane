@@ -6,6 +6,14 @@
  */
 export const CHANGELOG: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '1.0.13',
+    date: '2 October 2026',
+    lines: [
+      'Updates install and Lane comes back. It was quitting to restart and never returning: the new copy found the old one still listening, decided it was a duplicate, and left.',
+      'Restoring from a backup comes back the same way. It had the same fault.',
+    ],
+  },
+  {
     version: '1.0.12',
     date: '2 October 2026',
     lines: [
