@@ -50,6 +50,7 @@
   gtag('js', new Date());
   gtag('config', 'G-GLEMYFELND');
 </script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"VideoObject","name":"What Lane is, and why it exists","description":"Partha Borthakur on the problem Lane solves: you already did the work, and then you pay a second time to go looking for it. Lane keeps a memory of your working day on your own Mac.","uploadDate":"2026-10-01T22:03:55-07:00","thumbnailUrl":["https://i.ytimg.com/vi/tA4UnSGg3j4/hqdefault.jpg"],"embedUrl":"https://www.youtube-nocookie.com/embed/tA4UnSGg3j4","contentUrl":"https://youtu.be/tA4UnSGg3j4","publisher":{"@id":"https://lane.so/#org"}},{"@context":"https://schema.org","@type":"VideoObject","name":"Lane, a walkthrough of the app","description":"A screen recording of Lane for Mac: passive capture, the notch tab, asking your memory a question, meeting notes and dictation.","uploadDate":"2026-10-01T22:40:24-07:00","thumbnailUrl":["https://i.ytimg.com/vi/PXPtb4Z2GQA/hqdefault.jpg"],"embedUrl":"https://www.youtube-nocookie.com/embed/PXPtb4Z2GQA","contentUrl":"https://youtu.be/PXPtb4Z2GQA","publisher":{"@id":"https://lane.so/#org"}}]</script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -59,6 +60,7 @@
     <a class="brand" href="/" aria-label="Lane, home"><img src="logo.png" alt="" width="26"> Lane</a>
     <nav class="nav-links" aria-label="Primary">
       <a href="#product">Product</a>
+      <a href="#watch">Watch</a>
       <a href="#how">How it works</a>
       <a href="#rabbit">Rabbit</a>
       <a href="#privacy">Privacy</a>
@@ -257,6 +259,39 @@
   <div class="marq" aria-label="Lane reads the apps you already use">
     <div class="marq-in" id="marq"></div>
   </div>
+
+  <!-- The two films. Nothing from YouTube is fetched until somebody asks for
+       it: no iframe, no thumbnail, no cookie. The poster is drawn here. The
+       player is swapped in on click, through youtube-nocookie.com. -->
+  <section class="sec films" id="watch">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <span class="label on">Watch</span>
+        <h2 class="display">See it before you install it</h2>
+        <p class="sec-lede">Five minutes on why Lane exists, and a longer walkthrough of the app itself. Both play here, and nothing loads from YouTube until you press play.</p>
+      </div>
+      <div class="film-grid rv">
+        <article class="film">
+          <button class="film-poster" data-film="tA4UnSGg3j4" data-title="What Lane is, and why it exists" aria-label="Play: what Lane is, and why it exists">
+            <span class="film-play" aria-hidden="true"><svg width="62" height="62" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11.2" fill="currentColor"/><path d="M9.7 7.9v8.2l6.4-4.1z" fill="#1b1830"/></svg></span>
+            <span class="film-kind">The idea</span>
+            <span class="film-len">5:08</span>
+          </button>
+          <h3>What Lane is, and why it exists</h3>
+          <p>Partha on the problem: you already did the work, and then you pay a second time to go looking for it.</p>
+        </article>
+        <article class="film">
+          <button class="film-poster is-walk" data-film="PXPtb4Z2GQA" data-title="A walkthrough of the app" aria-label="Play: a walkthrough of the app">
+            <span class="film-play" aria-hidden="true"><svg width="62" height="62" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11.2" fill="currentColor"/><path d="M9.7 7.9v8.2l6.4-4.1z" fill="#1b1830"/></svg></span>
+            <span class="film-kind">The app</span>
+            <span class="film-len">16:33</span>
+          </button>
+          <h3>A walkthrough of the app</h3>
+          <p>Capture, the notch, asking a question, meetings and dictation — what each is for and when to reach for it.</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
   <section class="sec" id="how">
     <div class="wrap">

@@ -865,7 +865,7 @@ def build_company() -> list[str]:
             "Updates are signed with a key we hold offline. The app checks the signature before installing anything, so an update that did not come from us is refused.",
             "Licence keys are signed the same way and checked on your machine, which is why unlocking Lane needs no server.")),
         ("Our website", p(
-            "lane.so is a static site. It runs Google Analytics, which sets cookies and counts visits, and nothing else. If you sign up to test Lane, your email address is stored so we can send you a licence and write to you about it. If you buy, our payment processor handles the card and we never see it.",
+            "lane.so is a static site. It runs Google Analytics, which sets cookies and counts visits. The two videos on the home page load nothing from YouTube until you press play, and then through youtube-nocookie.com. If you sign up to test Lane, your email address is stored so we can send you a licence and write to you about it. If you buy, our payment processor handles the card and we never see it.",
             'The full detail is in the <a href="/privacy">privacy policy</a>.')),
         ("Reporting something", p(
             "If you find a security problem, please tell us before you tell anyone else, and give us a reasonable chance to fix it. " + CONTACT,
@@ -889,7 +889,7 @@ def build_company() -> list[str]:
             "Lane reads the text your apps publish for accessibility: the page you are reading, the document you are writing, the title of the window. It never reads keystrokes and it never stores what you type into a password field.",
             "You can pause it from the menu bar at any moment, and exclude any app or any website permanently. Anything you exclude is never read, not read and discarded.")),
         ("What we can see", p(
-            "Almost nothing about you, and nothing at all about your use of the app. The website runs Google Analytics, so we know how many people visited and which pages they read. We know how many people downloaded the app, because the download link counts clicks. We know who signed up to test Lane, because they told us their email address. We know who bought a licence, because they paid us.",
+            "Almost nothing about you, and nothing at all about your use of the app. The website runs Google Analytics, so we know how many people visited and which pages they read, and YouTube knows if you played one of the videos, which you have to ask for. We know how many people downloaded the app, because the download link counts clicks. We know who signed up to test Lane, because they told us their email address. We know who bought a licence, because they paid us.",
             "We do not know how you use Lane, what is in your memories, what you ask it, or whether you have opened it since installing. There is no telemetry.")),
         ("Things you can choose to send", p(
             "Feedback, which opens your mail app with the note you wrote and nothing attached. Labels for improving Rabbit, which are off unless you turn them on and which you can review before they go.",
@@ -920,6 +920,7 @@ def build_legal() -> list[str]:
             "Two optional features send something, and only when you start them: the feedback form, which opens your own mail application with a message you can read and edit before sending; and the contribution of labels for improving our model, which is off by default and which you review before anything is sent.")),
         ("The website", p("When you use lane.so we process a small amount of data:"),
          ul("<b>Testing programme.</b> If you submit the form, we store your email address, any name you give, and the page you came from, so that we can send you a licence and write to you about testing. Lawful basis: your consent.",
+            "<b>Videos.</b> The home page shows two videos hosted on YouTube. Nothing is requested from Google until you press play: the still you see before that is drawn by us, not fetched. Pressing play loads a player from youtube-nocookie.com, which then receives your IP address and sets no tracking cookie. Lawful basis: your consent, given by pressing play.",
             "<b>Downloads.</b> When the download link is used we record that a download happened, and the source parameter in the link. No IP address and no identifier is stored with it.",
             "<b>Feedback.</b> If you send feedback through the website we store what you wrote and, if you give one, your email address.",
             "<b>Purchases.</b> If you buy a licence we store your email address, the plan and the amount, so that we can support the purchase and meet our tax obligations."),
@@ -928,6 +929,7 @@ def build_legal() -> list[str]:
          ul("<b>Supabase</b> hosts the database holding the tester sign-ups, feedback and purchase records.",
             "<b>Dodo Payments</b> processes payments and acts as merchant of record. They handle your card details; we never receive them.",
             "<b>Netlify</b> serves the website and, like any web server, processes requests in order to answer them.",
+           "<b>YouTube</b> hosts the two videos on the home page, and receives nothing until you press play.",
             "<b>Google Analytics</b> counts visits to the website. It sees nothing that happens inside the application."),
          p("We do not sell your data, share it for advertising, or use it to train any model.")),
         ("How long we keep it", p(

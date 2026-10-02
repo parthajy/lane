@@ -672,6 +672,29 @@ pub fn open_file(path: String) -> Res<()> {
     crate::files::open_file(&path)
 }
 
+/// Open a link in the user's browser.
+///
+/// Deliberately narrow: https only, and nothing else. Lane has no shell
+/// plugin, and the one thing the window is allowed to ask the system to open
+/// is a web page. The videos explaining Lane live on YouTube, and they are
+/// watched there rather than inside the app: an embedded player would be a
+/// request to Google from a window that promises nothing leaves this Mac.
+#[tauri::command(async)]
+pub fn open_link(url: String) -> Res<()> {
+    let ok = url.starts_with("https://")
+        && !url.contains(['\n', '\r', '"', '\''])
+        && url.len() < 2_000;
+    if !ok {
+        return Err("only https links can be opened".into());
+    }
+    std::process::Command::new("/usr/bin/open")
+        .arg("--")
+        .arg(&url)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 #[tauri::command(async)]
 pub fn reindex_files(state: State<'_, Arc<AppState>>) {
     state.rescan_files.store(true, Ordering::Relaxed);

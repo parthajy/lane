@@ -3,6 +3,7 @@ import { format, isToday, isYesterday, subDays } from 'date-fns'
 import { CalendarClock, CalendarDays, CheckSquare, ChevronLeft, ChevronRight, Clock, FileText, Lightbulb, ListChecks, Loader2, Lock, Quote, RefreshCw, Sunrise, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { IntroVideos } from '@/components/intro-videos'
 import { ActivitySheet } from '@/components/activity-sheet'
 import { AppRows, Bars, Donut, StatCard } from '@/components/charts'
 import { ThreeThings, WhyLine } from '@/components/three-things'
@@ -165,6 +166,10 @@ export function TodayPage({ onAsk, onOpenTasks }: { onAsk: (q: string) => void; 
           <Button size="sm" variant="ghost" disabled={busy} onClick={() => load(true)} title="Write it again"><RefreshCw className="h-3.5 w-3.5 mr-1" /> Redo</Button>
         </div>
       </div>
+
+      {/* What Lane is, for somebody who has just installed it. Dismissed for
+          good on the first click of the cross. */}
+      <IntroVideos />
 
       {/* The numbers of the day in one strip, so the columns below start level. */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">

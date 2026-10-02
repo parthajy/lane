@@ -592,6 +592,7 @@ export const api = {
   resetAccessibility: () => invoke<void>('reset_accessibility'),
   setLaunchAtLogin: (enabled: boolean) => invoke<boolean>('set_launch_at_login', { enabled }),
   restartApp: () => invoke<void>('restart_app'),
+  openLink: (url: string) => invoke<void>('open_link', { url }),
   privacyLists: () => invoke<PrivacyLists>('get_privacy_lists'),
   listActivities: (before?: number, limit = 100) =>
     invoke<ActivitySummary[]>('list_activities', { before: before ?? null, limit }),

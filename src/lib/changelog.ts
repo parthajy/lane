@@ -6,6 +6,13 @@
  */
 export const CHANGELOG: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '1.0.14',
+    date: '2 October 2026',
+    lines: [
+      'Two short films on Today explaining what Lane is and how to drive it. They open in your browser: an embedded player would be a request to Google from a window that promises nothing leaves this Mac.',
+    ],
+  },
+  {
     version: '1.0.13',
     date: '2 October 2026',
     lines: [

@@ -294,3 +294,29 @@
     });
   });
 })();
+
+
+/* ── The two films ──────────────────────────────────────────────────────
+   The poster is ours and the player is not. Nothing is requested from
+   Google until somebody presses play, and then it goes through
+   youtube-nocookie.com, which does not set a tracking cookie for a
+   visitor who has not asked to be tracked. */
+(function () {
+  var posters = document.querySelectorAll('.film-poster[data-film]')
+  if (!posters.length) return
+
+  Array.prototype.forEach.call(posters, function (poster) {
+    poster.addEventListener('click', function () {
+      var id = poster.getAttribute('data-film')
+      if (!/^[A-Za-z0-9_-]{6,20}$/.test(id)) return
+      var frame = document.createElement('iframe')
+      frame.className = 'film-frame'
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0&modestbranding=1'
+      frame.title = poster.getAttribute('data-title') || 'Lane'
+      frame.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; web-share'
+      frame.referrerPolicy = 'strict-origin-when-cross-origin'
+      frame.allowFullscreen = true
+      poster.parentNode.replaceChild(frame, poster)
+    })
+  })
+})()

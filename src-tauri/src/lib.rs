@@ -1071,6 +1071,7 @@ pub fn run() {
             commands::file_stats,
             commands::reveal_file,
             commands::open_file,
+            commands::open_link,
             commands::reindex_files,
             commands::show_overlay,
             commands::hide_overlay,
