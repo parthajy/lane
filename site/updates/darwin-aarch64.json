@@ -1,10 +1,10 @@
 {
   "version": "1.0.12",
   "notes": "A question that fails because your Mac ran out of memory is now asked again against a restarted model, instead of breaking every question after it.",
-  "pub_date": "2026-10-02T04:54:48.609978+00:00",
+  "pub_date": "2026-10-02T05:03:07.163030+00:00",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZGprZGdCVWMyUjFDR05VaU8rRVhFMWtHU0podVFCT0IrNTZESlRQRCtGeGE5TWd3MkRZNG5jbkp6WHd2TGVDYVQ0RUJFSDZnajkxd2VRR0pvNWwrSUFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwOTE2ODg4CWZpbGU6TGFuZS5hcHAudGFyLmd6CmcwN2lPV2VuZWxVNmxzMjRwU2t3dFVTTDdzSlhteE9HWm1SaVh0eHFJZ0d3Z296MFlzZXJGRDh0NFMzYW9DWEhpaUMzWFJJRVNMa3czSVR4RjkwbEJBPT0K",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZHJNL0hHRXhNK1FsK2FkbFQ3NkE2L05GUnUwR3pGNVBKb3JuWUF2TmxFWENJOERPMmRkYkFVS0liR2xrZzRXMUhSWGgzangvY3ZBb1I3VThVaE5wc3dVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwOTE3Mzg3CWZpbGU6TGFuZS5hcHAudGFyLmd6ClU2Vlk4NEFhNDdNTkE4R203UmlLVmVXQWxyTzR2QjczdW83ck1XQTk3MmNEVDZocHlQbksxVjJhRm13YjlBcWVvMU5NN2JVSG9OSHVaN1RpZ0k3NERnPT0K",
       "url": "https://github.com/parthajy/lane/releases/download/v1.0.12/Lane.app.tar.gz"
     }
   }
