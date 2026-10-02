@@ -6,6 +6,14 @@
  */
 export const CHANGELOG: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '1.0.12',
+    date: '2 October 2026',
+    lines: [
+      'A question that fails because your Mac has run out of memory is asked again, against a model that has been restarted. Before this, the first failure broke every question after it until Lane was quit.',
+      'When it cannot be recovered, Lane says your Mac is out of memory rather than "Compute error", which is something you can actually do something about.',
+    ],
+  },
+  {
     version: '1.0.11',
     date: '2 October 2026',
     lines: [
