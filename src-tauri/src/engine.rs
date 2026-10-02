@@ -2806,7 +2806,22 @@ pub fn answer_with(state: &AppState, question: &str, history: &[AskTurn], draft:
     // asked for, and on this hardware every one of them costs a sixteenth
     // of a second: the length of the answer was most of the wait.
     let budget = if draft { 700 } else if matches!(intent.kind, IntentKind::Timeline | IntentKind::List | IntentKind::Synthesis) { 420 } else { 200 };
-    let text = runtime::chat_stream(port, if draft { DRAFT_SYSTEM } else { ASK_SYSTEM }, &user, budget, on_token)?;
+    let system = if draft { DRAFT_SYSTEM } else { ASK_SYSTEM };
+    let text = match runtime::chat_stream(port, system, &user, budget, &mut on_token) {
+        Ok(text) => text,
+        Err(first) if crate::lock(&runtime::SERVER).is_none() => {
+            // The runtime stopped its own server because the backend would
+            // not compute any more. Starting a fresh one takes the better
+            // part of a minute, which is a long wait but not as long as the
+            // user retyping the question to be told the same thing twice.
+            log::warn!("engine: the question failed and the model was restarted ({first}); asking once more");
+            let Backend::Bundled { port } = ensure_backend(state, &model)? else {
+                return Err(runtime::plain_english(&first));
+            };
+            runtime::chat_stream(port, system, &user, budget, &mut on_token).map_err(|e| runtime::plain_english(&e))?
+        }
+        Err(e) => return Err(runtime::plain_english(&e)),
+    };
     // Keep only sources the answer actually cites; drop citations out of range.
     let hedged = {
         let first = text.trim_start().to_lowercase();

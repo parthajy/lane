@@ -251,6 +251,59 @@ fn start_with(runtime: &Path, model: &Path, log_path: &Path, extra: &[&str]) -> 
     Err("model runtime did not become ready in time".into())
 }
 
+/// Metal can refuse a command buffer when the Mac has no graphics memory
+/// left to give. llama.cpp survives the refusal but not the aftermath: it
+/// reports `Compute error` for every request that follows and says in its
+/// own log that the backend must be recreated to recover, which it cannot
+/// do from the inside. So the process is dropped and the next call starts a
+/// fresh one. Without this, one unlucky moment on a busy 8 GB Mac turns
+/// into every question failing until the app is quit — thirty consecutive
+/// failures were in the log that sent me looking.
+fn backend_is_gone(msg: &str) -> bool {
+    msg.contains("Compute error") || msg.contains("failed to decode") || msg.contains("status code 500")
+}
+
+/// When the chat server was last stopped for a dead backend.
+static LAST_RECYCLE: Mutex<Option<Instant>> = Mutex::new(None);
+/// A fresh server costs the better part of a minute to load. If the Mac has
+/// no memory to give, a second one will fail the same way, so there is no
+/// point starting one every few seconds: that turns a slow app into an
+/// unusable one. Measured on this machine, the pressure that causes it comes
+/// and goes over minutes, not seconds.
+const RECYCLE_NO_OFTENER_THAN: Duration = Duration::from_secs(90);
+
+/// Drop the chat server when the message says its backend is unusable, and
+/// report whether it was in fact dropped. Callers hold no lock on it while a
+/// request is in flight, so this is safe from the failure path of any model
+/// call.
+fn recycle_if_gone(msg: &str) -> bool {
+    if !backend_is_gone(msg) {
+        return false;
+    }
+    let mut last = crate::lock(&LAST_RECYCLE);
+    if last.is_some_and(|t| t.elapsed() < RECYCLE_NO_OFTENER_THAN) {
+        log::warn!("runtime: the backend is still refusing to compute, and it was already restarted moments ago; leaving it be");
+        return false;
+    }
+    *last = Some(Instant::now());
+    drop(last);
+    let short: String = msg.chars().take(120).collect();
+    log::warn!("runtime: the model's backend will not compute any more ({short}); stopping it so the next call gets a fresh one");
+    *crate::lock(&SERVER) = None;
+    true
+}
+
+/// `Compute error` tells the user nothing they can act on. On every machine
+/// where this has happened the cause was the same — the Mac had no graphics
+/// memory left to give — and the remedy is something they can actually do.
+pub fn plain_english(msg: &str) -> String {
+    if backend_is_gone(msg) {
+        "Your Mac ran out of memory for the model. Close a few apps and ask again.".into()
+    } else {
+        msg.to_string()
+    }
+}
+
 pub fn health(port: u16) -> bool {
     ureq::get(&format!("http://127.0.0.1:{port}/health"))
         .timeout(Duration::from_secs(2))
@@ -308,9 +361,20 @@ pub fn chat_json(port: u16, system: &str, user: &str, schema: Value, max_tokens:
             let shorter = fit_prompt(user, MAX_PROMPT_CHARS * 6 / 10);
             let mut body = body;
             body["messages"][1]["content"] = json!(shorter.as_ref());
-            ureq::post(&format!("http://127.0.0.1:{port}/v1/chat/completions")).timeout(Duration::from_secs(600)).send_json(body).map_err(describe)?
+            match ureq::post(&format!("http://127.0.0.1:{port}/v1/chat/completions")).timeout(Duration::from_secs(600)).send_json(body) {
+                Ok(r) => r,
+                Err(e) => {
+                    let msg = describe(e);
+                    let _ = recycle_if_gone(&msg);
+                    return Err(msg);
+                }
+            }
         }
-        Err(e) => return Err(describe(e)),
+        Err(e) => {
+            let msg = describe(e);
+            let _ = recycle_if_gone(&msg);
+            return Err(msg);
+        }
     };
     let v: Value = resp.into_json().map_err(|e| e.to_string())?;
     let content = v["choices"][0]["message"]["content"].as_str().ok_or("empty model response")?.to_string();
@@ -393,6 +457,10 @@ fn chat_stream_once(port: u16, system: &str, user: &str, max_tokens: u32, max_ch
         "temperature": 0.2,
         "max_tokens": max_tokens,
         "stream": true,
+        // Without this the final chunk carries no usage block and the timing
+        // line below reports nought tokens in, which is how a real prompt of
+        // sixteen hundred looked like nothing for nine releases.
+        "stream_options": {"include_usage": true},
         // Keep the processed prompt between calls. The system prompt and
         // most of the sources are the same from one question to the next,
         // and without this every question pays to read them again.
@@ -405,9 +473,20 @@ fn chat_stream_once(port: u16, system: &str, user: &str, max_tokens: u32, max_ch
             let shorter = fit_prompt(user, MAX_PROMPT_CHARS * 6 / 10);
             let mut body = body;
             body["messages"][1]["content"] = json!(shorter.as_ref());
-            ureq::post(&format!("http://127.0.0.1:{port}/v1/chat/completions")).timeout(Duration::from_secs(600)).send_json(body).map_err(describe)?
+            match ureq::post(&format!("http://127.0.0.1:{port}/v1/chat/completions")).timeout(Duration::from_secs(600)).send_json(body) {
+                Ok(r) => r,
+                Err(e) => {
+                    let msg = describe(e);
+                    let _ = recycle_if_gone(&msg);
+                    return Err(msg);
+                }
+            }
         }
-        Err(e) => return Err(describe(e)),
+        Err(e) => {
+            let msg = describe(e);
+            let _ = recycle_if_gone(&msg);
+            return Err(msg);
+        }
     };
     let reader = std::io::BufReader::new(resp.into_reader());
     let mut full = String::new();
@@ -440,9 +519,16 @@ fn chat_stream_once(port: u16, system: &str, user: &str, max_tokens: u32, max_ch
         }
     }
     if full.trim().is_empty() {
-        return Err(format!(
+        // Nothing at all came back. On this machine that has meant the Metal
+        // backend died quietly mid-stream, so treat it the same way.
+        let msg = format!(
             "model produced no answer (finish: {finish:?}, reasoning chars: {reasoning}, prompt tokens: {prompt_tokens})"
-        ));
+        );
+        // Route it through the same guard, so an empty answer cannot restart
+        // the model every few seconds either.
+        let _ = recycle_if_gone("failed to decode");
+        log::warn!("runtime: {msg}");
+        return Err(msg);
     }
     // Where the time went, every time. "It is slow" is not a thing anybody
     // can act on; "nine seconds before the first word, on 2,100 tokens of
@@ -482,6 +568,26 @@ mod tests {
         let d = default_model();
         assert!(physical_ram_gb() >= d.min_ram_gb);
         assert_eq!(spec_for("Qwen3-4B-Instruct-2507-Q4_K_M.gguf").map(|m| m.min_ram_gb), Some(8));
+    }
+
+    #[test]
+    fn the_real_metal_failure_is_recognised() {
+        // Copied from llama.log on an 8 GB M1 that failed thirty questions in
+        // a row. If these stop being recognised the app goes back to asking a
+        // dead backend over and over.
+        for msg in [
+            "model call failed: status code 500: Compute error.",
+            "model call failed: status code 500: llama_decode: failed to decode, ret = -3",
+        ] {
+            assert!(backend_is_gone(msg), "should restart on: {msg}");
+        }
+        // A prompt that is merely too long is the server working correctly.
+        for msg in [
+            "model call failed: status code 400: the request exceeds the available context size",
+            "model call failed: io: connection closed",
+        ] {
+            assert!(!backend_is_gone(msg), "should not restart on: {msg}");
+        }
     }
 
     #[test]
