@@ -48,6 +48,13 @@ async function giveLifetime(email) {
     body: JSON.stringify({ p_payment_id: `comp:${to}`, p_plan: 'comp', p_email: to, p_amount: 0, p_currency: 'USD' }),
   })
   if (!out?.ok) return { ok: false, error: out?.error || 'No key came back.' }
+  // The counter on the site reads the waitlist, so somebody given a seat by
+  // hand — the people who were testing before the site asked for addresses —
+  // has to appear there too, or the count reads low for ever.
+  await db('rpc/join_waitlist', {
+    method: 'POST',
+    body: JSON.stringify({ p_email: to, p_name: '', p_source: 'admin' }),
+  }).catch(() => null)
   return { ok: true, key: out.key, email: to, again: Boolean(out.again) }
 }
 

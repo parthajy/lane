@@ -183,149 +183,107 @@
   }
 })();
 
-/* ================= the waitlist and the first two hundred seats =================
+/* ================= the two hundred seats =================
    The only part of this site that talks to a server. The app never does.
-   It calls two Supabase functions, which return counts and never rows. */
+   One endpoint, /join: GET says how many seats are gone, POST takes one.
+   Both forms on the page are the same form, so joining from the hero and
+   joining from the bottom of the page do and say exactly the same thing. */
 (function () {
-  var form = document.getElementById('wait');
-  var seats = document.getElementById('seats');
-  if (!form && !seats) return;
-
-  var db = (document.querySelector('meta[name="lane-db"]') || {}).content || '';
-  var key = (document.querySelector('meta[name="lane-key"]') || {}).content || '';
-  db = db.replace(/\/+$/, '');
   var SEATS = 200;
+  var forms = [
+    { form: 'wait-hero', email: 'wait-hero-email', msg: 'wait-hero-msg' },
+    { form: 'wait', email: 'wait-email', msg: 'wait-msg' },
+  ]
+    .map(function (f) {
+      return { form: document.getElementById(f.form), email: document.getElementById(f.email), msg: document.getElementById(f.msg) };
+    })
+    .filter(function (f) { return f.form && f.email; });
 
-  var msg = document.getElementById('wait-msg');
-  var email = document.getElementById('wait-email');
+  var taken = document.getElementById('seats-taken');
   var left = document.getElementById('seats-left');
+  var heroLeft = document.getElementById('hero-left');
   var fill = document.getElementById('seats-fill');
-  var button = form && form.querySelector('button');
+  var tag = document.getElementById('seats-tag');
+  if (!forms.length && !fill) return;
 
-  function call(fn, body) {
-    return fetch(db + '/rest/v1/rpc/' + fn, {
-      method: 'POST',
-      headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body || {}),
-    }).then(function (r) {
-      return r.json().then(function (d) {
-        if (!r.ok) throw new Error((d && (d.message || d.hint)) || 'that did not go through');
-        return d;
-      });
-    });
+  function say(f, text, kind) {
+    if (!f.msg) return;
+    f.msg.textContent = text;
+    f.msg.className = 'wait-msg' + (kind ? ' ' + kind : '');
   }
 
-  function say(text, kind) {
-    if (!msg) return;
-    msg.textContent = text;
-    msg.className = 'wait-msg' + (kind ? ' ' + kind : '');
-  }
-
+  /* The count, everywhere it appears. If the server cannot be reached the
+     printed copy stands on its own and the bar simply does not move. */
   function paint(n) {
-    if (typeof n !== 'number' || n < 0) return;
-    if (left) left.textContent = String(n);
-    if (fill) fill.style.width = Math.round(((SEATS - n) / SEATS) * 100) + '%';
+    if (!n || typeof n.claimed !== 'number') return;
+    var seats = n.seats || SEATS;
+    var gone = Math.min(seats, Math.max(0, n.claimed));
+    var over = Math.max(0, seats - gone);
+    if (taken) taken.textContent = String(gone);
+    if (left) left.textContent = String(over);
+    if (heroLeft) heroLeft.textContent = String(over);
+    if (fill) fill.style.width = Math.round((gone / seats) * 100) + '%';
+    if (tag) {
+      tag.className = 'seatbox-tag' + (over === 0 ? ' is-gone' : over <= 40 ? ' is-tight' : '');
+      tag.textContent = over === 0 ? 'Closed' : over <= 40 ? 'Nearly gone' : 'Open';
+    }
   }
 
-  /* How many seats are gone. If the database is unreachable the printed copy
-     stands on its own, so the counter simply does not move. */
-  if (db && key) {
-    call('waitlist_stats')
-      .then(function (d) {
-        if (!d) return;
-        if (typeof d.lifetimeSeats === 'number' && d.lifetimeSeats > 0) SEATS = d.lifetimeSeats;
-        paint(d.lifetimeLeft);
-      })
-      .catch(function () {});
-  }
+  fetch('/join')
+    .then(function (r) { return r.json(); })
+    .then(paint)
+    .catch(function () {});
 
-  if (!form) return;
-
+  /* Somebody who has already joined should not be asked again on their next
+     visit, and should certainly not be told they are too late. */
   var joined = false;
   try { joined = localStorage.getItem('lane.waitlist') === '1'; } catch (e) {}
-  if (joined) say('You are already on the list. We will write to you.', 'good');
 
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var value = (email.value || '').trim();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
-      email.setAttribute('aria-invalid', 'true');
-      email.focus();
-      say('That does not look like an email address.', 'bad');
-      return;
-    }
-    email.removeAttribute('aria-invalid');
-    if (!db || !key) { say('The list is not open yet. Write to pb@lane.so and we will add you.', 'bad'); return; }
+  forms.forEach(function (f) {
+    if (joined) say(f, 'You are already on the list. The licence comes by email.', 'good');
 
-    button.disabled = true;
-    say('One moment…');
+    f.form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var value = (f.email.value || '').trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
+        f.email.setAttribute('aria-invalid', 'true');
+        f.email.focus();
+        say(f, 'That does not look like an email address.', 'bad');
+        return;
+      }
+      f.email.removeAttribute('aria-invalid');
+      var button = f.form.querySelector('button');
+      var was = button.textContent;
+      button.disabled = true;
+      button.textContent = 'One moment…';
 
-    call('join_waitlist', { p_email: value, p_source: 'site' })
-      .then(function (d) {
-        button.disabled = false;
-        try { localStorage.setItem('lane.waitlist', '1'); } catch (e) {}
-        paint(d.lifetimeLeft);
-        form.reset();
-        if (d.lifetime) {
-          say('You are in, and a lifetime seat is held for you. We will write when the build is ready.', 'good');
-        } else {
-          say('You are on the list, number ' + d.position + '. We will write when the build is ready.', 'good');
-        }
+      fetch('/join?source=site', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: value }),
       })
-      .catch(function (err) {
-        button.disabled = false;
-        say(String(err.message || err).indexOf('email address') >= 0
-          ? 'That does not look like an email address.'
-          : 'We could not reach the list. Write to pb@lane.so and we will add you by hand.', 'bad');
-      });
+        .then(function (r) { return r.json(); })
+        .then(function (out) {
+          if (!out.ok) throw new Error(out.error || 'That did not go through.');
+          try { localStorage.setItem('lane.waitlist', '1'); } catch (e2) {}
+          paint(out);
+          forms.forEach(function (g) {
+            g.form.reset();
+            g.form.style.display = 'none';
+            say(g, out.again
+              ? 'You are already on the list. The licence comes by email.'
+              : out.lifetime === false
+                ? 'The two hundred seats have gone, but you are on the list and we will write if one frees up.'
+                : 'Your seat is held. The licence comes by email, usually the same day.', 'good');
+          });
+        })
+        .catch(function (err) {
+          button.disabled = false;
+          button.textContent = was;
+          say(f, String(err.message || err).indexOf('email address') >= 0
+            ? 'That does not look like an email address.'
+            : 'We could not reach the list. Write to pb@lane.so and we will add you by hand.', 'bad');
+        });
+    });
   });
 })();
-
-
-/* ── The two hundred free seats ───────────────────────────────────────
-   The count is asked for on load so the page can say how many are left
-   without anybody having to sign up to find out. The form posts the
-   address and says what happened in place, rather than navigating away. */
-(function () {
-  var form = document.getElementById('joinform')
-  var note = document.getElementById('joinnote')
-  var count = document.getElementById('joincount')
-  if (!form || !note) return
-
-  function show(n) {
-    if (!count || typeof n.claimed !== 'number') return
-    count.textContent = n.left > 0
-      ? n.claimed + ' of ' + n.seats + ' claimed · ' + n.left + ' left'
-      : 'All ' + n.seats + ' have been claimed. Leave your address anyway and I will write if one frees up.'
-  }
-
-  fetch('/join').then(function (r) { return r.json() }).then(show).catch(function () {})
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault()
-    var email = (form.email.value || '').trim()
-    if (!email) return
-    var button = form.querySelector('button')
-    button.disabled = true
-    var was = button.textContent
-    button.textContent = 'Sending…'
-    fetch('/join?source=site', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email }),
-    })
-      .then(function (r) { return r.json() })
-      .then(function (out) {
-        if (!out.ok) throw new Error(out.error || 'That did not go through.')
-        form.style.display = 'none'
-        note.textContent = out.again
-          ? 'You are already on the list. The licence comes by email.'
-          : 'Done. The licence comes by email, usually the same day.'
-      })
-      .catch(function (err) {
-        button.disabled = false
-        button.textContent = was
-        note.textContent = String(err.message || err)
-      })
-  })
-})()

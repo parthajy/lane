@@ -41,7 +41,7 @@
 {"@type":"Question","name":"Does Lane work offline?","acceptedAnswer":{"@type":"Answer","text":"Yes, on a plane with the wifi off. Lane never needed the network to answer you."}},
 {"@type":"Question","name":"Can I pause it or delete things?","acceptedAnswer":{"@type":"Answer","text":"Pause from the menu bar at any time. Exclude an app or a website permanently. Delete a single memory, a day, or everything."}},
 {"@type":"Question","name":"Which Macs does it run on?","acceptedAnswer":{"@type":"Answer","text":"Apple silicon Macs on macOS 13 or later. A Windows version is next."}},
-{"@type":"Question","name":"What does it cost?","acceptedAnswer":{"@type":"Answer","text":"Two months free with everything switched on and no card to start, then $9 a month or $89 a year. The first 200 people on the waitlist can pay $499 once for a lifetime licence."}}]}]}
+{"@type":"Question","name":"What does it cost?","acceptedAnswer":{"@type":"Answer","text":"The first 200 people to join the waitlist get Lane free for life, with every update included and no card to start. After those 200 seats are gone it is $499 once, bought outright. There is no subscription."}}]}]}
 </script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GLEMYFELND"></script>
 <script>
@@ -65,8 +65,8 @@
       <a href="#faq">FAQ</a>
     </nav>
     <div class="nav-end">
-      <a class="plain" href="/pricing">Pricing</a>
-      <a class="btn btn-primary btn-sm" href="/download/mac?source=nav">Download</a>
+      <a class="plain" href="#access">Pricing</a>
+      <a class="btn btn-primary btn-sm" href="#access">Claim a free seat</a>
     </div>
   </div>
 </header>
@@ -76,18 +76,23 @@
   <section class="hero">
     <div class="wrap hero-in">
       <div class="hero-copy">
-        <span class="pill"><b>Lane 1.0 for Mac</b><i class="pill-sep"></i><span class="tag">Out now</span></span>
+        <span class="pill"><b>Lane 1.0 for Mac</b><i class="pill-sep"></i><span class="tag">Invitation only</span></span>
         <h1 class="display">Your AI second brain, on&nbsp;your&nbsp;Mac</h1>
         <p class="lede">Lane remembers every page, document, call and promise from your working day, then answers in your own words. It runs on your Mac, built for you. No cloud, no accounts, no API keys. Ever.</p>
-        <div class="actions">
-          <a class="btn btn-primary btn-lg" href="/download/mac?source=hero"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v12M7 11l5 5 5-5M4.5 20.5h15"/></svg> Download for Mac</a>
-          <a class="btn btn-ghost btn-lg" href="#product"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#171727"/><path d="M10 8.3v7.4l6-3.7z" fill="#fff"/></svg> See it work</a>
-        </div>
-        <p class="hero-meta">Free for two months, everything switched on. macOS 13+ · Apple silicon · 33 MB · signed and notarised by Apple.</p>
+        <p class="lede hero-offer"><b>The first 200 people keep it free, for life.</b> After that it is $499 once. There is no subscription and there never will be.</p>
+        <form class="wait wait-hero" id="wait-hero" novalidate>
+          <div class="wait-row">
+            <label class="sr-only" for="wait-hero-email">Your email</label>
+            <input id="wait-hero-email" name="email" type="email" autocomplete="email" placeholder="you@work.com" required>
+            <button class="btn btn-primary btn-lg" type="submit">Claim my seat</button>
+          </div>
+          <p class="wait-msg" id="wait-hero-msg" role="status" aria-live="polite"></p>
+        </form>
+        <p class="hero-meta"><span class="seats-inline"><b id="hero-left">200</b> free seats left</span> · macOS 13+ · Apple silicon · signed and notarised by Apple.</p>
         <ul class="ticks">
           <li><span class="tick-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><circle cx="12" cy="15.8" r="1.1" fill="currentColor" stroke="none"/></svg></span><span>Nothing leaves<br>your Mac</span></li>
           <li><span class="tick-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="10" rx="2"/><path d="M2.5 19h19"/></svg></span><span>No account,<br>no cloud</span></li>
-          <li><span class="tick-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2.5 5 13.5h6l-1 8 8-11h-6z"/></svg></span><span>Two months free,<br>then $9</span></li>
+          <li><span class="tick-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2.5 5 13.5h6l-1 8 8-11h-6z"/></svg></span><span>Free for life,<br>first 200</span></li>
         </ul>
       </div>
       <div class="hero-orb" aria-hidden="true">
@@ -504,16 +509,6 @@
           <h3>Windows is next</h3>
           <p>The Mac app first, the same thing on Windows after. Early testers get both.</p>
         </article>
-        <article class="tile b-plain full" id="free">
-          <h3>Two hundred people get Lane for good</h3>
-          <p>The first two hundred to try it keep it for life — every version, on every Mac they own, with nothing to pay ever. Leave your email and I will send a licence.</p>
-          <form id="joinform" novalidate>
-            <label class="sr-only" for="joinemail">Your email</label>
-            <input id="joinemail" name="email" type="email" required autocomplete="email" placeholder="you@example.com">
-            <button type="submit">Claim a seat</button>
-          </form>
-          <p id="joinnote" class="note"><span id="joincount">&nbsp;</span></p>
-        </article>
       </div>
     </div>
   </section>
@@ -573,7 +568,7 @@
         <details><summary>Does it work offline?</summary><p>Yes, on a plane with the wifi off. Lane never needed the network to answer you in the first place.</p></details>
         <details><summary>Can I pause it or delete things?</summary><p>Pause from the menu bar at any time. Exclude an app or a website permanently. Delete a single memory, a whole day, or everything you have.</p></details>
         <details><summary>Which Macs does it run on?</summary><p>Apple silicon Macs running macOS 13 or later. Windows is next, and early testers get it.</p></details>
-        <details><summary>What does it cost?</summary><p>Two months free, with everything switched on, and no card to start. After that it is $9 a month, or $89 a year if you prefer. The first 200 people on the waitlist can instead pay $499 once and keep Lane for life, every update included. There is no free tier that quietly reads your day: if Lane is running, you are the customer.</p></details>
+        <details><summary>What does it cost?</summary><p>The first two hundred people to leave their address get Lane free, for life — every update, on every Mac they own, with no card and nothing to renew. After those seats are gone it is $499 once, bought outright. There is no subscription and there is no free tier that quietly reads your day: if Lane is running, you are the customer, not the product.</p></details>
       </div>
     </div>
   </section>
@@ -581,46 +576,38 @@
   <section class="access" id="access">
     <div class="wrap access-in">
       <div class="cta-txt rv">
-        <span class="label">Early access</span>
+        <span class="label">The first two hundred</span>
         <h2 class="display">Stop paying twice for the same day.</h2>
-        <p>Once to live it, and again to go looking for it. Leave your email and we send you the build, the moment your seat opens.</p>
-        <div class="actions" style="margin-bottom:2px">
-          <a class="btn btn-primary btn-lg" href="/download/mac?source=access"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v12M7 11l5 5 5-5M4.5 20.5h15"/></svg> Download for Mac</a>
-        </div>
-        <p class="cta-note" style="margin:-6px 0 6px">Or leave your address and we will tell you when something changes.</p>
+        <p>Once to live it, and again to go looking for it. Two hundred people get Lane outright — every version, on every Mac they own, with nothing to pay ever. Leave your address and the licence comes by email.</p>
         <form class="wait" id="wait" novalidate>
           <div class="wait-row">
-            <input id="wait-email" name="email" type="email" autocomplete="email" placeholder="you@work.com" aria-label="Your email" required>
-            <button class="btn btn-dark" type="submit">Join the waitlist</button>
+            <label class="sr-only" for="wait-email">Your email</label>
+            <input id="wait-email" name="email" type="email" autocomplete="email" placeholder="you@work.com" required>
+            <button class="btn btn-primary btn-lg" type="submit">Claim my seat</button>
           </div>
           <p class="wait-msg" id="wait-msg" role="status" aria-live="polite"></p>
         </form>
-        <p class="cta-note">macOS 13+ · Apple silicon · 33 MB · no account · cancel in a click</p>
+        <p class="cta-note">No card. No trial that expires. macOS 13+ · Apple silicon · signed and notarised by Apple.</p>
       </div>
 
       <div class="plans rv">
-        <div class="plans-head">
-          <span class="label">Two months free</span>
-          <p>Everything switched on, no card to start. Then pick one.</p>
+        <div class="seatbox" id="seats">
+          <div class="seatbox-top">
+            <span class="seatbox-n"><b id="seats-taken">0</b><i>of 200 taken</i></span>
+            <span class="seatbox-tag" id="seats-tag">Open</span>
+          </div>
+          <span class="seats-bar"><i id="seats-fill" style="width:0%"></i></span>
+          <p class="seatbox-note"><b id="seats-left">200</b> free seats left. When they are gone, they are gone.</p>
         </div>
-        <a class="plan is-first" href="/buy/lifetime">
-          <span class="plan-top"><b>Lifetime</b><span class="plan-tag">Only 200 spots</span></span>
+        <div class="plan is-first is-now">
+          <span class="plan-top"><b>Now</b><span class="plan-tag">First 200 only</span></span>
+          <span class="plan-p">Free<i>for life</i></span>
+          <span class="plan-d">Every update, every version, on every Mac you own. No renewal, no card, no expiry.</span>
+        </div>
+        <div class="plan is-later">
+          <span class="plan-top"><b>After that</b></span>
           <span class="plan-p">$499<i>once</i></span>
-          <span class="plan-d">Every update, every version, no renewal, ever.</span>
-          <span class="seats" id="seats">
-            <span class="seats-bar"><i id="seats-fill" style="width:0%"></i></span>
-            <span class="seats-n"><b id="seats-left">200</b> seats left</span>
-          </span>
-        </a>
-        <div class="plan-pair">
-          <a class="plan" href="/buy/monthly">
-            <span class="plan-top"><b>Monthly</b></span>
-            <span class="plan-p">$9<i>a month</i></span>
-          </a>
-          <a class="plan" href="/buy/yearly">
-            <span class="plan-top"><b>Yearly</b><span class="plan-tag is-quiet">Two months off</span></span>
-            <span class="plan-p">$89<i>a year</i></span>
-          </a>
+          <span class="plan-d">The same licence, bought outright. There is no monthly plan.</span>
         </div>
       </div>
     </div>
@@ -658,7 +645,7 @@
 
       <div class="foot-col">
         <h4 class="label">Company</h4>
-        <a href="/pricing">Pricing</a><a href="/privacy-explained">Privacy, explained</a><a href="/security">Security</a><a href="/changelog">Changelog</a><a href="/roadmap">Roadmap</a><a href="/blog">Blog</a><a href="mailto:pb@lane.so">Contact</a><a href="#access">Early access</a>
+        <a href="#access">Pricing</a><a href="/privacy-explained">Privacy, explained</a><a href="/security">Security</a><a href="/changelog">Changelog</a><a href="/roadmap">Roadmap</a><a href="/blog">Blog</a><a href="mailto:pb@lane.so">Contact</a><a href="#access">Early access</a>
       </div>
     </div>
 

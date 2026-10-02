@@ -880,3 +880,54 @@ body.dark-page {
 .b-coral { background: #f2555a; color: #fff; }
 .b-amber { background: #f5a524; color: #33220a; }
 .b-plain { background: var(--paper); border: 1px solid var(--line); color: var(--ink); }
+
+/* ── The two hundred seats ───────────────────────────────────────────────
+   The offer is the page now, so it has to carry weight in the hero and
+   again at the bottom. Nothing here is decoration: the bar is the only
+   thing on the page that moves on its own, and it is the reason to act. */
+
+.hero-offer { font-size: 16px !important; color: #3b3b4d !important; max-width: 46ch; }
+.hero-offer b { color: #171727; font-weight: 600; }
+
+.wait-hero { max-width: 500px; margin-top: 4px; }
+.wait-hero input { height: 52px; font-size: 15.5px; }
+.wait-hero button { height: 52px; }
+
+.seats-inline { font-variant-numeric: tabular-nums; }
+.seats-inline b { color: #171727; font-weight: 600; }
+
+.seatbox {
+  display: grid; gap: 10px; padding: 20px 22px; border-radius: 16px;
+  background: linear-gradient(140deg, #171727, #26213f);
+  box-shadow: 0 1px 2px rgba(16,16,26,.05), 0 24px 50px -26px rgba(32,22,80,.6);
+}
+.seatbox-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.seatbox-n { font-variant-numeric: tabular-nums; color: #fff; letter-spacing: -.03em; }
+.seatbox-n b { font-size: clamp(30px, 3.6vw, 40px); font-weight: 600; }
+.seatbox-n i {
+  font-style: normal; font-size: 13.5px; font-weight: 450; letter-spacing: 0;
+  color: rgba(255,255,255,.62); margin-left: 9px;
+}
+.seatbox-tag {
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 10px;
+  letter-spacing: .1em; text-transform: uppercase; white-space: nowrap;
+  color: #c9c2ff; background: rgba(140,125,255,.22); border-radius: 999px; padding: 5px 10px;
+}
+.seatbox-tag.is-tight { color: #ffd9c7; background: rgba(226,84,44,.26); }
+.seatbox-tag.is-gone { color: #ffc9c9; background: rgba(242,85,90,.28); }
+.seatbox .seats-bar { background: rgba(255,255,255,.14); height: 7px; }
+.seatbox .seats-bar i { background: linear-gradient(90deg, #8b7dff, #b9a6ff); }
+.seatbox-note { font-size: 13px; color: rgba(255,255,255,.72); margin: 0; }
+.seatbox-note b { color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Two cards, one price each: what it costs now, and what it costs after. */
+.plan.is-now .plan-p { color: #2f2a7a; }
+.plan.is-later { background: rgba(255,255,255,.5); }
+.plan.is-later .plan-p { color: #4a4a5d; }
+.plan.is-now:hover, .plan.is-later:hover { transform: none; box-shadow: 0 1px 2px rgba(16,16,26,.05), 0 18px 40px -22px rgba(60,40,140,.45); }
+.plan.is-later:hover { box-shadow: 0 1px 2px rgba(16,16,26,.04); border-color: rgba(16,16,26,.08); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}

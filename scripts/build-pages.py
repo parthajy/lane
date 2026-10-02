@@ -110,34 +110,37 @@ def sec(label: str, head: str, body: str, cls: str = "sec") -> str:
 CTA = '''  <section class="access" id="access">
     <div class="wrap access-in">
       <div class="cta-txt rv">
-        <span class="label">Early access</span>
-        <h2 class="display">Two months free. Then $9.</h2>
-        <p>Free for two months, everything switched on, no card to start. The first 200 people can buy Lane once, for $499, and keep it for life.</p>
-        <div class="actions" style="margin:2px 0 4px">
-          <a class="btn btn-primary btn-lg" href="/download/mac?source=cta"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v12M7 11l5 5 5-5M4.5 20.5h15"/></svg> Download for Mac</a>
-        </div>
+        <span class="label">The first two hundred</span>
+        <h2 class="display">Two hundred people keep it.</h2>
+        <p>The first two hundred to leave an address get Lane outright — every version, on every Mac they own, with nothing to pay ever. After that it is $499 once. There is no subscription.</p>
         <form class="wait" id="wait" novalidate>
           <div class="wait-row">
-            <input id="wait-email" name="email" type="email" autocomplete="email" placeholder="you@work.com" aria-label="Your email" required>
-            <button class="btn btn-dark" type="submit">Join the waitlist</button>
+            <label class="sr-only" for="wait-email">Your email</label>
+            <input id="wait-email" name="email" type="email" autocomplete="email" placeholder="you@work.com" required>
+            <button class="btn btn-primary btn-lg" type="submit">Claim my seat</button>
           </div>
           <p class="wait-msg" id="wait-msg" role="status" aria-live="polite"></p>
         </form>
-        <p class="cta-note">macOS 13+ · Apple silicon · 28 MB · no account · cancel in a click</p>
+        <p class="cta-note">No card. No trial that expires. macOS 13+ · Apple silicon · signed and notarised by Apple.</p>
       </div>
       <div class="plans rv">
-        <a class="plan is-first" href="/buy/lifetime">
-          <span class="plan-top"><b>Lifetime</b><span class="plan-tag">Only 200 spots</span></span>
+        <div class="seatbox" id="seats">
+          <div class="seatbox-top">
+            <span class="seatbox-n"><b id="seats-taken">0</b><i>of 200 taken</i></span>
+            <span class="seatbox-tag" id="seats-tag">Open</span>
+          </div>
+          <span class="seats-bar"><i id="seats-fill" style="width:0%"></i></span>
+          <p class="seatbox-note"><b id="seats-left">200</b> free seats left. When they are gone, they are gone.</p>
+        </div>
+        <div class="plan is-first is-now">
+          <span class="plan-top"><b>Now</b><span class="plan-tag">First 200 only</span></span>
+          <span class="plan-p">Free<i>for life</i></span>
+          <span class="plan-d">Every update, every version, on every Mac you own. No renewal, no card, no expiry.</span>
+        </div>
+        <div class="plan is-later">
+          <span class="plan-top"><b>After that</b></span>
           <span class="plan-p">$499<i>once</i></span>
-          <span class="plan-d">Every update, every version, no renewal, ever.</span>
-          <span class="seats" id="seats">
-            <span class="seats-bar"><i id="seats-fill" style="width:0%"></i></span>
-            <span class="seats-n"><b id="seats-left">200</b> seats left</span>
-          </span>
-        </a>
-        <div class="plan-pair">
-          <a class="plan" href="/buy/monthly"><span class="plan-top"><b>Monthly</b></span><span class="plan-p">$9<i>a month</i></span></a>
-          <a class="plan" href="/buy/yearly"><span class="plan-top"><b>Yearly</b><span class="plan-tag is-quiet">Two months off</span></span><span class="plan-p">$89<i>a year</i></span></a>
+          <span class="plan-d">The same licence, bought outright. There is no monthly plan.</span>
         </div>
       </div>
     </div>
@@ -189,8 +192,8 @@ def page(slug: str, title: str, desc: str, kicker: str, h1: str, lede: str, body
       <h1 class="display">{h1}</h1>
       <p class="lede">{lede}</p>
       <div class="actions">
-        <a class="btn btn-primary btn-lg" href="/download/mac?source={slug}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v12M7 11l5 5 5-5M4.5 20.5h15"/></svg> Download for Mac</a>
-        <a class="btn btn-ghost btn-lg" href="/pricing">See pricing</a>
+        <a class="btn btn-primary btn-lg" href="#access">Claim a free seat</a>
+        <a class="btn btn-ghost btn-lg" href="/pricing">What it costs</a>
       </div>
     </div>
   </section>"""}
@@ -724,7 +727,7 @@ COMPARISONS = [
               ("Where it lives", "Your devices and iCloud", "Your Mac, encrypted, no sync"),
               ("Asking it something", "Search for the word you used", "Ask in your own words and get a cited answer"),
               ("Meetings", "You type during them", "Recorded, transcribed and written up on device"),
-              ("Price", "Free with your Mac", "Two months free, then $9 a month")],
+              ("Price", "Free with your Mac", "Free for life for the first 200, then $499 once")],
         instead="All you need is somewhere to jot a phone number and have it on your phone a second later. Nothing beats the app that is already there.",
     ),
 ]
@@ -804,22 +807,19 @@ def build_company() -> list[str]:
     made = []
 
     # ---- pricing ----
-    plans = '''<div class="pricetable rv">
+    plans = '''<div class="pricetable rv is-two">
       <div class="pcol is-first">
-        <span class="plan-tag">Only 200 spots</span>
-        <b>Lifetime</b><span class="plan-p">$499<i>once</i></span>
-        <p>Every update, every version, for as long as Lane exists. No renewal, ever.</p>
-        <a class="btn btn-primary" href="/buy/lifetime">Buy once</a>
+        <span class="plan-tag">First 200 only</span>
+        <b>Now</b><span class="plan-p">Free<i>for life</i></span>
+        <p>Every update, every version, on every Mac you own, for as long as Lane exists. No card, no renewal, no expiry.</p>
+        <a class="btn btn-primary" href="/#access">Claim a free seat</a>
       </div>
-      <div class="pcol"><b>Monthly</b><span class="plan-p">$9<i>a month</i></span>
-        <p>Cancel in a click, from inside the app or by writing to us.</p>
-        <a class="btn btn-ghost" href="/buy/monthly">Choose monthly</a></div>
-      <div class="pcol"><b>Yearly</b><span class="plan-tag is-quiet">Two months off</span><span class="plan-p">$89<i>a year</i></span>
-        <p>The same thing, billed once a year, for the price of ten months.</p>
-        <a class="btn btn-ghost" href="/buy/yearly">Choose yearly</a></div>
+      <div class="pcol"><b>After the first 200</b><span class="plan-p">$499<i>once</i></span>
+        <p>The same licence, bought outright. There is no monthly plan and there never will be.</p>
+        <a class="btn btn-ghost" href="/#access">Join the list</a></div>
     </div>'''
     body = (
-        sec("", "", plans + '<p class="aside rv">Two months free first, with everything switched on and no card to start. <a class="tlink" href="/#access">Join the waitlist</a></p>', "sec")
+        sec("", "", plans + '<p class="aside rv">Lane is not on general download yet. A seat is claimed by leaving an address, and the licence arrives by email. <a class="tlink" href="/#access">Claim a free seat</a></p>', "sec")
         + sec("What you get", "The same app in every plan",
               facts([("check", "Everything, from the first day", "There is no tier that reads your day and gives you less. Every plan is the whole app."),
                      ("eye", "No free tier, on purpose", "A memory app funded by anything other than the person using it is a contradiction. If Lane is running, you are the customer."),
@@ -827,22 +827,22 @@ def build_company() -> list[str]:
                      ("key", "One key, your machines", "Use your licence on the Macs you work on. We do not count them or phone home to check.")]),
               "sec mist")
         + sec("Billing", "The dull but important part",
-              facts([("clock", "The trial is two months", "It starts the first time Lane runs, and it is kept on your machine, so reinstalling does not restart it and does not extend it."),
+              facts([("clock", "A free seat does not expire", "The first two hundred licences have no end date. They are checked on your own Mac, so there is nothing to renew and nothing to lapse."),
                      ("bar", "Payments are handled by Dodo Payments", "Dodo Payments is our merchant of record: they handle the card and the tax. We never see your card details."),
                      ("check", "Changed your mind", "Write within 14 days of buying and we refund you, no argument. The trial exists so it should not come to that."),
-                     ("file", "When the trial ends", "Lane stops reading and stops making memories. Nothing is deleted: everything you already have stays on your Mac and comes back the moment you unlock it.")]))
+                     ("file", "If a licence ever lapses", "Lane stops reading and stops making memories. Nothing is deleted: everything you already have stays on your Mac and comes back the moment you unlock it.")]))
         + sec("Questions", "The ones people ask about money",
               '<div class="faq rv">'
-              '<details><summary>What does lifetime actually mean?</summary><p>You pay once and use every version of Lane for Mac that we ship, for as long as we ship it. It is limited to the first 200 people because it is a bet on us by people who are early, and it would not be a sustainable price for everybody.</p></details>'
+              '<details><summary>What does free for life actually mean?</summary><p>You pay nothing, ever, and use every version of Lane for Mac that we ship, for as long as we ship it. It is limited to two hundred people because they are taking a bet on something unfinished, and because giving it away is not a sustainable price for everybody.</p></details>'
               '<details><summary>What happens if you disappear?</summary><p>Lane keeps working. It needs no server, so there is nothing to switch off. Your memories stay in a store on your disk, and you can export them to markdown whenever you like.</p></details>'
               '<details><summary>Is there a team or company plan?</summary><p>Not yet. Lane is a private memory for one person. An organisation version is the reason Rabbit exists, but it is not what we are selling today.</p></details>'
-              '<details><summary>Do you take purchasing power into account?</summary><p>If $9 is genuinely out of reach where you are, write to us and say so. We would rather you used it.</p></details>'
+              '<details><summary>Do you take purchasing power into account?</summary><p>If $499 is genuinely out of reach where you are, write to us and say so. We would rather you used it.</p></details>'
               '</div>', "sec mist")
     )
     made.append(str(page("pricing", "Pricing · Lane for Mac",
-                         "Two months free, then $9 a month or $89 a year. The first 200 people can buy Lane once for $499 and keep it for life. No account, no free tier that reads your day.",
-                         "Pricing", "Two months free.<br>Then nine&nbsp;dollars.",
-                         "One app, one price, no tier that quietly does less. The trial is long enough to see whether Lane is worth it before you pay for it.",
+                         "The first 200 people get Lane free for life, every update included, with no card. After that it is $499 once. No subscription, no account, no free tier that reads your day.",
+                         "Pricing", "The first two hundred<br>keep it for&nbsp;good.",
+                         "One app, one price, and no tier that quietly does less. Two hundred seats are being given away outright; after those, Lane is bought once and owned.",
                          body)))
 
     # ---- security ----
@@ -955,7 +955,7 @@ def build_legal() -> list[str]:
             "You may not reverse engineer, decompile or attempt to extract the model shipped with the application, except where that restriction is void under the law that applies to you.",
             "You may use Lane for commercial work. It is a tool; what you do with it is yours.")),
         ("The trial", p(
-            "Lane runs in full for two months from the first time you open it, with no payment details required. The trial is recorded on your own machine, so reinstalling neither restarts nor extends it.",
+            "The first two hundred people to claim a seat get Lane outright, with no payment details required and no end date. The licence is a signed note checked on your own Mac, so there is nothing to renew.",
             "When the trial ends, Lane stops reading and stops writing new memories. It does not delete anything: everything already on your disk stays there, and becomes available again as soon as you enter a licence key.")),
         ("Paying", p(
             "Prices are shown on the pricing page and are in US dollars. Payments are taken by Dodo Payments, who act as merchant of record and who handle the tax.",
@@ -1303,7 +1303,7 @@ def build_alternatives() -> list[str]:
             (f'What is the best {other} alternative?',
              f'It depends on what you are replacing. {a["answer"]}'),
             (f'Is there a free {other} alternative?',
-             'Apple Notes is free and already on your Mac, and Obsidian is free for personal use. Both are manual: they know what you type into them. Lane is free for two months, then $9 a month, $89 a year, or $499 once.'),
+             'Apple Notes is free and already on your Mac, and Obsidian is free for personal use. Both are manual: they know what you type into them. Lane is free for life for the first two hundred people, and $499 once after that.'),
             (f'Is there a private, offline {other} alternative?',
              'Lane. It has no account and no server, the model that reads your day runs inside the app, and it works with the wifi off. Obsidian is also local, but has no capture and no model of its own.'),
             ('Does Lane work on Windows?',
