@@ -201,10 +201,12 @@
 
   var taken = document.getElementById('seats-taken');
   var left = document.getElementById('seats-left');
+  var heroTaken = document.getElementById('hero-taken');
   var heroLeft = document.getElementById('hero-left');
   var fill = document.getElementById('seats-fill');
+  var heroFill = document.getElementById('hero-fill');
   var tag = document.getElementById('seats-tag');
-  if (!forms.length && !fill) return;
+  if (!forms.length && !fill && !heroFill) return;
 
   function say(f, text, kind) {
     if (!f.msg) return;
@@ -220,9 +222,14 @@
     var gone = Math.min(seats, Math.max(0, n.claimed));
     var over = Math.max(0, seats - gone);
     if (taken) taken.textContent = String(gone);
+    if (heroTaken) heroTaken.textContent = String(gone);
     if (left) left.textContent = String(over);
     if (heroLeft) heroLeft.textContent = String(over);
-    if (fill) fill.style.width = Math.round((gone / seats) * 100) + '%';
+    // A bar that rounds to nothing looks broken rather than empty, so the
+    // first seat is always worth a sliver.
+    var pct = gone === 0 ? 0 : Math.max(1.5, Math.round((gone / seats) * 100));
+    if (fill) fill.style.width = pct + '%';
+    if (heroFill) heroFill.style.width = pct + '%';
     if (tag) {
       tag.className = 'seatbox-tag' + (over === 0 ? ' is-gone' : over <= 40 ? ' is-tight' : '');
       tag.textContent = over === 0 ? 'Round full' : over <= 40 ? 'Nearly full' : 'Open';

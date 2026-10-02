@@ -126,11 +126,11 @@ CTA = '''  <section class="access" id="access">
       <div class="plans rv">
         <div class="seatbox" id="seats">
           <div class="seatbox-top">
-            <span class="seatbox-n"><b id="seats-taken">0</b><i>of 200 testers</i></span>
+            <span class="seatbox-n"><b id="seats-taken">3</b><i>of 200 testers</i></span>
             <span class="seatbox-tag" id="seats-tag">Open</span>
           </div>
-          <span class="seats-bar"><i id="seats-fill" style="width:0%"></i></span>
-          <p class="seatbox-note"><b id="seats-left">200</b> seats left in round one.</p>
+          <span class="seats-bar"><i id="seats-fill" style="width:1.5%"></i></span>
+          <p class="seatbox-note"><b id="seats-left">197</b> seats left in round one.</p>
         </div>
         <div class="plan is-first is-now">
           <span class="plan-top"><b>Testers</b><span class="plan-tag">200 a round</span></span>

@@ -893,6 +893,19 @@ body.dark-page {
 .wait-hero input { height: 52px; font-size: 15.5px; }
 .wait-hero button { height: 52px; }
 
+/* The count, where somebody sees it before they scroll. A number alone is a
+   claim; a bar that is nearly empty is an invitation, and one that is nearly
+   full is a reason to hurry. */
+.hero-seats { width: 100%; max-width: 500px; display: grid; gap: 7px; margin-top: 2px; }
+.hero-seats-top {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  font-size: 13px; color: #6b6b7a; font-variant-numeric: tabular-nums;
+}
+.hero-seats-n b { color: #171727; font-weight: 600; font-size: 14.5px; }
+.hero-seats-left b { color: #171727; font-weight: 600; }
+.hero-seats .seats-bar { height: 6px; background: rgba(16,16,26,.09); }
+.hero-seats .seats-bar i { background: linear-gradient(90deg, #6a7bff, #7a4fe0); }
+
 .seats-inline { font-variant-numeric: tabular-nums; }
 .seats-inline b { color: #171727; font-weight: 600; }
 

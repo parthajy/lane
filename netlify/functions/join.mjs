@@ -1,13 +1,20 @@
-import { db, count, json } from './_lib.mjs'
+import { db, json } from './_lib.mjs'
 
 /** How many people get Lane outright. The database holds the same number in
     lane_lifetime_seats(); this is the fallback when it cannot be reached. */
 const SEATS = 200
 
-/** Seats gone. A seat is taken the moment somebody claims it, not when the
-    licence is posted — otherwise the counter sits still for a day and the
-    two hundredth person is told there is room when there is not. */
-const taken = () => count('waitlist', 'lifetime=is.true').catch(() => 0)
+/** Seats gone, by either route: claimed on the site, or given by hand from
+    the admin page, which is how the first testers got theirs. The database
+    counts the union of the two, distinct by address, so the number cannot
+    drift from however a seat was actually handed over. A seat counts the
+    moment it is taken, not when the licence is posted — otherwise the counter
+    sits still for a day and the two hundredth person is told there is room
+    when there is not. */
+const taken = () =>
+  db('rpc/lane_seats_taken', { method: 'POST', body: '{}' })
+    .then((n) => Number(n) || 0)
+    .catch(() => 0)
 
 /**
  * The only door into the two hundred.

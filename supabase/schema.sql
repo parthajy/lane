@@ -66,6 +66,25 @@ alter table public.sales        enable row level security;
 create or replace function public.lane_lifetime_seats() returns integer
 language sql immutable as $$ select 200 $$;
 
+-- How many tester seats are gone.
+--
+-- A seat is taken by either route: somebody claims one on the site, or it is
+-- given to them by hand from the admin page, which is how the first testers
+-- got theirs. Counting one table missed the other, so the site read nought
+-- while three people were already testing. Distinct, because somebody who
+-- signs up and is then sent a licence is one tester, not two.
+create or replace function public.lane_seats_taken() returns integer
+language sql
+security definer
+set search_path = public
+as $$
+  select count(*)::integer from (
+    select lower(email) as who from waitlist where lifetime
+    union
+    select lower(claimed_by) from licence_keys where plan = 'comp' and claimed_at is not null
+  ) both_ways
+$$;
+
 -- Join the waitlist. Returns the position, whether a lifetime seat was held,
 -- and how many are left. Running it twice with the same address changes
 -- nothing and gives the same answer.
@@ -87,14 +106,14 @@ begin
     raise exception 'that does not look like an email address';
   end if;
 
-  select count(*) into v_taken from waitlist where lifetime;
+  v_taken := public.lane_seats_taken();
   insert into waitlist (email, name, source, lifetime)
   values (v_email, left(coalesce(p_name, ''), 80), left(coalesce(p_source, ''), 40), v_taken < v_seats)
   on conflict (email) do nothing;
 
   select lifetime, id into v_lifetime, v_id from waitlist where email = v_email;
   select count(*) into v_position from waitlist where id <= v_id;
-  select count(*) into v_taken from waitlist where lifetime;
+  v_taken := public.lane_seats_taken();
 
   return json_build_object(
     'ok', true,
@@ -113,7 +132,7 @@ set search_path = public
 as $$
   select json_build_object(
     'total', (select count(*) from waitlist),
-    'lifetimeLeft', greatest(0, public.lane_lifetime_seats() - (select count(*) from waitlist where lifetime)),
+    'lifetimeLeft', greatest(0, public.lane_lifetime_seats() - public.lane_seats_taken()),
     'lifetimeSeats', public.lane_lifetime_seats()
   )
 $$;
@@ -134,6 +153,7 @@ begin
   return json_build_object('ok', true);
 end $$;
 
+revoke all on function public.lane_seats_taken() from public;
 revoke all on function public.join_waitlist(text, text, text) from public;
 revoke all on function public.waitlist_stats() from public;
 revoke all on function public.send_feedback(text, text, text) from public;
