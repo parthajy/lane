@@ -280,3 +280,52 @@
       });
   });
 })();
+
+
+/* ── The two hundred free seats ───────────────────────────────────────
+   The count is asked for on load so the page can say how many are left
+   without anybody having to sign up to find out. The form posts the
+   address and says what happened in place, rather than navigating away. */
+(function () {
+  var form = document.getElementById('joinform')
+  var note = document.getElementById('joinnote')
+  var count = document.getElementById('joincount')
+  if (!form || !note) return
+
+  function show(n) {
+    if (!count || typeof n.claimed !== 'number') return
+    count.textContent = n.left > 0
+      ? n.claimed + ' of ' + n.seats + ' claimed · ' + n.left + ' left'
+      : 'All ' + n.seats + ' have been claimed. Leave your address anyway and I will write if one frees up.'
+  }
+
+  fetch('/join').then(function (r) { return r.json() }).then(show).catch(function () {})
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault()
+    var email = (form.email.value || '').trim()
+    if (!email) return
+    var button = form.querySelector('button')
+    button.disabled = true
+    var was = button.textContent
+    button.textContent = 'Sending…'
+    fetch('/join?source=site', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email }),
+    })
+      .then(function (r) { return r.json() })
+      .then(function (out) {
+        if (!out.ok) throw new Error(out.error || 'That did not go through.')
+        form.style.display = 'none'
+        note.textContent = out.again
+          ? 'You are already on the list. The licence comes by email.'
+          : 'Done. The licence comes by email, usually the same day.'
+      })
+      .catch(function (err) {
+        button.disabled = false
+        button.textContent = was
+        note.textContent = String(err.message || err)
+      })
+  })
+})()

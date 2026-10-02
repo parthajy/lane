@@ -98,7 +98,7 @@ export default async (request) => {
       count('waitlist', 'lifetime=is.true'),
       db('licence_keys?select=plan&claimed_at=is.null'),
       db('sales?select=plan,amount_cents,currency,email,created_at&order=id.desc&limit=200'),
-      db('waitlist?select=email,name,lifetime,created_at&order=id.desc&limit=25'),
+      db('waitlist?select=email,name,lifetime,created_at&order=id.desc&limit=60'),
       db('feedback?select=kind,body,email,created_at&order=id.desc&limit=25'),
       db(`downloads?select=created_at&created_at=gte.${since}&order=id.desc&limit=5000`),
       count('licence_keys', 'plan=eq.comp&claimed_at=not.is.null'),
@@ -128,8 +128,18 @@ export default async (request) => {
   const pool = ['lifetime', 'yearly', 'monthly']
     .map((p) => `<li><span>${p}</span><b>${free[p] || 0}</b><span class="n">keys unclaimed</span></li>`)
     .join('')
+  // Everyone who asked, with the button that answers them. The address is
+  // put straight into the give form, so issuing a key is one press rather
+  // than copying an address from one table into a box above it.
+  const issued = new Set((compRows || []).map((r) => (r.claimed_by || '').toLowerCase()))
   const waitRows = (recentWait || [])
-    .map((r) => `<tr><td>${escape(r.email)}</td><td>${escape(r.name)}</td><td>${r.lifetime ? 'lifetime' : ''}</td><td class="n">${when(r.created_at)}</td></tr>`)
+    .map((r) => {
+      const done = issued.has((r.email || '').toLowerCase())
+      const action = done
+        ? '<span class="sent">sent</span>'
+        : `<form method="post" action="/admin" class="inline"><input type="hidden" name="give" value="${escape(r.email)}"><button type="submit">Give lifetime</button></form>`
+      return `<tr><td>${escape(r.email)}</td><td>${escape(r.name)}</td><td class="n">${when(r.created_at)}</td><td class="act">${action}</td></tr>`
+    })
     .join('')
   const fbRows = (recentFeedback || [])
     .map((r) => `<tr><td>${escape(r.kind)}</td><td>${escape(String(r.body).slice(0, 300))}</td><td>${escape(r.email)}</td><td class="n">${when(r.created_at)}</td></tr>`)
@@ -184,6 +194,10 @@ form.give{display:flex;gap:8px;margin-bottom:12px}
 form.give input{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);flex:1;min-width:0}
 form.give input:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 4px rgba(90,81,229,.14)}
 form.give button{font:inherit;font-weight:500;padding:9px 16px;border:0;border-radius:10px;background:var(--ink);color:#fff;cursor:pointer;white-space:nowrap}
+form.inline{margin:0}
+form.inline button{font:inherit;font-size:12px;font-weight:500;padding:5px 11px;border:0;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;white-space:nowrap}
+td.act{width:112px;text-align:right}
+.sent{color:#1a7f4b;font-size:12px}
 .gave{background:#f2fbf5;border:1px solid rgba(22,140,80,.22);border-radius:12px;padding:12px;margin-bottom:12px}
 .gave p{margin:0 0 8px;font-size:13.5px}
 .gave textarea{width:100%;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:9px;border-radius:9px;border:1px solid var(--line);resize:vertical;word-break:break-all}
@@ -211,7 +225,7 @@ form.give button{font:inherit;font-weight:500;padding:9px 16px;border:0;border-r
 <section><h2>Sales by plan</h2><ul>${plans || '<li>none yet</li>'}</ul></section>
 <section><h2>Keys in the pool</h2><ul>${pool}</ul></section>
 <section><h2>Newest sales</h2><table>${saleRows || '<tr><td>none yet</td></tr>'}</table></section>
-<section><h2>Newest on the waitlist</h2><table>${waitRows || '<tr><td>nobody yet</td></tr>'}</table></section>
+<section><h2>Asked for a free seat · ${compsGiven} of ${COMPS} sent</h2><table>${waitRows || '<tr><td>nobody yet</td></tr>'}</table></section>
 <section class="fb"><h2>Feedback</h2><table>${fbRows || '<tr><td>nothing yet</td></tr>'}</table></section>
 `)
 }
