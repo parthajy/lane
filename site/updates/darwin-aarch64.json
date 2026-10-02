@@ -1,11 +1,11 @@
 {
-  "version": "1.0.13",
-  "notes": "Updates install and Lane comes back. It was quitting to restart and never returning.",
-  "pub_date": "2026-10-02T05:49:30.475572+00:00",
+  "version": "1.0.14",
+  "notes": "Two short films on Today explaining what Lane is and how to drive it. They open in your browser.",
+  "pub_date": "2026-10-02T06:39:32.931525+00:00",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZG1vUlZuTUhBNUk5UjA5MDlMTlI4NW5oNzdiWXVEM1lPNWE3dUFaOTdJZUZlSlV4VGZnU0xCNG5HUnQ5d2h0ajYvalFJcVQ2bUdoUUpSQ2lFZGRKalEwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwOTIwMTcwCWZpbGU6TGFuZS5hcHAudGFyLmd6CktiYTJQa0xKRFlCYUR6elU1VHl5dzdEZVRXUXRyRGUrN2xZQ1lUbVkrZzFMelhSZTZpYkFaQkFONi8yWjdpYVkvY0kyQlFEV0VsYk5vb2ZxNFJZckFBPT0K",
-      "url": "https://github.com/parthajy/lane/releases/download/v1.0.13/Lane.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTc2lKSlF1MVhzZG93aFg1M0JyekF6Uk9EWlYrVndhZE01Zjh4dHIzbEkvaFV1UXUya3pKMXBoekQ4cnVaZ1A3c2xCQmJDZkNFc2NNRFdkM1IrMU9NZUxBVlpvU2s1SFFrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwOTIzMTcyCWZpbGU6TGFuZS5hcHAudGFyLmd6CmVkNFVJZFdIQ0lDc3hubEhuK2tqQmJBOHkvTzJGQmtyZzUvZEdUaUlFYk5LaHlTOVUwTk4xQ1NaNS9wMXJuLzlTWVFvRHBjYXR5QitoNmU0SUpHcUFBPT0K",
+      "url": "https://github.com/parthajy/lane/releases/download/v1.0.14/Lane.app.tar.gz"
     }
   }
 }
