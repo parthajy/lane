@@ -2099,29 +2099,7 @@ mod tests {
 
 // ── Ask ──────────────────────────────────────────────────────────────────
 
-const ASK_SYSTEM: &str = "You are Lane, the memory of the person you are talking to. You have their memories of what \
-they saw and did on their Mac, each with a time. Most of what they saw belongs to somebody else: a post, a feed, an \
-article, a page about another person's company, sale or plan. Never treat what someone else did as theirs. Say \
-\"you\" only for what a memory shows them doing, writing, deciding or being asked for; for anything else name whose \
-it was (\"a post by @domainking said\", \"an article reported\") or leave it out. Somebody else's sale is not their \
-sale, and it never becomes a thing they owe. Answer like a sharp colleague who was there: lead with the answer, in one \
-or two natural sentences, then only the detail that matters. Speak to them as \"you\" and refer to time the way people do \
-(\"last night\", \"on Tuesday\", \"about an hour ago\") using the times given. Use ONLY the memories provided; cite the ones \
-you use inline as [1], [2]. When a FACTS block is given, take numbers, dates and names from it exactly as written; if two \
-facts disagree, give the newest (or the one confirmed by you) and mention the older value with its date in a few words. If \
-the memories do not contain the answer, say so in one sentence and mention the closest thing you do have. Answer exactly \
-what was asked: when the question names a time window (today, yesterday, last week, a date), a person, a place or a thing, \
-the first sentence either answers within that constraint or says plainly, in your own words for that question, that the \
-memories hold nothing for it. Never lead with a figure or fact that belongs to a different period, person or thing; a page \
-seen in the window that reports a total for another period, an old balance or a schedule is not what happened in the \
-window. Related facts may follow, labelled for what they are. A question with no time word is about all your memories; do \
-not narrow it to today. An order, invoice or cart marked pending, unpaid or waiting for payment is not money spent: say it \
-is pending. Name a weekday or a date only when the memory's own time says it; the times given are the truth about when: each source \
-begins with when it happened, and a date written inside the text is something the text talks about, not when the memory \
-is from. When the same kind of thing happened more than once, answer with the most recent and say in a few words that \
-there were earlier ones. \
-Plain prose only: no headings, no bullet lists, no markdown, no \
-preamble like \"Based on your memories\".";
+const ASK_SYSTEM: &str = "You are Lane, their memory of what they saw and did on this Mac; every source begins with when it happened. Most of it is somebody else's: a post, an article, a page about another company. Say \"you\" only for what a memory shows them doing, writing, deciding or being asked for; otherwise name whose it was. Someone else's sale is never theirs and never something they owe. Lead with the answer in one or two sentences, then only the detail that matters. Plain prose: no headings, lists, markdown, or \"based on your memories\". Use only the memories given and cite them inline as [1], [2]; if they do not hold the answer, say so in a sentence and offer the closest thing you have. Take numbers, dates and names from a FACTS block exactly as written; when two disagree give the newest and note the older with its date. Answer what was asked: if the question names a time, a person or a thing, the first sentence answers inside it or says plainly there is nothing for it, and never leads with a figure belonging to another period or person. A question with no time word is about everything, not today. A source's own time is the truth about when; a date inside the text is a subject, not a timestamp. Anything pending or unpaid is not money spent. When something happened more than once, give the most recent and note there were earlier ones.";
 
 /// What the question pins down, spelled out for the model and checked after
 /// the answer: a time window, named people, a quantity.
@@ -2267,8 +2245,12 @@ pub struct AskTurn {
 }
 
 /// More context on machines that can afford it.
-fn ask_top_k() -> u32 { if runtime::physical_ram_gb() >= 16 { 10 } else { 6 } }
-fn ask_excerpt_chars() -> usize { if runtime::physical_ram_gb() >= 16 { 800 } else { 500 } }
+// Everything here is read before a single word comes back, at roughly a
+// hundred and eighty tokens a second on a small Mac. Six excerpts of five
+// hundred characters is a page and a half to get through before answering
+// "what was the reference number".
+fn ask_top_k() -> u32 { if runtime::physical_ram_gb() >= 16 { 10 } else { 4 } }
+fn ask_excerpt_chars() -> usize { if runtime::physical_ram_gb() >= 16 { 800 } else { 380 } }
 const ASK_HISTORY_TURNS: usize = 3;
 
 /// "yesterday 20:14", "today 09:02", "Tue 16 Sep 11:30", "3 Aug 2026".
@@ -2819,7 +2801,11 @@ pub fn answer_with(state: &AppState, question: &str, history: &[AskTurn], draft:
         intent.instruction,
         intent.window.map(|(a, b)| format!(" Only memories between {} and {} were considered.", day_of(a), day_of(b - 1))).unwrap_or_default()
     );
-    let budget = if draft { 700 } else if matches!(intent.kind, IntentKind::Timeline | IntentKind::List | IntentKind::Synthesis) { 650 } else { 400 };
+    // A plain question deserves a plain answer. Four hundred tokens let
+    // the model write thirteen hundred characters where two sentences were
+    // asked for, and on this hardware every one of them costs a sixteenth
+    // of a second: the length of the answer was most of the wait.
+    let budget = if draft { 700 } else if matches!(intent.kind, IntentKind::Timeline | IntentKind::List | IntentKind::Synthesis) { 420 } else { 200 };
     let text = runtime::chat_stream(port, if draft { DRAFT_SYSTEM } else { ASK_SYSTEM }, &user, budget, on_token)?;
     // Keep only sources the answer actually cites; drop citations out of range.
     let hedged = {

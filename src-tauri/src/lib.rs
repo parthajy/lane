@@ -159,7 +159,11 @@ pub fn toggle_overlay(app: &AppHandle, want: Option<bool>) {
     log::info!("overlay: {}", if show { "show" } else { "hide" });
     if show {
         snapshot_screen(app);
-        let _ = w.set_content_protected(true);
+        // Same switch the notch uses. Protected unless LANE_UNPROTECTED is
+        // set, which is for filming a walkthrough and for self-tests: with
+        // Recall excluded from capture there is no way to show the one thing
+        // worth showing.
+        let _ = w.set_content_protected(std::env::var("LANE_UNPROTECTED").is_err());
         raise_window(&w, NS_FLOATING_WINDOW_LEVEL, None, None);
         let _ = w.center();
         let _ = w.show();
@@ -883,7 +887,7 @@ pub fn run() {
                 }
             }
             if let Some(w) = app.get_webview_window("overlay") {
-                let _ = w.set_content_protected(true);
+                let _ = w.set_content_protected(std::env::var("LANE_UNPROTECTED").is_err());
                 let h = app.handle().clone();
                 w.on_window_event(move |e| {
                     if let WindowEvent::Focused(false) = e {

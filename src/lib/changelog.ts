@@ -6,6 +6,15 @@
  */
 export const CHANGELOG: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '1.0.11',
+    date: '2 October 2026',
+    lines: [
+      'Answers come back in about a third of the time. They were long where two sentences were asked for, and every character costs a sixteenth of a second on a small Mac.',
+      'Lane reads four memories before answering rather than six, and its own instructions are half the length. Both were read in full before a single word came back.',
+      'Recall can be filmed with the rest of the app when LANE_UNPROTECTED is set. It stays hidden from screen sharing otherwise, as before.',
+    ],
+  },
+  {
     version: '1.0.10',
     date: '29 September 2026',
     lines: [
