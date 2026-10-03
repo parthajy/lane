@@ -1013,3 +1013,24 @@ body.dark-page {
 @media (prefers-reduced-motion: reduce) {
   .film-poster, .film-poster:hover .film-play { transition: none; transform: none; }
 }
+
+/* ── Once somebody has asked for a seat ──────────────────────────────────
+   This panel is what they get back. It replaces the row inside the form
+   rather than the form itself: the status line lives in there, so hiding
+   the whole form hid the only confirmation on the page. */
+.wait-done {
+  display: flex; align-items: flex-start; gap: 11px; width: 100%; max-width: 500px;
+  padding: 13px 15px; border-radius: var(--r);
+  background: rgba(30, 158, 106, .07); border: 1px solid rgba(30, 158, 106, .26);
+}
+.wait-tick {
+  flex: 0 0 auto; display: grid; place-items: center; width: 22px; height: 22px; margin-top: 1px;
+  border-radius: 50%; background: #1e9e6a; color: #fff;
+}
+.wait-done b { display: block; font-size: 14px; font-weight: 600; color: #126b49; }
+.wait-done i { display: block; font-style: normal; font-size: 13.2px; line-height: 1.55; color: #3f6b5b; margin-top: 2px; }
+.wait.is-done .wait-msg { display: none; }
+/* .wait-row is display:flex, and a class beats the browser's own rule for
+   the hidden attribute, so the field and the button stayed on screen under
+   the confirmation. Say it explicitly. */
+.wait-row[hidden] { display: none; }

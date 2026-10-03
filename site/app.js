@@ -214,6 +214,42 @@
     f.msg.className = 'wait-msg' + (kind ? ' ' + kind : '');
   }
 
+  /* What somebody sees once they have asked for a seat.
+     The row goes and the form stays: the status line lives inside the form,
+     so hiding the form hid the only confirmation there was, and a person who
+     had just typed their address was shown nothing at all. */
+  function done(f, out) {
+    var row = f.form.querySelector('.wait-row');
+    if (row) row.hidden = true;
+    f.form.classList.add('is-done');
+    if (f.form.dataset.done === '1') return;
+    f.form.dataset.done = '1';
+
+    var head = out.again
+      ? 'You are already on the list'
+      : out.lifetime === false
+        ? 'This round is full — you are first in line for the next'
+        : 'Request received';
+    var body = out.again
+      ? 'Nothing more to do. Your licence and the next steps come by email.'
+      : out.lifetime === false
+        ? 'Two hundred more seats open after this round, and I will write to you when they do.'
+        : 'Your seat is held. I will be in touch by email with your licence and the next steps, usually the same day.';
+
+    var panel = document.createElement('div');
+    panel.className = 'wait-done';
+    panel.setAttribute('role', 'status');
+    panel.innerHTML =
+      '<span class="wait-tick" aria-hidden="true">' +
+      '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>' +
+      '</span><span><b></b><i></i></span>';
+    panel.querySelector('b').textContent = head;
+    panel.querySelector('i').textContent = body;
+    f.form.insertBefore(panel, f.msg || null);
+    say(f, '', '');
+  }
+
   /* The count, everywhere it appears. If the server cannot be reached the
      printed copy stands on its own and the bar simply does not move. */
   function paint(n) {
@@ -247,7 +283,7 @@
   try { joined = localStorage.getItem('lane.waitlist') === '1'; } catch (e) {}
 
   forms.forEach(function (f) {
-    if (joined) say(f, 'You are already on the list. The licence comes by email.', 'good');
+    if (joined) done(f, { again: true, lifetime: true });
 
     f.form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -274,15 +310,7 @@
           if (!out.ok) throw new Error(out.error || 'That did not go through.');
           try { localStorage.setItem('lane.waitlist', '1'); } catch (e2) {}
           paint(out);
-          forms.forEach(function (g) {
-            g.form.reset();
-            g.form.style.display = 'none';
-            say(g, out.again
-              ? 'You are already on the list. The licence comes by email.'
-              : out.lifetime === false
-                ? 'This round is full, but you are first in line for the next two hundred. I will write when it opens.'
-                : 'You are in. The licence comes by email, usually the same day.', 'good');
-          });
+          forms.forEach(function (g) { done(g, out); });
         })
         .catch(function (err) {
           button.disabled = false;

@@ -26,6 +26,31 @@ button{font:inherit;font-weight:500;padding:11px;border:0;border-radius:10px;bac
 /** How many people can be given Lane outright. */
 const COMPS = 200
 
+/**
+ * How many disc images GitHub has actually handed over.
+ *
+ * The downloads table counts requests to /download/mac, which includes every
+ * crawler, link preview and prefetch that ever touched the button — the
+ * marketing pages each collected seven or eight before anybody was sent to
+ * them. This counts bytes that left GitHub, which is as close to a person as
+ * we can get without tracking one.
+ */
+async function realDownloads() {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${process.env.LANE_REPO || 'parthajy/lane'}/releases?per_page=100`, {
+      headers: { accept: 'application/vnd.github+json', 'user-agent': 'lane.so' },
+    })
+    if (!res.ok) return null
+    const releases = await res.json()
+    return releases.reduce(
+      (n, r) => n + (r.assets || []).filter((a) => a.name.endsWith('.dmg')).reduce((m, a) => m + (a.download_count || 0), 0),
+      0,
+    )
+  } catch {
+    return null
+  }
+}
+
 /** A plain look at an email address. */
 const isEmail = (e) => /^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(e)
 
@@ -98,9 +123,10 @@ export default async (request) => {
   }
 
   const since = new Date(Date.now() - 21 * 86400_000).toISOString()
-  const [downloads, waitTotal, lifetimeTaken, keysLeft, sales, recentWait, recentFeedback, recentDownloads, compsGiven, compRows] =
+  const [downloads, dmgs, waitTotal, lifetimeTaken, keysLeft, sales, recentWait, recentFeedback, recentDownloads, compsGiven, compRows] =
     await Promise.all([
       count('downloads'),
+      realDownloads(),
       count('waitlist'),
       count('waitlist', 'lifetime=is.true'),
       db('licence_keys?select=plan&claimed_at=is.null'),
@@ -183,6 +209,8 @@ p.sub{color:var(--muted);margin:0 0 24px}
 .card{background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 1px 2px rgba(16,16,26,.05)}
 .card b{display:block;font-size:28px;letter-spacing:-.02em}
 .card span{color:var(--muted);font-size:13px}
+.card.is-soft b{font-size:20px;color:var(--muted)}
+.card.is-soft{opacity:.75}
 section{background:#fff;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 1px 2px rgba(16,16,26,.05)}
 h2{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 12px}
 ul{list-style:none;margin:0;padding:0}
@@ -212,7 +240,8 @@ td.act{width:112px;text-align:right}
 </style>
 <h1>Lane</h1><p class="sub">Everything the outside world tells us. The app itself reports nothing. <a href="/admin?out=1" style="color:var(--muted)">Sign out</a></p>
 <div class="cards">
-  <div class="card"><b>${downloads}</b><span>downloads</span></div>
+  <div class="card"><b>${dmgs ?? '—'}</b><span>discs downloaded${dmgs === null ? ' (GitHub unreachable)' : ''}</span></div>
+  <div class="card is-soft"><b>${downloads}</b><span>button presses, bots included</span></div>
   <div class="card"><b>${waitTotal}</b><span>on the waitlist</span></div>
   <div class="card"><b>${seats}</b><span>lifetime seats left</span></div>
   <div class="card"><b>${(sales || []).length}</b><span>sales</span></div>
