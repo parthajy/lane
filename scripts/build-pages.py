@@ -865,7 +865,7 @@ def build_company() -> list[str]:
             "Updates are signed with a key we hold offline. The app checks the signature before installing anything, so an update that did not come from us is refused.",
             "Licence keys are signed the same way and checked on your machine, which is why unlocking Lane needs no server.")),
         ("Our website", p(
-            "lane.so is a static site. It runs Google Analytics, which sets cookies and counts visits. The two videos on the home page load nothing from YouTube until you press play, and then through youtube-nocookie.com. If you sign up to test Lane, your email address is stored so we can send you a licence and write to you about it. If you buy, our payment processor handles the card and we never see it.",
+            "lane.so is a static site. It runs Google Analytics, which sets cookies and counts visits. The update check the app makes when it starts is counted, as a daily hash that cannot be reversed or joined across days, and that headcount is the only thing we know about the app being used. The two videos on the home page load nothing from YouTube until you press play, and then through youtube-nocookie.com. If you sign up to test Lane, your email address is stored so we can send you a licence and write to you about it. If you buy, our payment processor handles the card and we never see it.",
             'The full detail is in the <a href="/privacy">privacy policy</a>.')),
         ("Reporting something", p(
             "If you find a security problem, please tell us before you tell anyone else, and give us a reasonable chance to fix it. " + CONTACT,
@@ -889,8 +889,9 @@ def build_company() -> list[str]:
             "Lane reads the text your apps publish for accessibility: the page you are reading, the document you are writing, the title of the window. It never reads keystrokes and it never stores what you type into a password field.",
             "You can pause it from the menu bar at any moment, and exclude any app or any website permanently. Anything you exclude is never read, not read and discarded.")),
         ("What we can see", p(
-            "Almost nothing about you, and nothing at all about your use of the app. The website runs Google Analytics, so we know how many people visited and which pages they read, and YouTube knows if you played one of the videos, which you have to ask for. We know how many people downloaded the app, because the download link counts clicks. We know who signed up to test Lane, because they told us their email address. We know who bought a licence, because they paid us.",
-            "We do not know how you use Lane, what is in your memories, what you ask it, or whether you have opened it since installing. There is no telemetry.")),
+            "Almost nothing about you. The website runs Google Analytics, so we know how many people visited and which pages they read, and YouTube knows if you played one of the videos, which you have to ask for. We know how many people downloaded the app, because the download link counts clicks. We know who signed up to test Lane, because they told us their email address. We know who bought a licence, because they paid us.",
+           "There is one more, and it is the only thing we know about the app being used. Lane asks our server whether a newer version exists each time it starts, as it always has, and we now count those requests. So we can see that some number of copies of Lane were opened today. We cannot see which, and we cannot tell today's from yesterday's: what is stored is a hash of the address together with the date, which is a different value tomorrow for the same machine. It is a headcount, and it is built so that it cannot become anything else.",
+            "Beyond that headcount we know nothing. Not how you use Lane, not what is in your memories, not what you ask it, not how long it runs, not whether it works. The app reports none of it, because it contains no code that could.")),
         ("Things you can choose to send", p(
             "Feedback, which opens your mail app with the note you wrote and nothing attached. Labels for improving Rabbit, which are off unless you turn them on and which you can review before they go.",
             "Both are explicit, both are optional, and neither is on by default.")),
@@ -915,11 +916,12 @@ def build_legal() -> list[str]:
             MAKER + " In this policy, Lane means both the Mac application and the website at lane.so. " + CONTACT,
             'If you want this in plain words rather than legal ones, read <a href="/privacy-explained">privacy, explained</a>. Where the two differ, this page is the one that governs.')),
         ("The application", p(
-            "The Lane application does not collect, transmit or receive any personal data. It has no accounts, no telemetry and no analytics, and it does not send your content to us or to any third party.",
+            "The Lane application has no accounts and no analytics, and it does not send your content to us or to any third party. It contains no code that reports what you do with it. It does make one request to our server when it starts, to ask whether a newer version exists, and that request necessarily carries your IP address; what we do with it is described under <a href=\"#the-website\">the website</a> below. Nothing else about your use of Lane reaches us.",
             "Everything the application records about your work is written to an encrypted store on your own device. We have no access to it, and no ability to obtain it.",
             "Two optional features send something, and only when you start them: the feedback form, which opens your own mail application with a message you can read and edit before sending; and the contribution of labels for improving our model, which is off by default and which you review before anything is sent.")),
         ("The website", p("When you use lane.so we process a small amount of data:"),
          ul("<b>Testing programme.</b> If you submit the form, we store your email address, any name you give, and the page you came from, so that we can send you a licence and write to you about testing. Lawful basis: your consent.",
+            "<b>Update checks.</b> Each time Lane starts it asks our server whether a newer version exists. We record the date, the platform, and a hash of your IP address combined with that date and a secret, so that we can count how many installs checked in. The hash changes daily and cannot be reversed to an address, so it cannot be used to recognise you tomorrow or to build a profile of you, and we do not store the address itself. Lawful basis: our legitimate interest in knowing roughly how many people use Lane, which we have no other way to learn.",
             "<b>Videos.</b> The home page shows two videos hosted on YouTube. Nothing is requested from Google until you press play: the still you see before that is drawn by us, not fetched. Pressing play loads a player from youtube-nocookie.com, which then receives your IP address and sets no tracking cookie. Lawful basis: your consent, given by pressing play.",
             "<b>Downloads.</b> When the download link is used we record that a download happened, and the source parameter in the link. No IP address and no identifier is stored with it.",
             "<b>Feedback.</b> If you send feedback through the website we store what you wrote and, if you give one, your email address.",
@@ -1181,7 +1183,7 @@ def build_rabbit() -> list[str]:
       <div class="rcards rv">
         <div class="rcard"><span class="rc-ic">''' + RICON["stack"] + '''</span><b>Understands your full context</b><p>Web, documents, calls, notes and files, in one place, in the order they happened.</p></div>
         <div class="rcard"><span class="rc-ic">''' + RICON["bolt"] + '''</span><b>Fast, local, powerful</b><p>Runs entirely on your Mac, so an answer costs nothing and waits for nobody.</p></div>
-        <div class="rcard"><span class="rc-ic">''' + RICON["lock"] + '''</span><b>Designed for your trust</b><p>No cloud, no data sharing, no telemetry. Your information stays yours.</p></div>
+        <div class="rcard"><span class="rc-ic">''' + RICON["lock"] + '''</span><b>Designed for your trust</b><p>No cloud, no data sharing, and nothing reported about what you do with it. Your information stays yours.</p></div>
       </div>
     </div></section>'''
 

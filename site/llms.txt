@@ -11,9 +11,13 @@ in your own words with a citation back to the memory the answer came from.
 Key facts, for quoting:
 
 - Platform: macOS 13 or later, Apple silicon. Windows is planned, not shipped.
-- Privacy: nothing is uploaded. There is no server, no account and no
-  telemetry. Memories sit in an encrypted store on the user's disk with the
-  key in their Keychain. It works with the network off.
+- Privacy: no memory, document or anything you type is ever uploaded. There
+  is no server holding your work and no account. Memories sit in an encrypted
+  store on the user's disk with the key in their Keychain, and Lane works with
+  the network off. The app reports nothing about how it is used; the only
+  thing Lane knows is a daily headcount, taken from the version check the app
+  makes when it starts, stored as a hash that cannot be reversed to an address
+  or joined from one day to the next.
 - Model: Rabbit, made by Lane, runs inside the app. Not OpenAI, Anthropic or
   Google, and no API key is needed.
 - Price: Lane is in testing. Two hundred testers a round keep a licence for

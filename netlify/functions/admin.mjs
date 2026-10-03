@@ -123,10 +123,11 @@ export default async (request) => {
   }
 
   const since = new Date(Date.now() - 21 * 86400_000).toISOString()
-  const [downloads, dmgs, waitTotal, lifetimeTaken, keysLeft, sales, recentWait, recentFeedback, recentDownloads, compsGiven, compRows] =
+  const [downloads, dmgs, checks, waitTotal, lifetimeTaken, keysLeft, sales, recentWait, recentFeedback, recentDownloads, compsGiven, compRows] =
     await Promise.all([
       count('downloads'),
       realDownloads(),
+      db('rpc/update_check_stats', { method: 'POST', body: '{}' }).catch(() => null),
       count('waitlist'),
       count('waitlist', 'lifetime=is.true'),
       db('licence_keys?select=plan&claimed_at=is.null'),
@@ -240,6 +241,8 @@ td.act{width:112px;text-align:right}
 </style>
 <h1>Lane</h1><p class="sub">Everything the outside world tells us. The app itself reports nothing. <a href="/admin?out=1" style="color:var(--muted)">Sign out</a></p>
 <div class="cards">
+  <div class="card"><b>${checks?.today ?? '—'}</b><span>installs checked in today</span></div>
+  <div class="card"><b>${checks?.week ?? '—'}</b><span>installs this week</span></div>
   <div class="card"><b>${dmgs ?? '—'}</b><span>discs downloaded${dmgs === null ? ' (GitHub unreachable)' : ''}</span></div>
   <div class="card is-soft"><b>${downloads}</b><span>button presses, bots included</span></div>
   <div class="card"><b>${waitTotal}</b><span>on the waitlist</span></div>

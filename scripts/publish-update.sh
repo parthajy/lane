@@ -52,6 +52,14 @@ manifest = {
 json.dump(manifest, open(f"{out}/darwin-{arch}.json", "w"), indent=2)
 os.makedirs("site/updates", exist_ok=True)
 json.dump(manifest, open(f"site/updates/darwin-{arch}.json", "w"), indent=2)
-print(f"manifest: site/updates/darwin-{arch}.json (commit it; Netlify serves it)")
+
+# The manifest the app actually receives is served by a function, which
+# bundles this file at build time and counts the install that asked. If this
+# is not kept in step the site keeps offering the version before this one.
+feed_path = "netlify/functions/_feed.json"
+feed = json.load(open(feed_path)) if os.path.exists(feed_path) else {}
+feed[f"darwin-{arch}"] = manifest
+json.dump(feed, open(feed_path, "w"), indent=2)
+print(f"manifest: site/updates/darwin-{arch}.json and {feed_path} (commit both)")
 PY
-echo "next: scripts/release-github.sh, then commit site/updates/darwin-$ARCH.json"
+echo "next: scripts/release-github.sh, then commit the manifest and netlify/functions/_feed.json"

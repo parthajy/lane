@@ -56,10 +56,31 @@ create table if not exists public.sales (
 );
 
 -- Locked by default: the publishable key can reach nothing directly.
+-- How many installs checked in, and nothing more.
+--
+-- Every running Lane asks the site whether a newer version exists when it
+-- starts, which it has always done and the security page has always said.
+-- Counting those requests is the only thing Lane knows about its own use.
+--
+-- The fingerprint is a hash of the caller's address together with the date
+-- and a secret. Salting it with the date is the point: the same machine
+-- hashes differently tomorrow, so this can answer "how many today" and can
+-- never answer "is this the same one as last week". It is a headcount that
+-- cannot grow into a profile.
+create table if not exists public.update_checks (
+  day         date    not null,
+  target      text    not null default '',
+  fingerprint text    not null,
+  checks      integer not null default 1,
+  primary key (day, target, fingerprint)
+);
+create index if not exists update_checks_day on public.update_checks (day desc);
+
 alter table public.waitlist     enable row level security;
 alter table public.feedback     enable row level security;
 alter table public.downloads    enable row level security;
 alter table public.licence_keys enable row level security;
+alter table public.update_checks enable row level security;
 alter table public.sales        enable row level security;
 
 -- How many lifetime seats the promise covers.
@@ -210,3 +231,29 @@ end $$;
 -- Only the server may claim: never the website, never the publishable key.
 revoke all on function public.claim_licence(text, text, text, integer, text) from public, anon, authenticated;
 grant execute on function public.claim_licence(text, text, text, integer, text) to service_role;
+
+-- One check-in, counted. A repeat from the same machine on the same day
+-- bumps the count rather than adding a row, so installs and checks are both
+-- answerable from the one table.
+create or replace function public.note_update_check(p_target text, p_fingerprint text)
+returns void language sql security definer set search_path = public as $fn$
+  insert into update_checks (day, target, fingerprint)
+  values (current_date, left(coalesce(p_target, ''), 40), left(p_fingerprint, 64))
+  on conflict (day, target, fingerprint) do update set checks = update_checks.checks + 1
+$fn$;
+
+-- What the admin page reads. Counts only, never a fingerprint.
+create or replace function public.update_check_stats()
+returns json language sql security definer set search_path = public as $fn$
+  select json_build_object(
+    'today',     (select count(*) from update_checks where day = current_date),
+    'yesterday', (select count(*) from update_checks where day = current_date - 1),
+    'week',      (select count(distinct fingerprint) from update_checks where day > current_date - 7),
+    'days',      (select coalesce(json_agg(d order by d->>'day' desc), '[]'::json)
+                  from (select json_build_object('day', day, 'installs', count(*), 'checks', sum(checks)) as d
+                        from update_checks where day > current_date - 14 group by day) x)
+  )
+$fn$;
+
+revoke all on function public.note_update_check(text, text) from public;
+revoke all on function public.update_check_stats() from public;

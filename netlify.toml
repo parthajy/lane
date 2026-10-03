@@ -36,6 +36,15 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
+# Every running Lane asks for this file to see whether there is a newer
+# build. Serving it from a function counts the install that asked, and
+# changes nothing about what leaves their Mac.
+[[redirects]]
+  from = "/updates/*"
+  to = "/.netlify/functions/updates"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/join"
   to = "/.netlify/functions/join"
