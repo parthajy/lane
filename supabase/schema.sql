@@ -246,11 +246,11 @@ $fn$;
 create or replace function public.update_check_stats()
 returns json language sql security definer set search_path = public as $fn$
   select json_build_object(
-    'today',     (select count(*) from update_checks where day = current_date),
-    'yesterday', (select count(*) from update_checks where day = current_date - 1),
+    'today',     (select count(distinct fingerprint) from update_checks where day = current_date),
+    'yesterday', (select count(distinct fingerprint) from update_checks where day = current_date - 1),
     'week',      (select count(distinct fingerprint) from update_checks where day > current_date - 7),
     'days',      (select coalesce(json_agg(d order by d->>'day' desc), '[]'::json)
-                  from (select json_build_object('day', day, 'installs', count(*), 'checks', sum(checks)) as d
+                  from (select json_build_object('day', day, 'installs', count(distinct fingerprint), 'checks', sum(checks)) as d
                         from update_checks where day > current_date - 14 group by day) x)
   )
 $fn$;
